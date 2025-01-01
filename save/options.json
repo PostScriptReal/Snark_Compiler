@@ -1,0 +1,13 @@
+{
+     "backup_smd": true,
+     "bone_offset": [
+          [
+               "bone name",
+               0,
+               0,
+               0
+          ]
+     ],
+     "save_paths": false,
+     "startFolder": ""
+}

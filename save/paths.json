@@ -1,0 +1,14 @@
+{
+    "bonez": {
+        "path": "",
+        "bBone": "",
+        "nBone": "",
+        "pBone": ""
+    },
+    "matFix": {
+        "path": "",
+        "finder": "",
+        "sRename": "",
+        "sReplace": ""
+    }
+}
