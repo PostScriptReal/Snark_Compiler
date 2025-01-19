@@ -1,0 +1,16 @@
+{
+    "name": "Svengine",
+    "install": "<install2>/Sven Co-op SDK/",
+    "compiler": "modelling/studiomdl.exe",
+    "type": "Svengine",
+    "capabilities": {
+        "fullbright": true,
+        "flatshade": true,
+        "1024px": true,
+        "unlockedChrome": true,
+        "cliptotextures": false
+    },
+    "compOpts": [
+        {"name": "Keep all bones", "desc": "Tells the compiler to keep unweighted bones", "arg": "-k"}
+    ]
+}

@@ -1,0 +1,12 @@
+{
+    "name": "Sven Co-op",
+    "compiler": "svengine",
+    "type": "Svengine",
+    "capabilities": {
+        "fullbright": true,
+        "flatshade": true,
+        "1024px": true,
+        "unlockedChrome": true,
+        "cliptotextures": false
+    }
+}

@@ -1,0 +1,12 @@
+{
+    "name": "Half-Life",
+    "compiler": "goldsrc",
+    "type": "GoldSRC",
+    "capabilities": {
+        "fullbright": false,
+        "flatshade": false,
+        "1024px": false,
+        "unlockedChrome": false,
+        "cliptotextures": true
+    }
+}

@@ -11,6 +11,7 @@ from pathlib import Path
 import webbrowser as browser
 import sys
 from urllib.request import urlopen
+from helpers import *
 
 selected_scr = ''
 scr_dat = ''
@@ -18,7 +19,6 @@ scr_dat = ''
 class Flags:
 
 	def __init__(self):
-		self.pyinstaller = True
 		self.devMode = True
 
 class Interp:
@@ -215,7 +215,7 @@ class GetNewVersion:
 		self.noButton.grid(column=1, row=1, sticky=(S))
 	
 	def releasesPage(self):
-		browser.open_new_tab("https://github.com/PostScriptReal/Snark/releases/latest")
+		browser.open_new_tab("https://github.com/PostScriptReal/Snark_Compiler/releases/latest")
 		self.nroot.destroy()
 	
 	def closeWin(self):
@@ -290,6 +290,15 @@ class GUI(Tk):
 			self.fixGUI = False
 		# print(font.nametofont('TkDefaultFont').actual())
 		
+		# Defining colours for the theme
+		thCol = {
+			"bg": "#ff862d",
+			# First value is inactive colour, 2nd hover and 3rd being the active colour
+			"btn": ["#eb6524", "#ed763c", "#ee8d5e"],
+			"ent": "#e3573d",
+			"txt": "white"
+		}
+		
 		# Get Options
 		self.get_options()
 		if self.options["save_paths"]:
@@ -301,43 +310,47 @@ class GUI(Tk):
 		else:
 			self.save_paths = False
 
+		widgets = []
+		buttons = []
+
 		# Create Window
-		frame = Frame(self, borderwidth=2, relief="sunken")
+		frame = Frame(self, borderwidth=2, relief="sunken", bg=thCol["bg"])
 		frame.grid(column=6, row=2, sticky=(N, E, S, W))
-		header = Frame(frame, borderwidth=2)
-		header.grid(column=1, row=1, sticky=(N), columnspan=10)
-		mtbtns = Frame(frame, borderwidth=2)
+		header = Frame(frame, borderwidth=2, bg=thCol["bg"])
+		header.grid(column=1, row=1, sticky=(N, W, E), columnspan=69)
+		mtbtns = Frame(frame, borderwidth=2, bg=thCol["bg"])
 		mtbtns.grid(column=1, row=9, sticky=(S), columnspan=10)
+		menu = Frame(frame, borderwidth=2, bg=thCol["bg"])
+		menu.grid(column=0, row=2, sticky=(W, S), columnspan=10)
 		self.columnconfigure(6, weight=1)
 		self.rowconfigure(2, weight=1)
 
 		# Create Header Buttons
-		self.dupe_button = Button(header, text="Game Setup", command=self.bd_menu)
-		self.dupe_button.grid(column=1, row=1, sticky=(N))
+		self.dupe_button = Button(header, text="Game Setup", command=self.bd_menu, bg=thCol["btn"][0])
+		self.dupe_button.grid(column=0, row=0, sticky=(N))
 
-		self.mat_button = Button(header, text="Decompile", command=self.mnc_menu)
-		self.mat_button.grid(column=2, row=1, sticky=(N))
+		self.mat_button = Button(header, text="Decompile", command=self.mnc_menu, bg=thCol["btn"][0])
+		self.mat_button.grid(column=1, row=0, sticky=(N))
 
-		self.mat_button = Button(header, text="Compile", command=self.mnc_menu)
-		self.mat_button.grid(column=3, row=1, sticky=(N))
+		self.comp_button = Button(header, text="Compile", command=self.mnc_menu, bg=thCol["btn"][0])
+		self.comp_button.grid(column=2, row=0, sticky=(N))
 
-		# Getting rid of this because I don't think I could reasonably create something like this
-		"""fakeweight = Button(frame, text="Soft Weights", command=self.fakesoft)
-		fakeweight.grid(column=3, row=1, sticky=(N), padx=(0, 195))"""
-
-		self.scripts = Button(header, text="Scripts", command=self.scripts)
-		self.scripts.grid(column=4, row=1, sticky=(N))
+		self.scripts = Button(header, text="Scripts", command=self.scripts, bg=thCol["btn"][0])
+		self.scripts.grid(column=3, row=0, sticky=(N))
 		
-		self.options = Button(header, text="Options", command=self.optionsMenu)
-		self.options.grid(column=6, row=1, sticky=(N))
+		self.options = Button(header, text="Options", command=self.optionsMenu, bg=thCol["btn"][0])
+		self.options.grid(column=5, row=0, sticky=(N))
 
-		self.help = Button(header, text="Help", command=self.help)
-		self.help.grid(column=7, row=1, sticky=(N))
+		self.help = Button(header, text="Help", command=self.help, bg=thCol["btn"][0])
+		self.help.grid(column=6, row=0, sticky=(N))
 		
 		self.aboutB = Button(header, text="About", command=self.about)
-		self.aboutB.grid(column=5, row=1, sticky=(N))
+		self.aboutB.grid(column=4, row=0, sticky=(N))
 
-		self.tile_label = Label(frame, text="Path to SMDs")
+		self.setupMenu = SetupMenu(menu, thCol)
+		self.decMenu = DecompMenu(menu, thCol, True)
+
+		"""self.tile_label = Label(frame, text="Path to SMDs")
 		self.tile_label.grid(column=2, row=3)
 
 		self.path = StringVar()
@@ -349,8 +362,8 @@ class GUI(Tk):
 		self.save_button = Button(frame, text="Open QC", command=self.openfile)
 		self.save_button.grid(column=5, row=3, sticky=(S))
 
-		"""self.dir_button = Button(frame, text="Open Folder", command=self.opendir)
-		self.dir_button.grid(column=7, row=3, sticky=(S))"""
+		self.dir_button = Button(frame, text="Open Folder", command=self.opendir)
+		self.dir_button.grid(column=7, row=3, sticky=(S))
 
 		self.base_label = Label(frame, text="Select Base Bone")
 		self.base_label.grid(column=2, row=5, sticky=(S))
@@ -392,32 +405,28 @@ class GUI(Tk):
 		self.replace_label = Label(frame, text="String Part To Replace")
 
 		self.replace = StringVar()
-		self.replace_entry = Entry(frame, textvariable=self.replace, width=50)
+		self.replace_entry = Entry(frame, textvariable=self.replace, width=50)"""
 
-		# Objects to add whitespace to borders
-		ws = Label(frame, text='   ')
-		ws.grid(column=8, row=1, sticky=(S))
-		ws5 = Label(frame, text='   ')
-		ws5.grid(column=1, row=2, sticky=(S))
-		ws2 = Label(frame, text='   ')
-		ws2.grid(column=1, row=4, sticky=(S))
-		self.ws3 = Label(frame, text='   ')
-		self.ws3.grid(column=1, row=8, sticky=(S))
-		self.ws4 = Label(frame, text='   ')
-		self.ws6 = Label(mtbtns, text='       ')
-		ws7 = Label(frame, text='   ')
-		ws7.grid(column=4, row=3, sticky=(S))
-		ws8 = Label(frame, text='   ')
-		ws8.grid(column=6, row=3, sticky=(S))
 		vnum = open('version.txt', "r")
 		self.ver = vnum.read().replace("(OS)", sys.platform)
-		version = Label(frame, text=self.ver)
-		version.grid(column=2, row=69, sticky=(W, S), columnspan=2)
+		version = Label(frame, text=self.ver, background=thCol["bg"], fg=thCol["txt"])
+		version.grid(column=1, row=69, sticky=(W, S), columnspan=2)
+
+		# Applying theme
+		for w in header.winfo_children():
+			w.configure(bg=thCol["btn"][0])
+			w.configure(highlightbackground=thCol["btn"][1])
+			w.configure(activebackground=thCol["btn"][2])
+			try:
+				w.configure(fg=thCol["txt"])
+			except:
+				pass
+
 		if not self.flags.devMode:
 			self.check_version()
 
 	def help(self):
-		browser.open_new_tab('https://github.com/PostScriptReal/PS-SMD-Tools/wiki')
+		browser.open_new_tab('https://github.com/PostScriptReal/Snark_Compiler/wiki')
 	
 	def about(self):
 		a = About(self.ver)
@@ -458,86 +467,16 @@ class GUI(Tk):
 
 	""" Switches menu to the Bone Dupe Menu """
 	def bd_menu(self):
-		# Displaying Bone Dupe options
-		self.base_label.grid(column=2, row=5, sticky=(S))
-		self.bname_entry.grid(column=3, row=5, sticky=(N, E, W))
-		self.new_label.grid(column=2, row=6, sticky=(S,))
-		self.nname_entry.grid(column=3, row=6, sticky=(N, E, W))
-		self.parent_label.grid(column=2, row=7, sticky=(S))
-		self.pname_entry.grid(column=3, row=7, sticky=(N, E, W))
-		self.action_button.grid(column=1, row=9, sticky=(S), padx=(0, 0), columnspan=5)
-		self.ws3.grid(column=1, row=8, sticky=(S))
-		# Removing SMD Mat options
-		self.bmp_button.grid_remove()
-		self.matrn_button.grid_remove()
-		self.ref_label.grid_remove()
-		self.ref_entry.grid_remove()
-		self.ws4.grid_remove()
-		self.rename_label.grid_remove()
-		self.rename_entry.grid_remove()
-		self.replace_label.grid_remove()
-		self.replace_entry.grid_remove()
-		self.ws6.grid_remove()
-		# Fix centering for Header buttons
-		"""self.dupe_button.grid(column=2, row=1, sticky=(N), padx=(110, 0))
-		if not self.fixGUI:
-			self.mat_button.grid(column=2, row=1, sticky=(N), padx=(280, 0))
-		else:
-			self.mat_button.grid(column=2, row=1, sticky=(N), padx=(316, 0))
-		if not self.fixGUI:
-			self.scripts.grid(column=3, row=1, sticky=(N), padx=(0, 208))
-		else:
-			self.scripts.grid(column=3, row=1, sticky=(N), padx=(0, 262))
-		if not self.fixGUI:
-			self.options.grid(column=3, row=1, sticky=(N), padx=(0, 108))
-		else:
-			self.options.grid(column=3, row=1, sticky=(N), padx=(0, 110))
-		if not self.fixGUI:
-			self.help.grid(column=3, row=1, sticky=(N), padx=(0, 20))
-		else:
-			self.help.grid(column=3, row=1, sticky=(N), padx=(28, 0))"""
+		if self.setupMenu.hidden:
+			self.decMenu.hide()
+			self.setupMenu.show()
 		
 	
 	""" Switches menu to SMD Material options """
 	def mnc_menu(self):
-		# Removing Bone Dupe options
-		self.base_label.grid_remove()
-		self.bname_entry.grid_remove()
-		self.new_label.grid_remove()
-		self.nname_entry.grid_remove()
-		self.parent_label.grid_remove()
-		self.pname_entry.grid_remove()
-		self.action_button.grid_remove()
-		self.ws3.grid_remove()
-		# Displaying SMD Mat options
-		self.bmp_button.grid(column=0, row=9, sticky=(S))
-		self.ws6.grid(column=1, row=9, sticky=(S))
-		self.matrn_button.grid(column=2, row=9, sticky=(S))
-		self.ref_label.grid(column=2, row=5, sticky=(S))
-		self.ref_entry.grid(column=3, row=5, sticky=(N, E, W))
-		self.ws4.grid(column=1, row=8, sticky=(S))
-		self.rename_label.grid(column=2, row=6, sticky=(S, W))
-		self.rename_entry.grid(column=3, row=6, sticky=(N, E, W))
-		self.replace_label.grid(column=2, row=7, sticky=(S, W))
-		self.replace_entry.grid(column=3, row=7, sticky=(N, E, W))
-		# Fixing Centering for Header Buttons
-		"""self.dupe_button.grid(column=2, row=1, sticky=(N), padx=(50, 0))
-		if not self.fixGUI:
-			self.mat_button.grid(column=2, row=1, sticky=(N), padx=(190, 0))
-		else:
-			self.mat_button.grid(column=2, row=1, sticky=(N), padx=(256, 0))
-		if not self.fixGUI:
-			self.scripts.grid(column=3, row=1, sticky=(N), padx=(0, 134))
-		else:
-			self.scripts.grid(column=3, row=1, sticky=(N), padx=(0, 156))
-		if not self.fixGUI:
-			self.options.grid(column=3, row=1, sticky=(N), padx=(0, 35))
-		else:
-			self.options.grid(column=3, row=1, sticky=(N), padx=(0, 3))
-		if not self.fixGUI:
-			self.help.grid(column=3, row=1, sticky=(N), padx=(55, 0))
-		else:
-			self.help.grid(column=3, row=1, sticky=(N), padx=(134, 0))"""
+		if self.decMenu.hidden:
+			self.setupMenu.hide()
+			self.decMenu.show()
 	
 	def bmp(self):
 		# Initialising Pointer fix function
