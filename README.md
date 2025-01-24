@@ -19,5 +19,4 @@
 			<td>MIT</td>
 		</tr>
 	</table>
-
 </div>
