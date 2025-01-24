@@ -322,6 +322,8 @@ class GUI(Tk):
 		mtbtns.grid(column=1, row=9, sticky=(S), columnspan=10)
 		menu = Frame(frame, borderwidth=2, bg=thCol["bg"])
 		menu.grid(column=0, row=2, sticky=(W, S), columnspan=10)
+		dumbFixMenu = Frame(menu, borderwidth=2, bg=thCol["bg"])
+		dumbFixMenu.grid(column=0, row=0, sticky="nsew", columnspan=10)
 		self.columnconfigure(6, weight=1)
 		self.rowconfigure(2, weight=1)
 
@@ -335,7 +337,7 @@ class GUI(Tk):
 		self.mat_button = Button(header, text="Decompile", command=self.mnc_menu, bg=thCol["btn"][0])
 		self.mat_button.grid(column=2, row=0, sticky=(N))
 
-		self.comp_button = Button(header, text="Compile", command=self.mnc_menu, bg=thCol["btn"][0])
+		self.comp_button = Button(header, text="Compile", command=self.cmp_menu, bg=thCol["btn"][0])
 		self.comp_button.grid(column=3, row=0, sticky=(N))
 
 		self.scripts = Button(header, text="Scripts", command=self.scripts, bg=thCol["btn"][0])
@@ -352,6 +354,7 @@ class GUI(Tk):
 
 		self.setupMenu = SetupMenu(menu, thCol)
 		self.decMenu = DecompMenu(menu, thCol, True)
+		self.cmpMenu = CompMenu(dumbFixMenu, thCol, True)
 
 		"""self.tile_label = Label(frame, text="Path to SMDs")
 		self.tile_label.grid(column=2, row=3)
@@ -468,18 +471,27 @@ class GUI(Tk):
 		# Alternate bone duping function for scripts
 		qc.startScript(batch=qc.batch, values=[base, new, parent])
 
-	""" Switches menu to the Bone Dupe Menu """
+	""" Switches menu to the Game Setup Menu """
 	def bd_menu(self):
 		if self.setupMenu.hidden:
 			self.decMenu.hide()
+			self.cmpMenu.hide()
 			self.setupMenu.show()
 		
 	
-	""" Switches menu to SMD Material options """
+	""" Switches menu to Decompile Menu """
 	def mnc_menu(self):
 		if self.decMenu.hidden:
 			self.setupMenu.hide()
+			self.cmpMenu.hide()
 			self.decMenu.show()
+	
+	""" Switches menu to Compile Menu """
+	def cmp_menu(self):
+		if self.cmpMenu.hidden:
+			self.setupMenu.hide()
+			self.cmpMenu.show()
+			self.decMenu.hide()
 	
 	def bmp(self):
 		# Initialising Pointer fix function
