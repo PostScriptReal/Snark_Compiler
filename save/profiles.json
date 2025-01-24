@@ -1,0 +1,26 @@
+{
+    "profiles": {
+        "Half-Life": {
+            "compiler": "goldsrc",
+            "type": "GoldSRC",
+            "capabilities": {
+                "fullbright": false,
+                "flatshade": false,
+                "1024px": false,
+                "unlockedChrome": false,
+                "cliptotextures": true
+        },
+        "Sven Co-op": {
+            "compiler": "svengine",
+            "type": "Svengine",
+            "capabilities": {
+                "fullbright": true,
+                "flatshade": true,
+                "1024px": true,
+                "unlockedChrome": true,
+                "cliptotextures": false
+            }
+        }
+    }
+    }
+}

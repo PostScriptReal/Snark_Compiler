@@ -326,26 +326,29 @@ class GUI(Tk):
 		self.rowconfigure(2, weight=1)
 
 		# Create Header Buttons
-		self.dupe_button = Button(header, text="Game Setup", command=self.bd_menu, bg=thCol["btn"][0])
+		self.dupe_button = Button(header, text="Games", command=self.bd_menu, bg=thCol["btn"][0])
 		self.dupe_button.grid(column=0, row=0, sticky=(N))
 
+		self.cmpiler_button = Button(header, text="Compilers", command=self.bd_menu, bg=thCol["btn"][0])
+		self.cmpiler_button.grid(column=1, row=0, sticky=(N))
+
 		self.mat_button = Button(header, text="Decompile", command=self.mnc_menu, bg=thCol["btn"][0])
-		self.mat_button.grid(column=1, row=0, sticky=(N))
+		self.mat_button.grid(column=2, row=0, sticky=(N))
 
 		self.comp_button = Button(header, text="Compile", command=self.mnc_menu, bg=thCol["btn"][0])
-		self.comp_button.grid(column=2, row=0, sticky=(N))
+		self.comp_button.grid(column=3, row=0, sticky=(N))
 
 		self.scripts = Button(header, text="Scripts", command=self.scripts, bg=thCol["btn"][0])
-		self.scripts.grid(column=3, row=0, sticky=(N))
+		self.scripts.grid(column=4, row=0, sticky=(N))
 		
 		self.options = Button(header, text="Options", command=self.optionsMenu, bg=thCol["btn"][0])
-		self.options.grid(column=5, row=0, sticky=(N))
+		self.options.grid(column=6, row=0, sticky=(N))
 
 		self.help = Button(header, text="Help", command=self.help, bg=thCol["btn"][0])
-		self.help.grid(column=6, row=0, sticky=(N))
+		self.help.grid(column=7, row=0, sticky=(N))
 		
 		self.aboutB = Button(header, text="About", command=self.about)
-		self.aboutB.grid(column=4, row=0, sticky=(N))
+		self.aboutB.grid(column=5, row=0, sticky=(N))
 
 		self.setupMenu = SetupMenu(menu, thCol)
 		self.decMenu = DecompMenu(menu, thCol, True)
@@ -410,7 +413,7 @@ class GUI(Tk):
 		vnum = open('version.txt', "r")
 		self.ver = vnum.read().replace("(OS)", sys.platform)
 		version = Label(frame, text=self.ver, background=thCol["bg"], fg=thCol["txt"])
-		version.grid(column=1, row=69, sticky=(W, S), columnspan=2)
+		version.grid(column=0, row=69, sticky=(W, S), columnspan=2)
 
 		# Applying theme
 		for w in header.winfo_children():

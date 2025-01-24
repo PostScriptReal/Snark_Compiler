@@ -1,0 +1,61 @@
+{
+    "compilers": {
+        "GoldSRC":{
+            "path": {
+                "default": {
+                    "_comment1": "Any path value that uses a list has multiple directories that Snark searches for,",
+                    "_comment2": "In the case of Windows, the 1st string is for 64-bit installs of Steam, while the 2nd one is for 32-bit installs",
+                    "win32": [
+                        "C:/Program Files (x86)/Steam/steamapps/common/Half-Life SDK/Model Tools/studiomdl.exe", 
+                        "C:/Program Files/Steam/steamapps/common/Half-Life SDK/Model Tools/studiomdl.exe"
+                    ],
+                    "darwin": "~/Library/Application Support/Steam/steamapps/common/Half-Life SDK/Model Tools/studiomdl.exe",
+                    "_comment3": "For Linux, the 1st string is for the native version of Steam, the 2nd one is for Flatpak Steam and the 3rd one is for Snap Steam",
+                    "linux": [
+                        "~/.steam/steam/steamapps/common/Half-Life SDK/Model Tools/studiomdl.exe",
+                        "~/.var/app/com.valvesoftware.Steam/.local/share/Steam/steamapps/common/Half-Life SDK/Model Tools/studiomdl.exe",
+                        "~/snap/steam/common/Steam/steamapps/common/Half-Life SDK/Model Tools/studiomdl.exe"
+                    ]
+                },
+                "custom": ""
+            },
+            "type": "GoldSRC",
+            "capabilities": {
+                "fullbright": false,
+                "flatshade": false,
+                "1024px": false,
+                "unlockedChrome": false,
+                "cliptotextures": true
+            }
+        },
+        "Svengine":{
+            "path": {
+                "default": {
+                    "win32": [
+                        "C:/Program Files (x86)/Steam/steamapps/common/Sven Co-op SDK/modelling/studiomdl.exe", 
+                        "C:/Program Files/Steam/steamapps/common/Sven Co-op SDK/modelling/studiomdl.exe"
+                    ],
+                    "_comment": "Sven Co-op doesn't natively support MacOS, but I'm keeping this anyway on the off-chance someone installed it on Mac somehow",
+                    "darwin": "~/Library/Application Support/Steam/steamapps/common/Sven Co-op SDK/modelling/studiomdl.exe",
+                    "linux": [
+                        "~/.steam/steam/steamapps/common/Sven Co-op SDK/modelling/studiomdl.exe",
+                        "~/.var/app/com.valvesoftware.Steam/.local/share/Steam/steamapps/common/Sven Co-op SDK/modelling/studiomdl.exe",
+                        "~/snap/steam/common/Steam/steamapps/common/Sven Co-op SDK/modelling/studiomdl.exe"
+                    ]
+                },
+                "custom": ""
+            },
+            "type": "Svengine",
+            "capabilities": {
+                "fullbright": true,
+                "flatshade": true,
+                "1024px": true,
+                "unlockedChrome": true,
+                "cliptotextures": false
+            },
+            "compOpts": [
+                {"name": "Keep all bones", "desc": "Tells the compiler to keep unweighted bones", "arg": "-k"}
+            ]
+        }
+    }
+}
