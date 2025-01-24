@@ -322,8 +322,7 @@ class GUI(Tk):
 		mtbtns.grid(column=1, row=9, sticky=(S), columnspan=10)
 		menu = Frame(frame, borderwidth=2, bg=thCol["bg"])
 		menu.grid(column=0, row=2, sticky=(W, S), columnspan=10)
-		dumbFixMenu = Frame(menu, borderwidth=2, bg=thCol["bg"])
-		dumbFixMenu.grid(column=0, row=0, sticky="nsew", columnspan=10)
+		self.dumbFixMenu = Frame(frame, borderwidth=2, bg=thCol["bg"])
 		self.columnconfigure(6, weight=1)
 		self.rowconfigure(2, weight=1)
 
@@ -354,7 +353,7 @@ class GUI(Tk):
 
 		self.setupMenu = SetupMenu(menu, thCol)
 		self.decMenu = DecompMenu(menu, thCol, True)
-		self.cmpMenu = CompMenu(dumbFixMenu, thCol, True)
+		self.cmpMenu = CompMenu(self.dumbFixMenu, thCol, True)
 
 		"""self.tile_label = Label(frame, text="Path to SMDs")
 		self.tile_label.grid(column=2, row=3)
@@ -474,6 +473,7 @@ class GUI(Tk):
 	""" Switches menu to the Game Setup Menu """
 	def bd_menu(self):
 		if self.setupMenu.hidden:
+			self.dumbFixMenu.grid_remove()
 			self.decMenu.hide()
 			self.cmpMenu.hide()
 			self.setupMenu.show()
@@ -482,6 +482,7 @@ class GUI(Tk):
 	""" Switches menu to Decompile Menu """
 	def mnc_menu(self):
 		if self.decMenu.hidden:
+			self.dumbFixMenu.grid_remove()
 			self.setupMenu.hide()
 			self.cmpMenu.hide()
 			self.decMenu.show()
@@ -490,6 +491,7 @@ class GUI(Tk):
 	def cmp_menu(self):
 		if self.cmpMenu.hidden:
 			self.setupMenu.hide()
+			self.dumbFixMenu.grid(column=0, row=2, sticky="nsew", columnspan=10)
 			self.cmpMenu.show()
 			self.decMenu.hide()
 	
