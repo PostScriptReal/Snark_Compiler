@@ -2,7 +2,7 @@
   <img src="logo512.png" width="192" height="192" alt="Snark logo">
   <h1>Snark</h1>
 	<p>Cross-platform alternative for the Crowbar program for GoldSRC modders, by a GoldSRC modder!</p>
-	<b>
+	<br>
 	<h2>External Libraries/Programs Used</h2>
 	<p>Snark uses some open-source libraries for proper usage, these libraries along with their licenses are shown in the table below:</p>
 	<table>
