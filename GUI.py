@@ -149,45 +149,6 @@ class OptWin:
 		opts.close()
 		self.nroot.destroy()
 
-"""class PluginWarning:
-
-	def __init__(self, plugin_to_run):
-		self.nroot = Tk()
-		self.win(plugin_to_run)
-		self.nroot.mainloop()
-
-	def win(self, plugin_to_run):
-		global guii
-		self.nroot.title("PLUGIN WARNING")
-		frame = Frame(self.nroot, borderwidth=2, relief="sunken")
-		frame.grid(column=1, row=1, sticky=(N, E, S, W))
-		self.nroot.columnconfigure(1, weight=1)
-		self.nroot.rowconfigure(1, weight=1)
-		self.filename = plugin_to_run
-
-		b_smd = Label(frame, text="WARNING: You are about to run a plugin, plugins are loaded as normal python modules with no checks for security!\nIf you trust the author of this plugin, click confirm, otherwise click deny if you believe that the plugin could be malicious.\nBY CLICKING CONFIRM YOU COULD RISK RUNNING A MALICIOUS SCRIPT, I SHOULD NOT BE HELD LIABLE FOR ANY DAMAGE A MALICIOUS PLUGIN MAY CAUSE TO YOUR SYSTEM")
-		b_smd.grid(column=1, row=1, sticky=(S), padx=25, pady=25)
-
-		select_scr = Button(frame, text="Confirm", command=self.run_plugin)
-		select_scr.grid(column=1, row=6, sticky=(S), padx=(0, 75))
-
-		select_scr = Button(frame, text="Deny", command=self.deny)
-		select_scr.grid(column=1, row=6, sticky=(S), padx=(75, 0))
-	
-	def run_plugin(self):
-		self.nroot.destroy()
-		# We do this for the plugin file as the importing function uses an absolute path (e.g. "C://something/")
-		script_dir = Path(__file__).parent
-		mymodule_path = str(script_dir.joinpath('plugins', self.filename + '.py'))
-		# Import plugin file as a normal .py script
-		loader = importlib.machinery.SourceFileLoader(self.filename, mymodule_path)
-		plugin = importlib.util.spec_from_loader(self.filename, loader)
-		exec_plugin = importlib.util.module_from_spec(plugin)
-		loader.exec_module(exec_plugin)
-	
-	def deny(self):
-		self.nroot.destroy()"""
-
 class GetNewVersion:
 
 	def __init__(self, version):
@@ -296,7 +257,8 @@ class GUI(Tk):
 			# First value is inactive colour, 2nd hover and 3rd being the active colour
 			"btn": ["#eb6524", "#ed763c", "#ee8d5e"],
 			"ent": "#e3573d",
-			"txt": "white"
+			"txt": "white",
+			"tt": "#dc5200"
 		}
 		
 		# Get Options

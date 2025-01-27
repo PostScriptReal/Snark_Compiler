@@ -1,5 +1,6 @@
 from tkinter import *
 from tkinter import ttk
+from tktooltip import ToolTip
 import os
 from tkinter.filedialog import askopenfilename, askdirectory
 import subprocess
@@ -125,8 +126,11 @@ class DecompMenu():
         self.outputEntry = Entry(master, textvariable=self.out, width=55)
         self.mdlBrowse = Button(master, text='Browse', command=self.findMDL)
         self.outBrowse = Button(master, text='Browse', command=self.output)
+        self.logVal = BooleanVar(master, value=False)
+        self.logChk = Checkbutton(master, text="Write log to file", variable=self.logVal, command=self.setLog)
+        self.logChkTT = ToolTip(self.logChk, "Writes the log in the terminal below as a text file inside the logs folder", background=thme["tt"], foreground=thme["txt"])
         self.decomp = Button(master, text='Decompile', command=self.startDecomp)
-        self.console = Console(master, 'Start a decompile and the terminal output will appear here!', 0, 3, 50, 10)
+        self.console = Console(master, 'Start a decompile and the terminal output will appear here!', 0, 4, 50, 10)
         if not startHidden:
             self.setupLabel.grid(column=0, row=0, sticky=(W))
             self.nameLabel.grid(column=0, row=1, sticky=(W))
@@ -134,7 +138,8 @@ class DecompMenu():
             self.outputEntry.grid(column=1, row=1, padx=(5,0))
             self.mdlBrowse.grid(column=2, row=0, padx=(6,0))
             self.outBrowse.grid(column=2, row=1, padx=(6,0))
-            self.decomp.grid(column=0, row=2, pady=(20,0))
+            self.logChk.grid(column=1, row=2)
+            self.decomp.grid(column=0, row=3, pady=(20,0))
             self.console.show()
         
         # Applying theme
@@ -154,12 +159,21 @@ class DecompMenu():
             elif isinstance(w, Text):
                 w.configure(bg=thme["ent"])
                 w.configure(fg=thme["txt"])
+            elif w.winfo_class() == "Checkbutton":
+                w.configure(bg=thme["bg"])
+                w.configure(highlightbackground=thme["bg"])
+                w.configure(activebackground=thme["bg"])
+                w.configure(fg=thme["txt"])
+                w.configure(selectcolor=thme["ent"])
             else:
                 w.configure(bg=thme["bg"])
                 try:
                     w.configure(fg=thme["txt"])
                 except:
                     pass
+    def setLog(self):
+        self.logOutput = self.logVal.get()
+
     def hide(self):
         self.hidden = True
         for w in self.master.winfo_children():
@@ -173,7 +187,8 @@ class DecompMenu():
         self.outputEntry.grid(column=1, row=1, padx=(5,0))
         self.mdlBrowse.grid(column=2, row=0, padx=(6,0))
         self.outBrowse.grid(column=2, row=1, padx=(6,0))
-        self.decomp.grid(column=0, row=2, pady=(20,0))
+        self.logChk.grid(column=1, row=2, sticky="w")
+        self.decomp.grid(column=0, row=3, pady=(30,0))
         self.console.show()
     
     def findMDL(self):
@@ -230,12 +245,12 @@ class CompMenu():
         self.outputEntry = Entry(master, textvariable=self.out, width=55)
         self.mdlBrowse = Button(master, text='Browse', command=self.findMDL)
         self.outBrowse = Button(master, text='Browse', command=self.output)
-        self.decomp = Button(master, text='Decompile', command=self.startDecomp)
-        self.console = Console(master, 'Start a compiling task and the terminal output will appear here!', 0, 3, 50, 10)
+        self.decomp = Button(master, text='Compile', command=self.startDecomp)
+        self.console = Console(master, 'Currently no warnings or errors!', 0, 3, 50, 10)
         if not startHidden:
             self.setupLabel.grid(column=0, row=0, sticky=(W))
             self.nameLabel.grid(column=0, row=1, sticky=(W))
-            self.nameEntry.grid(column=1, row=0, padx=(5, 0))
+            self.nameEntry.grid(column=1, row=0, padx=(10, 0))
             self.outputEntry.grid(column=1, row=1, padx=(5,0))
             self.mdlBrowse.grid(column=2, row=0, padx=(6,0))
             self.outBrowse.grid(column=2, row=1, padx=(6,0))
@@ -274,13 +289,12 @@ class CompMenu():
         self.hidden = False
         self.setupLabel.grid(column=0, row=0, sticky=(W))
         self.nameLabel.grid(column=0, row=1, sticky=(W))
-        self.nameEntry.grid(column=1, row=0, padx=(5, 0))
-        self.outputEntry.grid(column=1, row=1, padx=(5,0))
+        self.nameEntry.grid(column=1, row=0, padx=(18, 0))
+        self.outputEntry.grid(column=1, row=1, padx=(18,0))
         self.mdlBrowse.grid(column=2, row=0, padx=(6,0))
         self.outBrowse.grid(column=2, row=1, padx=(6,0))
-        self.decomp.grid(column=0, row=2, pady=(20,0))
+        self.decomp.grid(column=0, row=2, pady=(30,0))
         self.console.show()
-        print("SHOWING COMPILER GUI")
     
     def findMDL(self):
         # startdir = self.options["startFolder"]
