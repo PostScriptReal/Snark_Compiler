@@ -12,6 +12,7 @@ import webbrowser as browser
 import sys
 from urllib.request import urlopen
 from helpers import *
+from menus import *
 
 selected_scr = ''
 scr_dat = ''
