@@ -7,8 +7,7 @@
                 "fullbright": false,
                 "flatshade": false,
                 "1024px": false,
-                "unlockedChrome": false,
-                "cliptotextures": true
+                "unlockedChrome": false
         },
         "Sven Co-op": {
             "compiler": "svengine",
@@ -17,8 +16,7 @@
                 "fullbright": true,
                 "flatshade": true,
                 "1024px": true,
-                "unlockedChrome": true,
-                "cliptotextures": false
+                "unlockedChrome": true
             }
         }
     }

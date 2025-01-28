@@ -7,6 +7,7 @@ import subprocess
 import shutil
 import datetime
 from helpers import BoolEntry, Console, BoolSpinbox
+import json
 
 class SetupMenu():
     def __init__(self, master, thme:dict, startHidden:bool=False):
@@ -205,13 +206,10 @@ class CompMenu():
     def __init__(self, master, thme:dict, startHidden:bool=False):
         self.hidden = startHidden
         self.master = master
+        self.svengine = False
+        self.selects = Frame(master, borderwidth=2, bg=thme["bg"])
         self.advOpt = Frame(master, borderwidth=2, bg=thme["bg"], relief="sunken")
         self.thme = thme
-        """gOptions = ["Half-Life", "Sven Co-op"]
-        gText = StringVar()
-        gText.set(gOptions[0])
-        self.gameSel = ttk.Combobox(master, textvariable=gText, values=gOptions)
-        self.gameSel.grid(column=1, row=2)"""
         self.setupLabel = Label(master, text="QC Input: ")
         self.nameLabel = Label(master, text="Output: ")
         self.name = StringVar()
@@ -220,8 +218,36 @@ class CompMenu():
         self.outputEntry = Entry(master, textvariable=self.out, width=55)
         self.mdlBrowse = Button(master, text='Browse', command=self.findMDL)
         self.outBrowse = Button(master, text='Browse', command=self.output)
+        self.compLabel = Label(self.selects, text="Compiler: ")
+        cList = open("save/compilers.txt", "r")
+        cOptions = cList.read().split('\n')
+        cOptions.pop(len(cOptions)-1)
+        cText = StringVar()
+        cText.set(cOptions[0])
+        self.compSel = ttk.Combobox(self.selects, textvariable=cText, values=cOptions, width=8)
+        self.compSel.bind("<<ComboboxSelected>>", self.compilerStuff)
+        self.gameLabel = Label(self.selects, text="Game Profile: ")
+        gList = open("save/games.txt", "r")
+        gOptions = gList.read().split('\n')
+        gOptions.pop(len(gOptions)-1)
+        gText = StringVar()
+        gText.set(gOptions[0])
+        self.gameSel = ttk.Combobox(self.selects, textvariable=gText, values=gOptions, width=10)
+        # self.gameSel.bind("<<ComboboxSelected>>", self.compilerStuff)
+
 
         # Advanced Options
+        # All options for Half-Life's StudioMDL can be found here https://github.com/ValveSoftware/halflife/blob/master/utils/studiomdl/studiomdl.c at line 3362-3408
+        # Note that the Half-Life SDK doesn't document every command available to the compiler
+        # Some information for other GoldSRC compilers can be found here: https://developer.valvesoftware.com/wiki/StudioMDL_(GoldSrc)
+        """ Commands that have yet to be implemented into the GUI:
+                -n - Tags bad normals
+                -f - Flips all triangles
+                -i - Ignore warnings
+                -p - Force power of 2 textures (Unavailable in Sven Co-op StudioMDL)
+                -g - Sets the maximum group size for sequences in KB
+            While -t is implemented, the option to replace one texture with another isn't yet.
+        """
         self.advOptLabel = Label(self.advOpt, text="Advanced Options")
         self.logVal = BooleanVar(self.advOpt, value=False)
         self.logChk = Checkbutton(self.advOpt, text="Write log to file", variable=self.logVal, command=self.setLog)
@@ -229,21 +255,25 @@ class CompMenu():
         self.dashTbool = BooleanVar(self.advOpt, value=False)
         self.dashTChk = Checkbutton(self.advOpt, text="-t", variable=self.dashTbool, command=self.dashThandler)
         self.dashT = BoolEntry(self.advOpt, textvariable=self.dashTvar, placeholder="<texture.bmp>")
-        self.logChkTT = ToolTip(self.logChk, "Writes the log in the terminal below as a text file inside the logs folder.", background=thme["tt"], foreground=thme["txt"])
-        self.dashTChkTT = ToolTip(self.dashTChk, "Globally replaces all textures in the model with the specified bitmap.", background=thme["tt"], foreground=thme["txt"])
         self.rNormalB = BooleanVar(self.advOpt, value=False)
         self.rNormalChk = Checkbutton(self.advOpt, text="-r", variable=self.rNormalB)
-        self.rNormalTT = ToolTip(self.rNormalChk, "Tags flipped normals in the console when enabled, useful for finding issues with backface culling.", background=thme["tt"], foreground=thme["txt"])
         self.angleB = BooleanVar(self.advOpt, value=False)
         self.angleChk = Checkbutton(self.advOpt, text="-a", variable=self.angleB, command=self.angleSBhandler)
         self.angleSB = BoolSpinbox(self.advOpt, range=[0,360], bg=thme["ent"], fg=thme["txt"])
-        self.angleSBtt = ToolTip(self.angleChk, "Overrides the blend angle of vertex normals", background=thme["tt"], foreground=thme["txt"])
         self.hitboxB = BooleanVar(self.advOpt, value=False)
         self.hitboxChk = Checkbutton(self.advOpt, text="-h", variable=self.hitboxB)
-        self.angleChkTT = ToolTip(self.hitboxChk, "Dumps hitbox information to the console when enabled", background=thme["tt"], foreground=thme["txt"])
+        self.keepBonesB = BooleanVar(self.advOpt, value=False)
+        self.keepBonesChk = Checkbutton(self.advOpt, text="-k", variable=self.keepBonesB)
+        # Tooltips
+        self.logChkTT = ToolTip(self.logChk, "Writes the log in the terminal below as a text file inside the logs folder.", background=thme["tt"], foreground=thme["txt"])
+        self.dashTChkTT = ToolTip(self.dashTChk, "Specify a texture to replace while compiling, you can globally replace all textures by specifying one bitmap or replace a single texture by following this format: \'tex1.bmp,tex2.bmp\'.", background=thme["tt"], foreground=thme["txt"])
+        self.rNormalTT = ToolTip(self.rNormalChk, "Tags flipped normals in the console when enabled, useful for finding issues with backface culling.", background=thme["tt"], foreground=thme["txt"])
+        self.angleSBtt = ToolTip(self.angleChk, "Overrides the blend angle of vertex normals, Valve recommends setting this value to 2 according to the HLSDK docs.", background=thme["tt"], foreground=thme["txt"])
+        self.angleChkTT = ToolTip(self.hitboxChk, "Dumps hitbox information to the console when enabled.", background=thme["tt"], foreground=thme["txt"])
+        self.keepBonesChkTT = ToolTip(self.keepBonesChk, "Tells the compiler to keep all bones, including unweighted bones.", background=thme["tt"], foreground=thme["txt"])
         
-        self.decomp = Button(master, text='Compile', command=self.startDecomp)
-        self.console = Console(master, 'Currently no warnings or errors!', 0, 4, 50, 10)
+        self.decomp = Button(master, text='Compile', command=self.startCompile)
+        self.console = Console(master, 'Currently no warnings or errors!', 0, 5, 50, 10)
         if not startHidden:
             self.setupLabel.grid(column=0, row=0, sticky=(W))
             self.nameLabel.grid(column=0, row=1, sticky=(W))
@@ -260,6 +290,7 @@ class CompMenu():
         # Applying theme
         self.applyTheme(master)
         self.applyTheme(self.advOpt)
+        self.applyTheme(self.selects)
     def setLog(self):
         self.logOutput = self.logVal.get()
     
@@ -274,6 +305,17 @@ class CompMenu():
             self.angleSB.unlock()
         else:
             self.angleSB.lock()
+    
+    def compilerStuff(self, compiler):
+        js = open("save/compilers.json", 'r')
+        fullJS = json.loads(js.read())
+        self.compJS = fullJS["compilers"][self.compSel.get()]
+        if self.compJS["type"].lower() == "svengine":
+            self.svengine = True
+            self.keepBonesChk.grid(column=7, row=1)
+        else:
+            self.svengine = False
+            self.keepBonesChk.grid_remove()
 
     def applyTheme(self, master):
         for w in master.winfo_children():
@@ -317,7 +359,12 @@ class CompMenu():
         self.outputEntry.grid(column=1, row=1, padx=(18,0))
         self.mdlBrowse.grid(column=2, row=0, padx=(6,0))
         self.outBrowse.grid(column=2, row=1, padx=(6,0))
-        self.advOpt.grid(column=0, row=2, sticky="nsew", columnspan=10, pady=(20,0))
+        self.selects.grid(column=0, row=2, sticky="nsew", columnspan=10)
+        self.compLabel.grid(column=0, row=0)
+        self.compSel.grid(column=1, row=0, padx=(0,10))
+        self.gameLabel.grid(column=2, row=0)
+        self.gameSel.grid(column=3, row=0)
+        self.advOpt.grid(column=0, row=3, sticky="nsew", columnspan=10, pady=(20,0))
         self.advOptLabel.grid(column=0, row=0, sticky="w")
         self.logChk.grid(column=0, row=1, sticky="w")
         self.dashT.grid(column=2, row=1, sticky="w")
@@ -326,7 +373,9 @@ class CompMenu():
         self.angleChk.grid(column=4, row=1, sticky="w")
         self.angleSB.grid(column=5, row=1, sticky="w")
         self.hitboxChk.grid(column=6, row=1, sticky="w")
-        self.decomp.grid(column=0, row=3, pady=(20,0))
+        if self.svengine:
+            self.keepBonesChk.grid(column=7, row=1, sticky="w")
+        self.decomp.grid(column=0, row=4, pady=(20,0))
         self.console.show()
     
     def findMDL(self):
@@ -339,18 +388,34 @@ class CompMenu():
         startDir = os.path.expanduser("~/Documents")
         self.out.set(askdirectory(title="Select Output Folder", initialdir=startDir))
     
-    def startDecomp(self):
+    def startCompile(self):
         mdl = self.name.get()
         output = self.out.get()
         tOutput = ''
+        compilerPath = ''
+        compilerFound = False
+        try:
+            paths = self.compJS["path"]["default"][sys.platform]
+            for p in paths:
+                if os._exists(p):
+                    compilerPath = p
+                    compilerFound = True
+                    break
+            if not compilerFound:
+                paths = self.compJS["paths"]["custom"]
+                if os._exists(paths):
+                    compilerPath = paths
+                    compilerFound = True
+        except:
+            self.console.setOutput("ERROR: Couldn't find compiler, have you selected one?")
         if sys.platform == 'linux':
             tOutput = subprocess.getoutput(f'./third_party/mdldec \"{mdl}\"')
         elif sys.platform == 'win32':
             tOutput = subprocess.getoutput(f'third_party/mdldec_win32.exe \"{mdl}\"')
         # I don't have a Mac so I can't compile mdldec to Mac targets :(
         # So instead I have to use wine for Mac systems
-        elif sys.platform == 'darwin':
-            tOutput = subprocess.getoutput(f'wine third_party/mdldec_win32.exe \"{mdl}\"')
+        """elif sys.platform == 'darwin':
+            tOutput = subprocess.getoutput(f'wine third_party/mdldec_win32.exe \"{mdl}\"')"""
         print(tOutput)
         self.console.setOutput(tOutput)
         # Moving files to output directory (this is a workaround to a bug with Xash3D's model decompiler)
