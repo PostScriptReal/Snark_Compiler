@@ -20,7 +20,11 @@ scr_dat = ''
 class Flags:
 
 	def __init__(self):
+		# Enables Developer mode, which disables automatic updates and enables extra logging
 		self.devMode = True
+		# Flag specifically for Snark, scripts are currently not implemented yet and is a copy of the scripting system from SMD Tools v1.1
+		# This will allow me to disable the functionality for it until I come up with a proper implementation
+		self.allowScripts = False
 
 class Interp:
 
@@ -70,6 +74,7 @@ class ScriptWin:
 		self.nroot.mainloop()
 
 	def win(self):
+		self.flags = Flags()
 		self.nroot.title("Scripts")
 
 		frame = Frame(self.nroot, borderwidth=2, relief="sunken")
@@ -77,25 +82,34 @@ class ScriptWin:
 		self.nroot.columnconfigure(1, weight=1)
 		self.nroot.rowconfigure(1, weight=1)
 
-		self.scripts = []
-		if getattr(sys, 'frozen', False):
-			EXE_LOCATION = os.path.dirname( sys.executable )
+		if self.flags.allowScripts:
+			self.scripts = []
+			if getattr(sys, 'frozen', False):
+				EXE_LOCATION = os.path.dirname( sys.executable )
+			else:
+				EXE_LOCATION = os.path.dirname( os.path.realpath( __file__ ) )
+			scr_dir = os.path.join(EXE_LOCATION, "scripts")
+			for s in os.listdir(scr_dir):
+				self.scripts.append(s.replace('.txt', ''))
+			print(self.scripts)
+
+			self.scr_list = Listbox(frame)
+			self.scr_list.grid(column=1, row=1, sticky=(N, S, E, W), padx=40, pady=(40, 0), rowspan=5)
+			count = 0
+			for n in self.scripts:
+				count += 1
+				self.scr_list.insert(count, n)
+
+			select_scr = Button(frame, text="Select", command=self.select)
+			select_scr.grid(column=1, row=6, sticky=(S))
 		else:
-			EXE_LOCATION = os.path.dirname( os.path.realpath( __file__ ) )
-		scr_dir = os.path.join(EXE_LOCATION, "scripts")
-		for s in os.listdir(scr_dir):
-			self.scripts.append(s.replace('.txt', ''))
-		print(self.scripts)
+			b_smd = Label(frame, text=f"Proper script functionality will be implemented in a future release,\nfor now though, the script button is here so I don't have to\ncompletely remodel the GUI with its removal.")
+			b_smd.grid(column=1, row=1, sticky=(S), padx=25, pady=25)
 
-		self.scr_list = Listbox(frame)
-		self.scr_list.grid(column=1, row=1, sticky=(N, S, E, W), padx=40, pady=(40, 0), rowspan=5)
-		count = 0
-		for n in self.scripts:
-			count += 1
-			self.scr_list.insert(count, n)
-
-		select_scr = Button(frame, text="Select", command=self.select)
-		select_scr.grid(column=1, row=6, sticky=(S))
+			select_scr = Button(frame, text="I understand", command=self.close)
+			select_scr.grid(column=1, row=6, sticky=(S))
+	def close(self):
+		self.nroot.destroy()
 
 	def select(self):
 		global selected_scr
