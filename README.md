@@ -1,3 +1,22 @@
+<div style="">
+	<p>Table of contents:</p>
+	<dl>
+		<dt><a href="#snark">Introduction</a></dt>
+		<dt><a href="#why-should-i-use-snark-over-crowbar">Why should I use Snark over Crowbar?</a></dt>
+		<dd>
+			<a href="#its-easier-to-configure-and-use" style="">Easier to configure and use</a>
+			<br><a href="#natively-runs-on-windows-and-linux">Natively runs on Windows and Linux</a>
+			<br><a href="#better-detection-for-unsupported-features-with-compilers">Better detection of unsupported features with compilers</a>
+		</dd>
+		<dt><a href="#frequently-asked-questions">Frequently Asked Questions</a></dt>
+		<dd>
+			<a href="#why-is-this-an-alpha-release" style="">Why is this an Alpha release?</a>
+			<br><a href="#will-there-be-support-for-source">Will there be support for Source?</a>
+			<br><a href="#there-is-a-bugfeature-i-would-like-to-get-fixedimplemented-how-can-i-report-it">There is a bug/feature I would like to get fixed/implemented, how can I report it?</a>
+		</dd>
+		<dt><a href="#external-librariesprograms-used">External libraries/programs used</a></dt>
+	</dl>
+</div>
 <div align="center">
   <img src="logo512.png" width="192" height="192" alt="Snark logo">
   <h1>Snark</h1>
@@ -9,7 +28,7 @@
 	<p>On top of that, the compiling GUI includes all the command-line options as toggleable checks with tooltips to tell you what they do, so you don't need to check any sort of documentation, official or unofficial to use the advanced features StudioMDL offers its users.</p>
 	<h3>Natively runs on Windows and Linux!</h3>
 	<p>Snark is written using Python & Tkinter, which means that native support for the major operating systems can be easily offered. You no longer need to run Crowbar under Wine for Linux systems to make models for GoldSRC, instead you can run Snark natively with proper Linux binaries. <b><i>Wine will still be needed to run the compilers that Snark interfaces with, make sure you have the system package installed instead of the Flatpak!</i></b></p>
-	<h3>Better checking for unsupported features with compilers</h3>
+	<h3>Better detection for unsupported features with compilers</h3>
 	<p>There are many different model compilers for GoldSRC, such as the Counter-Strike and Sven Co-op compilers that introduce new features that aren't supported in other games utilising the engine. Snark uses a profile system to track which compiler and game you're using so any discrepancies between what the compiler and game supports doesn't go unnoticed by the program. For example, if you use the Svengine compiler with Half-Life instead of Sven Co-op, the compiler will warn you that Half-Life doesn't support 1024px textures or chrome textures that aren't 64x64 resolution if any of them are included in the model files.</p>
 	<br>
 	<h2>Frequently Asked Questions</h2>
