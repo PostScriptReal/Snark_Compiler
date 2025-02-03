@@ -23,12 +23,12 @@
 	<p>Snark is a cross-platform alternative to the Crowbar program for GoldSRC modders, aiming to provide a similar, yet simpler workflow than what Crowbar provides.</p>
 	<br>
 	<h2>Why should I use Snark over Crowbar?</h2>
-	<h3>It's easier to configure and use!</h3>
+	<h3><i>It's easier to configure and use!</i></h3>
 	<p>In Crowbar, to decompile a model you would have to fiddle around with settings in order to get your model decompiled properly for GoldSRC. With Snark, you don't need to do any extra configuration, just select an MDL file, select the output folder, hit the decompile button and you're set!</p>
 	<p>On top of that, the compiling GUI includes all the command-line options as toggleable checks with tooltips to tell you what they do, so you don't need to check any sort of documentation, official or unofficial to use the advanced features StudioMDL offers its users.</p>
-	<h3>Natively runs on Windows and Linux!</h3>
-	<p>Snark is written using Python & Tkinter, which means that native support for the major operating systems can be easily offered. You no longer need to run Crowbar under Wine for Linux systems to make models for GoldSRC, instead you can run Snark natively with proper Linux binaries. <b><i>Wine will still be needed to run the compilers that Snark interfaces with, make sure you have the system package installed instead of the Flatpak!</i></b></p>
-	<h3>Better detection for unsupported features with compilers</h3>
+	<h3><i>Natively runs on Windows and Linux!</i></h3>
+	<p>Snark is written using Python & Tkinter, which means that native support for the major operating systems can be easily offered. You no longer need to run Crowbar under Wine for Linux systems to make models for GoldSRC, instead you can run Snark natively with proper Linux binaries. <b>Wine will still be needed to run the compilers that Snark interfaces with, make sure you have the system package installed instead of the Flatpak!</b></p>
+	<h3><i>Better detection for unsupported features with compilers</i></h3>
 	<p>There are many different model compilers for GoldSRC, such as the Counter-Strike and Sven Co-op compilers that introduce new features that aren't supported in other games utilising the engine. Snark uses a profile system to track which compiler and game you're using so any discrepancies between what the compiler and game supports doesn't go unnoticed by the program. For example, if you use the Svengine compiler with Half-Life instead of Sven Co-op, the compiler will warn you that Half-Life doesn't support 1024px textures or chrome textures that aren't 64x64 resolution if any of them are included in the model files.</p>
 	<br>
 	<h2>Frequently Asked Questions</h2>
