@@ -8,6 +8,7 @@ import shutil
 import datetime
 from helpers import BoolEntry, Console, BoolSpinbox
 import json
+import sys
 
 class SetupMenu():
     def __init__(self, master, thme:dict, startHidden:bool=False):
@@ -413,7 +414,7 @@ class CompMenu():
         startDir = os.path.expanduser("~/Documents")
         self.out.set(askdirectory(title="Select Output Folder", initialdir=startDir))
     
-    def getCompilerOptions():
+    def getCompilerOptions(self):
         self.boolVars = []
         conVars = []
         # Setting up the variables in lists for easy checking
@@ -487,31 +488,36 @@ class CompMenu():
         try:
             paths = self.compJS["path"]["default"][sys.platform]
             for p in paths:
-                if os._exists(p):
-                    compilerPath = p
+                if os.path.exists(os.path.expanduser(p)):
+                    print(p)
+                    compilerPath = os.path.expanduser(p)
                     compilerFound = True
                     break
             if not compilerFound:
-                paths = self.compJS["paths"]["custom"]
+                paths = self.compJS["path"]["custom"]
                 if os._exists(paths):
                     compilerPath = paths
                     compilerFound = True
         except:
             self.console.setOutput("ERROR: Couldn't find compiler, have you selected one?")
+            return
         cOpts = self.getCompilerOptions()
         if sys.platform == 'linux':
             # I will check if it is a native executable anyway for future proofing
             # Pretty much all StudioMDL compilers are windows executables only
-            if compilerPath.endswith(".exe"):
-                if cOpts == None:
-                    tOutput = subprocess.getoutput(f'wine \"{compilerPath}\" \"{mdl}\"')
-                else:
-                    tOutput = subprocess.getoutput(f'wine \"{compilerPath}\" {cOpts} \"{mdl}\"')
+            compilerPath.endswith(".exe")
+            if cOpts == None:
+                print(compilerPath)
+                tOutput = subprocess.getoutput(f'wine \"{compilerPath}\" \"{mdl}\"')
+                print(f'wine \"{compilerPath}\" \"{mdl}\"')
             else:
+                tOutput = subprocess.getoutput(f'wine \"{compilerPath}\" {cOpts} \"{mdl}\"')
+                print(f'wine \"{compilerPath}\" {cOpts} \"{mdl}\"')
+            """else:
                 if cOpts == None:
                     tOutput = subprocess.getoutput(f'\"{compilerPath}\" \"{mdl}\"')
                 else:
-                    tOutput = subprocess.getoutput(f'\"{compilerPath}\" {cOpts} \"{mdl}\"')
+                    tOutput = subprocess.getoutput(f'\"{compilerPath}\" {cOpts} \"{mdl}\"')"""
         elif sys.platform == 'win32':
             if cOpts == None:
                 tOutput = subprocess.getoutput(f'\"{compilerPath}\" \"{mdl}\"')
