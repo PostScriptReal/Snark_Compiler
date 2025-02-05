@@ -1,12 +1,13 @@
 from tkinter import *
 from tkinter import ttk
+from tkinter import font
 from tktooltip import ToolTip
 import os
 from tkinter.filedialog import askopenfilename, askdirectory
 import subprocess
 import shutil
 import datetime
-from helpers import BoolEntry, Console, BoolSpinbox
+from helpers import BoolEntry, Console, BoolSpinbox, QCHandler
 import json
 import sys
 
@@ -61,6 +62,15 @@ class SetupMenu():
 
 class DecompMenu():
     def __init__(self, master, thme:dict, startHidden:bool=False):
+        self.curFont = font.nametofont('TkDefaultFont').actual()
+        self.widthFix = 51
+        self.conFix = 46
+        self.logOutput = False
+        if self.curFont["family"].lower() == "nimbus sans l":
+            self.widthFix = 55
+            self.conFix = 50
+        else:
+            pass
         self.hidden = startHidden
         self.master = master
         self.advOpt = Frame(master, borderwidth=2, bg=thme["bg"], relief="sunken")
@@ -68,9 +78,9 @@ class DecompMenu():
         self.setupLabel = Label(master, text="MDL Input: ")
         self.nameLabel = Label(master, text="Output: ")
         self.name = StringVar()
-        self.nameEntry = Entry(master, textvariable=self.name, width=55)
+        self.nameEntry = Entry(master, textvariable=self.name, width=self.widthFix)
         self.out = StringVar()
-        self.outputEntry = Entry(master, textvariable=self.out, width=55)
+        self.outputEntry = Entry(master, textvariable=self.out, width=self.widthFix)
         self.mdlBrowse = Button(master, text='Browse', command=self.findMDL)
         self.outBrowse = Button(master, text='Browse', command=self.output)
         self.advOptLabel = Label(self.advOpt, text="Advanced Options")
@@ -78,7 +88,7 @@ class DecompMenu():
         self.logChk = Checkbutton(self.advOpt, text="Write log to file", variable=self.logVal, command=self.setLog)
         self.logChkTT = ToolTip(self.logChk, "Writes the log in the terminal below as a text file inside the logs folder.", background=thme["tt"], foreground=thme["txt"])
         self.decomp = Button(master, text='Decompile', command=self.startDecomp)
-        self.console = Console(master, 'Start a decompile and the terminal output will appear here!', 0, 4, 50, 12)
+        self.console = Console(master, 'Start a decompile and the terminal output will appear here!', 0, 4, self.conFix, 12)
         if not startHidden:
             self.setupLabel.grid(column=0, row=0, sticky=(W))
             self.nameLabel.grid(column=0, row=1, sticky=(W))
@@ -89,8 +99,11 @@ class DecompMenu():
             self.advOpt.grid(column=0, row=2, sticky="nsew", columnspan=10, pady=(20,0))
             self.advOptLabel.grid(column=0, row=0, sticky="w")
             self.logChk.grid(column=0, row=1, sticky="w")
-            self.decomp.grid(column=0, row=3, pady=(20,0))
+            self.decomp.grid(column=0, row=3, pady=(25,0))
             self.console.show()
+        
+        self.mdlTT = ToolTip(self.mdlBrowse, "REQUIRED, specifies the MDL file used to decompile a model, you cannot leave this blank.", background=thme["tt"], foreground=thme["txt"])
+        self.outputTT = ToolTip(self.outBrowse, "REQUIRED, you must specify an output folder to place all files into.", background=thme["tt"], foreground=thme["txt"])
         
         # Applying theme
         self.applyTheme(master)
@@ -144,7 +157,7 @@ class DecompMenu():
         self.advOpt.grid(column=0, row=2, sticky="nsew", columnspan=10, pady=(20,0))
         self.advOptLabel.grid(column=0, row=0, sticky="w")
         self.logChk.grid(column=0, row=1, sticky="w")
-        self.decomp.grid(column=0, row=3, pady=(22,0))
+        self.decomp.grid(column=0, row=3, pady=(27,0))
         self.console.show()
     
     def findMDL(self):
@@ -173,7 +186,7 @@ class DecompMenu():
         self.console.setOutput(tOutput)
         if self.logOutput:
             date = datetime.datetime.now()
-            curDate = f"{date.strftime('%Y')}-{date.strftime('%m')}-{date.strftime('%d')}-{date.strftime('%H')}-{date.strftime('%M')}-{date.strftime('%S')}"
+            curDate = f"{date.strftime('%d')}-{date.strftime('%m')}-{date.strftime('%Y')}-{date.strftime('%H')}-{date.strftime('%M')}-{date.strftime('%S')}"
             log = open(f"logs/decomp-{curDate}.txt", 'w')
             log.write(tOutput)
             log.close()
@@ -200,18 +213,29 @@ class DecompMenu():
 
 class CompMenu():
     def __init__(self, master, thme:dict, startHidden:bool=False):
+        self.curFont = font.nametofont('TkDefaultFont').actual()
+        self.widthFix = 52
+        self.conFix = 47
+        self.advOptFix = True
+        if self.curFont["family"].lower() == "nimbus sans l":
+            self.widthFix = 55
+            self.conFix = 50
+            self.advOptFix = False
+        else:
+            pass
         self.hidden = startHidden
         self.master = master
         self.svengine = False
+        self.logOutput = False
         self.selects = Frame(master, borderwidth=2, bg=thme["bg"])
         self.advOpt = Frame(master, borderwidth=2, bg=thme["bg"], relief="sunken")
         self.thme = thme
         self.setupLabel = Label(master, text="QC Input: ")
         self.nameLabel = Label(master, text="Output: ")
         self.name = StringVar()
-        self.nameEntry = Entry(master, textvariable=self.name, width=55)
+        self.nameEntry = Entry(master, textvariable=self.name, width=self.widthFix)
         self.out = StringVar()
-        self.outputEntry = Entry(master, textvariable=self.out, width=55)
+        self.outputEntry = Entry(master, textvariable=self.out, width=self.widthFix)
         self.mdlBrowse = Button(master, text='Browse', command=self.findMDL)
         self.outBrowse = Button(master, text='Browse', command=self.output)
         self.compLabel = Label(self.selects, text="Compiler: ")
@@ -242,7 +266,6 @@ class CompMenu():
                 -i - Ignore warnings (IMPLEMENTED!)
                 -p - Force power of 2 textures (Unavailable in Sven Co-op StudioMDL)
                 -g - Sets the maximum group size for sequences in KB (IMPLEMENTED)
-            While -t is implemented, the option to replace one texture with another isn't yet.
         """
         self.advOptLabel = Label(self.advOpt, text="Advanced Options")
         self.logVal = BooleanVar(self.advOpt, value=False)
@@ -283,9 +306,11 @@ class CompMenu():
         self.flipChkTT = ToolTip(self.flipChk, "Tells the compiler to flip all triangles in the model.", background=thme["tt"], foreground=thme["txt"])
         self.groupChkTT = ToolTip(self.groupChk, "Sets the maximum group size for sequences in KB", background=thme["tt"], foreground=thme["txt"])
         self.pf2ChkTT = ToolTip(self.pf2Chk, "Forces power of 2 textures when enabled", background=thme["tt"], foreground=thme["txt"])
+        self.mdlTT = ToolTip(self.mdlBrowse, "REQUIRED, specifies the QC file used to compile your model, you cannot leave this blank.", background=thme["tt"], foreground=thme["txt"])
+        self.outputTT = ToolTip(self.outBrowse, "OPTIONAL, if an output folder is not specified, then it will place the compiled model in a models subfolder of where the QC file is located.", background=thme["tt"], foreground=thme["txt"])
         
         self.decomp = Button(master, text='Compile', command=self.startCompile)
-        self.console = Console(master, 'Currently no warnings or errors!', 0, 5, 50, 10)
+        self.console = Console(master, 'Currently no warnings or errors!', 0, 5, self.conFix, 10)
         if not startHidden:
             self.setupLabel.grid(column=0, row=0, sticky=(W))
             self.nameLabel.grid(column=0, row=1, sticky=(W))
@@ -395,10 +420,18 @@ class CompMenu():
         self.hitboxChk.grid(column=6, row=1, sticky="w")
         self.ignoreChk.grid(column=7, row=1, sticky="w")
         self.bNormChk.grid(column=8, row=1, sticky="w")
-        self.flipChk.grid(column=9, row=1, sticky="w")
-        self.groupChk.grid(column=0, row=2, sticky="w")
-        self.groupSB.grid(column=0, row=2, sticky="w",padx=(40,0))
-        self.pf2Chk.grid(column=1, row=2, sticky="w")
+        if not self.advOptFix:
+            self.flipChk.grid(column=9, row=1, sticky="w")
+        else:
+            self.flipChk.grid(column=0, row=2, sticky="w")
+        if not self.advOptFix:
+            self.groupChk.grid(column=0, row=2, sticky="w")
+            self.groupSB.grid(column=0, row=2, sticky="w",padx=(40,0))
+        else:
+            self.groupChk.grid(column=0, row=2, sticky="w",padx=(40,0))
+            self.groupSB.grid(column=0, row=2, sticky="w",padx=(81,0))
+        if not self.svengine:
+            self.pf2Chk.grid(column=1, row=2, sticky="w")
         if self.svengine:
             self.keepBonesChk.grid(column=1, row=2, sticky="w")
         self.decomp.grid(column=0, row=4, pady=(10,0))
@@ -425,6 +458,7 @@ class CompMenu():
         else:
             self.boolVars = [self.dashTbool.get(),self.rNormalB.get(),self.bNormB.get(),
             self.flipB.get(),self.angleB.get(),self.hitboxB.get(),self.ignoreB.get(),self.keepBonesB.get(),self.groupB.get()]
+            print()
             conVars = ["-t", "-r", "-n", "-f", "-a", "-h", "-i", "-k", "-g"]
         optionEn = False
         # Using the index method so that I can check if any of these options are enabled.
@@ -435,49 +469,37 @@ class CompMenu():
         except:
             pass
         oID = -1
-        first = True
-        para = []
+        self.para = []
         if optionEn:
             # Using a while loop as it is faster than a for loop
-            while oID >= len(self.boolVars):
+            while oID < len(self.boolVars)-1:
+                print(oID)
                 oID += 1
                 if self.boolVars[oID]:
                     if conVars[oID] == "-t":
                         uInput = self.dashTvar.get()
                         uInput = uInput.split(',', 1)
                         if len(uInput) == 1:
-                            if first:
-                                first = False
-                                para.append(f"-t {uInput[0]}")
-                            else:
-                                para.append(f" -t {uInput[0]}")
+                            self.para.append(f"-t {uInput[0]}")
                         else:
-                            if first:
-                                first = False
-                                para.append(f"-t {uInput[0]} {uInput[1]}")
-                            else:
-                                para.append(f" -t {uInput[0]} {uInput[1]}")
+                            self.para.append(f"-t {uInput[0]} {uInput[1]}")
                     elif conVars[oID] == "-a" or conVars[oID] == "-g":
                         uInput = None
                         if conVars[oID] == "-a":
                             uInput = str(self.angleSB.get())
                         else:
                             uInput = str(self.groupSB.get())
-                        if first:
-                            first = False
-                            para.append(f"{conVars[oID]} {uInput}")
-                        else:
-                            para.append(f" {conVars[oID]} {uInput}")
+                        self.para.append(f"{conVars[oID]} {uInput}")
                     else:
-                        if first:
-                            first = False
-                            para.append(f"{conVars[oID]}")
-                        else:
-                            para.append(f" {conVars[oID]}")
-            if optionEn:
-                return para
-            else:
-                return None
+                        self.para.append(f"{conVars[oID]}")
+        if optionEn:
+            print("Found parameters!")
+            paraStr = ' '.join(self.para)
+            print(paraStr)
+            return paraStr
+        else:
+            print("No paramaters found!")
+            return None
 
     def startCompile(self):
         mdl = self.name.get()
@@ -501,23 +523,29 @@ class CompMenu():
         except:
             self.console.setOutput("ERROR: Couldn't find compiler, have you selected one?")
             return
+        # Getting advanced options the user has enabled and turning that into a string that can be used with StudioMDL
         cOpts = self.getCompilerOptions()
+        # Checking if the qc file supplied uses relative pathing for $cd and $cdtexture as the compiler cannot find the files otherwise
+        qcRelChk = QCHandler(mdl)
+        qcRelChk.crowbarFormatCheck()
+        if qcRelChk.cbarFrmt:
+            mdl = qcRelChk.newQCPath
+
         if sys.platform == 'linux':
             # I will check if it is a native executable anyway for future proofing
             # Pretty much all StudioMDL compilers are windows executables only
-            compilerPath.endswith(".exe")
-            if cOpts == None:
-                print(compilerPath)
-                tOutput = subprocess.getoutput(f'wine \"{compilerPath}\" \"{mdl}\"')
-                print(f'wine \"{compilerPath}\" \"{mdl}\"')
+            if compilerPath.endswith(".exe"):
+                if cOpts == None:
+                    print(f'wine \"{compilerPath}\" \"{mdl}\"')
+                    tOutput = subprocess.getoutput(f'wine \"{compilerPath}\" \"{mdl}\"')
+                else:
+                    print(f'wine \"{compilerPath}\" {cOpts} \"{mdl}\"')
+                    tOutput = subprocess.getoutput(f'wine \"{compilerPath}\" {cOpts} \"{mdl}\"')
             else:
-                tOutput = subprocess.getoutput(f'wine \"{compilerPath}\" {cOpts} \"{mdl}\"')
-                print(f'wine \"{compilerPath}\" {cOpts} \"{mdl}\"')
-            """else:
                 if cOpts == None:
                     tOutput = subprocess.getoutput(f'\"{compilerPath}\" \"{mdl}\"')
                 else:
-                    tOutput = subprocess.getoutput(f'\"{compilerPath}\" {cOpts} \"{mdl}\"')"""
+                    tOutput = subprocess.getoutput(f'\"{compilerPath}\" {cOpts} \"{mdl}\"')
         elif sys.platform == 'win32':
             if cOpts == None:
                 tOutput = subprocess.getoutput(f'\"{compilerPath}\" \"{mdl}\"')
@@ -529,23 +557,22 @@ class CompMenu():
             tOutput = subprocess.getoutput(f'wine third_party/mdldec_win32.exe \"{mdl}\"')"""
         print(tOutput)
         self.console.setOutput(tOutput)
-        """# Moving files to output directory (this is a workaround to a bug with Xash3D's model decompiler)
-        filesToMove = []
-        mdlFolder = os.path.dirname(mdl)
-        anims = os.path.join(mdlFolder, 'anims/')
-        texFolder = os.path.join(mdlFolder, 'textures/')
-        for f in os.listdir(mdlFolder):
-            print(f)
-            if f.endswith("smd") or f.endswith("qc"):
-                shutil.copy(f"{mdlFolder}/{f}", os.path.join(output, f))
-                os.remove(f"{mdlFolder}/{f}")
-        shutil.copytree(anims, os.path.join(output, 'anims/'))
-        shutil.copytree(texFolder, os.path.join(output, 'textures/'))
-        try:
-            shutil.rmtree(anims)
-        except:
-            pass
-        try:
-            shutil.rmtree(texFolder)
-        except:
-            pass"""
+        # Removing temporary QC file used to compile model when the qc file supplied had used relative pathing
+        if qcRelChk.cbarFrmt:
+            os.remove(mdl)
+        if self.logOutput:
+            date = datetime.datetime.now()
+            curDate = f"{date.strftime('%d')}-{date.strftime('%m')}-{date.strftime('%Y')}-{date.strftime('%H')}-{date.strftime('%M')}-{date.strftime('%S')}"
+            log = open(f"logs/decomp-{curDate}.txt", 'w')
+            log.write(tOutput)
+            log.close()
+        # Moving the compiled MDL file to the output folder
+        mdlFolder = ""
+        if output == "" or output == None:
+            mdlFolder = qcRelChk.qcLoc
+            mdlFolder = os.path.join(mdlFolder, "models/")
+        else:
+            mdlFolder = output
+        mdlF = qcRelChk.getMDLname()
+        shutil.copy(mdlF, os.path.join(mdlFolder, mdlF))
+        os.remove(mdlF)

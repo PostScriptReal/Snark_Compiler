@@ -95,3 +95,80 @@ class BoolSpinbox():
     
     def get(self):
         return self.entry.get()
+
+class QCHandler:
+
+    def __init__(self, qc):
+        f = open(qc, 'r')
+        self.qcf = f.readlines()
+        f.close()
+        self.qcLoc = os.path.dirname(qc)
+        self.cbarFrmt = False
+    
+    def crowbarFormatCheck(self):
+        checks = 0
+        count = -1
+        cd = False
+        cdTex = 0
+        newCD = ""
+        cdRef = 0
+        newCDtex = ""
+        cdTexR = 0
+        self.newQC = self.qcf
+        self.newQCPath = ""
+        while checks < 2:
+            count += 1
+            qcL = self.qcf[count]
+            if qcL.startswith("$cdtex"):
+                if qcL.find('\"./texture/\"') != -1:
+                    cdTex = 1
+                    cdTexR = count
+                    checks += 1
+                elif qcL.find('\".\"') != -1:
+                    cdTex = 2
+                    cdTexR = count
+                    checks += 1
+            elif qcL.startswith("$cd") and qcL.find('\".\"') != -1:
+                cd = True
+                cdRef = count
+                checks += 1
+        if cd or cdTex != 0:
+            self.cbarFrmt = True
+            print(cd)
+            print(cdTex)
+            if cd:
+                newCD = self.qcf[cdRef]
+                newCD = newCD.replace('\".\"', f'\"{self.qcLoc}\"')
+                self.newQC[cdRef] = newCD
+                print(newCD)
+            if cdTex == 1:
+                newCDtex = self.qcf[cdTexR]
+                newCDtex = newCDtex.replace('\"./texture/\"', f'\"{self.qcLoc}/texture/\"')
+                self.newQC[cdTexR] = newCDtex
+            elif cdTex == 2:
+                newCDtex = self.qcf[cdTexR]
+                newCDtex = newCDtex.replace('\".\"', f'\"{self.qcLoc}\"')
+                self.newQC[cdTexR] = newCDtex
+            self.newQCPath = os.path.join(self.qcLoc, "temp.qc")
+            f = open(self.newQCPath, "w")
+            f.write("".join(self.newQC))
+            f.close()
+    def getMDLname(self):
+        checks = 0
+        count = -1
+        capture = False
+        mdlName = ""
+        while checks < 1:
+            count += 1
+            qcL = self.qcf[count]
+            if qcL.startswith("$modelname"):
+                for c in qcL:
+                    if capture:
+                        mdlName += c
+                    if c == '\"' and not capture:
+                        capture = True
+                    elif c == '\"' and capture:
+                        capture = False
+                        break
+                break
+        return mdlName[:-1]

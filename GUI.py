@@ -1,7 +1,7 @@
 import json
 from tkinter import *
 from tkinter.filedialog import askopenfilename, askdirectory
-# from tkinter import font
+from tkinter import font
 import os
 from os.path import *
 import importlib.machinery
@@ -262,20 +262,50 @@ class GUI(Tk):
 		self.title("Snark")
 		if sys.platform == 'linux':
 			self.fixGUI = True
+			self.geometry("609x491")
 		else:
 			self.fixGUI = False
-		# print(font.nametofont('TkDefaultFont').actual())
+			self.geometry("569x411")
+		self.selTheme = "Cross"
 		
+		thCol = {}
 		# Defining colours for the theme
-		thCol = {
-			"bg": "#ff862d",
-			# First value is inactive colour, 2nd hover and 3rd being the active colour
-			"btn": ["#eb6524", "#ed763c", "#ee8d5e"],
-			"ent": "#e3573d",
-			"txt": "white",
-			"tt": "#dc5200"
-		}
-		
+		if self.selTheme == "Freeman":
+			thCol = {
+				"bg": "#ff862d",
+				# First value is inactive colour, 2nd hover and 3rd being the active colour
+				"btn": ["#eb6524", "#ed763c", "#ee8d5e"],
+				"ent": "#e3573d",
+				"txt": "white",
+				"tt": "#dc5200"
+			}
+		elif self.selTheme == "Shephard":
+			thCol = {
+				"bg": "#11da00",
+				# First value is inactive colour, 2nd hover and 3rd being the active colour
+				"btn": ["#27be07", "#2ad008", "#31e50c"],
+				"ent": "#4dc011",
+				"txt": "white",
+				"tt": "#14a000"
+			}
+		elif self.selTheme == "Calhoun":
+			thCol = {
+				"bg": "#4741ff",
+				# First value is inactive colour, 2nd hover and 3rd being the active colour
+				"btn": ["#1f2deb", "#333fec", "#4f5aed"],
+				"ent": "#5074e6",
+				"txt": "white",
+				"tt": "#0006f8"
+			}
+		elif self.selTheme == "Cross":
+			thCol = {
+				"bg": "#ff362d",
+				# First value is inactive colour, 2nd hover and 3rd being the active colour
+				"btn": ["#eb242f", "#ed3c46", "#ee5e66"],
+				"ent": "#e33d63",
+				"txt": "white",
+				"tt": "#dc0002"
+			}
 		# Get Options
 		self.get_options()
 		if self.options["save_paths"]:
@@ -471,6 +501,7 @@ class GUI(Tk):
 			self.dumbFixMenu.grid(column=0, row=2, sticky="nsew", columnspan=10)
 			self.cmpMenu.show()
 			self.decMenu.hide()
+			print(f"width: {self.winfo_width()} height: {self.winfo_height()}")
 	
 	def bmp(self):
 		# Initialising Pointer fix function
