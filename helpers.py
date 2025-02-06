@@ -121,7 +121,7 @@ class QCHandler:
             count += 1
             qcL = self.qcf[count]
             if qcL.startswith("$cdtex"):
-                if qcL.find('\"./texture/\"') != -1:
+                if qcL.find('\"./textures/\"') != -1:
                     cdTex = 1
                     cdTexR = count
                     checks += 1
@@ -144,7 +144,7 @@ class QCHandler:
                 print(newCD)
             if cdTex == 1:
                 newCDtex = self.qcf[cdTexR]
-                newCDtex = newCDtex.replace('\"./texture/\"', f'\"{self.qcLoc}/texture/\"')
+                newCDtex = newCDtex.replace('\"./textures/\"', f'\"{self.qcLoc}/textures/\"')
                 self.newQC[cdTexR] = newCDtex
             elif cdTex == 2:
                 newCDtex = self.qcf[cdTexR]
