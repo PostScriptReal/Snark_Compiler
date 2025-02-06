@@ -6,6 +6,7 @@ from tkinter.filedialog import askopenfilename, askdirectory
 import subprocess
 import shutil
 import datetime
+import webbrowser as browser
 
 class FuncMenu():
 
@@ -172,3 +173,18 @@ class QCHandler:
                         break
                 break
         return mdlName[:-1]
+
+class HyperlinkImg():
+
+    def __init__(self, master, image:PhotoImage, lID:int=0):
+        self.link = Label(master, image=image, cursor="hand2")
+        self.link.bind("<Button-1>", lambda e: self.openLink(lID))
+    
+    def grid(self, column=0, row=0, padx=0, pady=0, sticky=""):
+        self.link.grid(column=column, row=row, padx=padx, pady=pady, sticky=sticky)
+    
+    def openLink(self, id):
+        if id == 0:
+            browser.open_new("https://github.com/PostScriptReal/Snark_Compiler")
+        elif id == 1:
+            browser.open_new("https://gamebanana.com/tools/games/5250")

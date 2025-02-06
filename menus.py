@@ -1,13 +1,14 @@
 from tkinter import *
 from tkinter import ttk
 from tkinter import font
+from tkinter import PhotoImage
 from tktooltip import ToolTip
 import os
 from tkinter.filedialog import askopenfilename, askdirectory
 import subprocess
 import shutil
 import datetime
-from helpers import BoolEntry, Console, BoolSpinbox, QCHandler
+from helpers import BoolEntry, Console, BoolSpinbox, QCHandler, HyperlinkImg
 import json
 import sys
 
@@ -81,13 +82,13 @@ class DecompMenu():
         self.nameEntry = Entry(master, textvariable=self.name, width=self.widthFix)
         self.out = StringVar()
         self.outputEntry = Entry(master, textvariable=self.out, width=self.widthFix)
-        self.mdlBrowse = Button(master, text='Browse', command=self.findMDL)
-        self.outBrowse = Button(master, text='Browse', command=self.output)
+        self.mdlBrowse = Button(master, text='Browse', command=self.findMDL, cursor="hand2")
+        self.outBrowse = Button(master, text='Browse', command=self.output, cursor="hand2")
         self.advOptLabel = Label(self.advOpt, text="Advanced Options")
         self.logVal = BooleanVar(self.advOpt, value=False)
         self.logChk = Checkbutton(self.advOpt, text="Write log to file", variable=self.logVal, command=self.setLog)
         self.logChkTT = ToolTip(self.logChk, "Writes the log in the terminal below as a text file inside the logs folder.", background=thme["tt"], foreground=thme["txt"])
-        self.decomp = Button(master, text='Decompile', command=self.startDecomp)
+        self.decomp = Button(master, text='Decompile', command=self.startDecomp, cursor="hand2")
         self.console = Console(master, 'Start a decompile and the terminal output will appear here!', 0, 4, self.conFix, 12)
         if not startHidden:
             self.setupLabel.grid(column=0, row=0, sticky=(W))
@@ -236,8 +237,8 @@ class CompMenu():
         self.nameEntry = Entry(master, textvariable=self.name, width=self.widthFix)
         self.out = StringVar()
         self.outputEntry = Entry(master, textvariable=self.out, width=self.widthFix)
-        self.mdlBrowse = Button(master, text='Browse', command=self.findMDL)
-        self.outBrowse = Button(master, text='Browse', command=self.output)
+        self.mdlBrowse = Button(master, text='Browse', command=self.findMDL, cursor="hand2")
+        self.outBrowse = Button(master, text='Browse', command=self.output, cursor="hand2")
         self.compLabel = Label(self.selects, text="Compiler: ")
         cList = open("save/compilers.txt", "r")
         cOptions = cList.read().split('\n')
@@ -309,7 +310,7 @@ class CompMenu():
         self.mdlTT = ToolTip(self.mdlBrowse, "REQUIRED, specifies the QC file used to compile your model, you cannot leave this blank.", background=thme["tt"], foreground=thme["txt"])
         self.outputTT = ToolTip(self.outBrowse, "OPTIONAL, if an output folder is not specified, then it will place the compiled model in a models subfolder of where the QC file is located.", background=thme["tt"], foreground=thme["txt"])
         
-        self.decomp = Button(master, text='Compile', command=self.startCompile)
+        self.decomp = Button(master, text='Compile', command=self.startCompile, cursor="hand2")
         self.console = Console(master, 'Currently no warnings or errors!', 0, 5, self.conFix, 10)
         if not startHidden:
             self.setupLabel.grid(column=0, row=0, sticky=(W))
@@ -525,7 +526,7 @@ class CompMenu():
             return
         # Getting advanced options the user has enabled and turning that into a string that can be used with StudioMDL
         cOpts = self.getCompilerOptions()
-        # Checking if the qc file supplied uses relative pathing for $cd and $cdtexture as the compiler cannot find the files otherwise
+        # Checking if the QC file supplied uses relative pathing for $cd and $cdtexture as the compiler cannot find the files otherwise
         qcRelChk = QCHandler(mdl)
         qcRelChk.crowbarFormatCheck()
         if qcRelChk.cbarFrmt:
@@ -557,13 +558,13 @@ class CompMenu():
             tOutput = subprocess.getoutput(f'wine third_party/mdldec_win32.exe \"{mdl}\"')"""
         print(tOutput)
         self.console.setOutput(tOutput)
-        # Removing temporary QC file used to compile model when the qc file supplied had used relative pathing
+        # Removing temporary QC file used to compile model when the QC file supplied had used relative pathing
         if qcRelChk.cbarFrmt:
             os.remove(mdl)
         if self.logOutput:
             date = datetime.datetime.now()
             curDate = f"{date.strftime('%d')}-{date.strftime('%m')}-{date.strftime('%Y')}-{date.strftime('%H')}-{date.strftime('%M')}-{date.strftime('%S')}"
-            log = open(f"logs/decomp-{curDate}.txt", 'w')
+            log = open(f"logs/compile-{curDate}.txt", 'w')
             log.write(tOutput)
             log.close()
         # Moving the compiled MDL file to the output folder
@@ -576,3 +577,75 @@ class CompMenu():
         mdlF = qcRelChk.getMDLname()
         shutil.copy(mdlF, os.path.join(mdlFolder, mdlF))
         os.remove(mdlF)
+
+class AboutMenu():
+    def __init__(self, master, thme:dict, startHidden:bool=False):
+        self.hidden = startHidden
+        self.master = master
+        self.thme = thme
+        # Images
+        self.snarkLogoPNG = PhotoImage(file="logo128.png")
+        self.gitLogoPNG = PhotoImage(file="images/github.png")
+        self.gbLogoPNG = PhotoImage(file="images/gamebanana.png")
+        # Labels displaying the images
+        self.snarkLogo = Label(master, image=self.snarkLogoPNG)
+        self.githubLogo = HyperlinkImg(master, image=self.gitLogoPNG, lID=0)
+        self.gameBLogo = HyperlinkImg(master, image=self.gbLogoPNG, lID=1)
+        # Text
+        vnum = open('version.txt', "r")
+        self.ver = vnum.read().replace("(OS)", sys.platform)
+        self.setupLabel = Label(master, text=f"Snark {self.ver} by:", background=thme["bg"], foreground=thme["txt"])
+        credits = ["PostScript", "\nusing:", "MDLDec by Flying With Gauss", "get_image_size by Paulo Scardine", "TkTooltip by DaedalicEntertainment"]
+        self.nameLabel = Label(master, text="\n".join(credits), background=thme["bg"], fg=thme["txt"])
+        # Tooltips
+        self.githubTT = ToolTip(self.githubLogo.link, "Source Code and Releases on Github", background=thme["tt"], foreground=thme["txt"])
+        self.gameBtt = ToolTip(self.gameBLogo.link, "Official Download page on Gamebanana", background=thme["tt"], foreground=thme["txt"])
+        if not startHidden:
+            self.snarkLogo.grid(column=1,row=0)
+            self.setupLabel.grid(column=1, row=1)
+            self.nameLabel.grid(column=1, row=2)
+        
+        # Applying theme
+        self.applyTheme(master)
+    
+    def applyTheme(self, master):
+        for w in master.winfo_children():
+            if w.winfo_class() == "Button":
+                w.configure(bg=self.thme["btn"][0])
+                w.configure(highlightbackground=self.thme["btn"][1])
+                w.configure(activebackground=self.thme["btn"][2])
+                w.configure(fg=self.thme["txt"])
+            elif w.winfo_class() == "Entry":
+                pass
+                # w.configure(bg=self.thme["ent"])
+            elif isinstance(w, ttk.Combobox):
+                pass
+                w.configure(foreground='black')
+                # w["menu"].config(bg=self.thme["btn"][1])
+            elif isinstance(w, Text):
+                w.configure(bg=self.thme["ent"])
+                w.configure(fg=self.thme["txt"])
+            elif w.winfo_class() == "Checkbutton":
+                w.configure(bg=self.thme["bg"])
+                w.configure(highlightbackground=self.thme["bg"])
+                w.configure(activebackground=self.thme["bg"])
+                w.configure(fg=self.thme["txt"])
+                w.configure(selectcolor=self.thme["ent"])
+            else:
+                w.configure(bg=self.thme["bg"])
+                try:
+                    w.configure(fg=self.thme["txt"])
+                except:
+                    pass
+
+    def hide(self):
+        self.hidden = True
+        for w in self.master.winfo_children():
+            w.grid_remove()
+    def show(self):
+        self.hidden = False
+        self.snarkLogo.grid(column=1, row=0)
+        self.githubLogo.grid(column=1,row=1, padx=(0,50))
+        self.gameBLogo.grid(column=1,row=1, padx=(50,0))
+        self.setupLabel.grid(column=1, row=2)
+        self.nameLabel.grid(column=1, row=3)

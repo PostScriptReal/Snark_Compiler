@@ -191,7 +191,7 @@ class GetNewVersion:
 		self.noButton.grid(column=1, row=1, sticky=(S))
 	
 	def releasesPage(self):
-		browser.open_new_tab("https://github.com/PostScriptReal/Snark_Compiler/releases/latest")
+		browser.open_new("https://github.com/PostScriptReal/Snark_Compiler/releases/latest")
 		self.nroot.destroy()
 	
 	def closeWin(self):
@@ -202,29 +202,6 @@ class GetNewVersion:
 		opts = open('save/options.json', 'w')
 		opts.write(newjson)
 		opts.close()
-		self.nroot.destroy()
-
-class About:
-
-	def __init__(self, ver):
-		self.nroot = Tk()
-		self.win(ver)
-		self.nroot.mainloop()
-
-	def win(self, ver):
-		self.nroot.title("About Snark")
-		frame = Frame(self.nroot, borderwidth=2, relief="sunken")
-		frame.grid(column=1, row=1, sticky=(N, E, S, W))
-		self.nroot.columnconfigure(1, weight=1)
-		self.nroot.rowconfigure(1, weight=1)
-
-		b_smd = Label(frame, text=f"Snark {ver}")
-		b_smd.grid(column=1, row=1, sticky=(S), padx=25, pady=25)
-
-		select_scr = Button(frame, text="Close", command=self.close)
-		select_scr.grid(column=1, row=6, sticky=(S))
-	
-	def close(self):
 		self.nroot.destroy()
 
 class GUI(Tk):
@@ -266,7 +243,7 @@ class GUI(Tk):
 		else:
 			self.fixGUI = False
 			self.geometry("569x411")
-		self.selTheme = "Cross"
+		self.selTheme = "Calhoun"
 		
 		thCol = {}
 		# Defining colours for the theme
@@ -330,37 +307,39 @@ class GUI(Tk):
 		menu = Frame(frame, borderwidth=2, bg=thCol["bg"])
 		menu.grid(column=0, row=2, sticky=(W, S), columnspan=10)
 		self.dumbFixMenu = Frame(frame, borderwidth=2, bg=thCol["bg"])
+		self.dumbFixMenu2 = Frame(frame, borderwidth=2, bg=thCol["bg"])
 		self.columnconfigure(6, weight=1)
 		self.rowconfigure(2, weight=1)
 
 		# Create Header Buttons
-		self.dupe_button = Button(header, text="Games", command=self.bd_menu, bg=thCol["btn"][0])
+		self.dupe_button = Button(header, text="Games", command=self.bd_menu, bg=thCol["btn"][0], cursor="hand2")
 		self.dupe_button.grid(column=0, row=0, sticky=(N))
 
-		self.cmpiler_button = Button(header, text="Compilers", command=self.bd_menu, bg=thCol["btn"][0])
+		self.cmpiler_button = Button(header, text="Compilers", command=self.bd_menu, bg=thCol["btn"][0], cursor="hand2")
 		self.cmpiler_button.grid(column=1, row=0, sticky=(N))
 
-		self.mat_button = Button(header, text="Decompile", command=self.mnc_menu, bg=thCol["btn"][0])
+		self.mat_button = Button(header, text="Decompile", command=self.mnc_menu, bg=thCol["btn"][0], cursor="hand2")
 		self.mat_button.grid(column=2, row=0, sticky=(N))
 
-		self.comp_button = Button(header, text="Compile", command=self.cmp_menu, bg=thCol["btn"][0])
+		self.comp_button = Button(header, text="Compile", command=self.cmp_menu, bg=thCol["btn"][0], cursor="hand2")
 		self.comp_button.grid(column=3, row=0, sticky=(N))
 
-		self.scripts = Button(header, text="Scripts", command=self.scripts, bg=thCol["btn"][0])
+		self.scripts = Button(header, text="Scripts", command=self.scripts, bg=thCol["btn"][0], cursor="hand2")
 		self.scripts.grid(column=4, row=0, sticky=(N))
 		
-		self.options = Button(header, text="Options", command=self.optionsMenu, bg=thCol["btn"][0])
+		self.options = Button(header, text="Options", command=self.optionsMenu, bg=thCol["btn"][0], cursor="hand2")
 		self.options.grid(column=6, row=0, sticky=(N))
 
-		self.help = Button(header, text="Help", command=self.help, bg=thCol["btn"][0])
+		self.help = Button(header, text="Help", command=self.help, bg=thCol["btn"][0], cursor="hand2")
 		self.help.grid(column=7, row=0, sticky=(N))
 		
-		self.aboutB = Button(header, text="About", command=self.about)
+		self.aboutB = Button(header, text="About", command=self.about, cursor="hand2")
 		self.aboutB.grid(column=5, row=0, sticky=(N))
 
 		self.setupMenu = SetupMenu(menu, thCol)
 		self.decMenu = DecompMenu(menu, thCol, True)
 		self.cmpMenu = CompMenu(self.dumbFixMenu, thCol, True)
+		self.abtMenu = AboutMenu(self.dumbFixMenu2, thCol, True)
 
 		"""self.tile_label = Label(frame, text="Path to SMDs")
 		self.tile_label.grid(column=2, row=3)
@@ -421,8 +400,8 @@ class GUI(Tk):
 
 		vnum = open('version.txt', "r")
 		self.ver = vnum.read().replace("(OS)", sys.platform)
-		version = Label(frame, text=self.ver, background=thCol["bg"], fg=thCol["txt"])
-		version.grid(column=0, row=69, sticky=(W, S), columnspan=2)
+		self.version = Label(frame, text=self.ver, background=thCol["bg"], fg=thCol["txt"])
+		self.version.grid(column=0, row=69, sticky=(W, S), columnspan=2)
 
 		# Applying theme
 		for w in header.winfo_children():
@@ -438,10 +417,18 @@ class GUI(Tk):
 			self.check_version()
 
 	def help(self):
-		browser.open_new_tab('https://github.com/PostScriptReal/Snark_Compiler/wiki')
+		browser.open_new('https://github.com/PostScriptReal/Snark_Compiler/wiki')
 	
 	def about(self):
-		a = About(self.ver)
+		if self.abtMenu.hidden:
+			self.setupMenu.hide()
+			self.dumbFixMenu2.grid(column=0, row=2, sticky="nsew", columnspan=10)
+			self.dumbFixMenu.grid_remove()
+			self.version.grid_remove()
+			self.abtMenu.show()
+			self.cmpMenu.hide()
+			self.decMenu.hide()
+			print(f"width: {self.winfo_width()} height: {self.winfo_height()}")
 	
 	def openfile(self):
 		# startdir = self.options["startFolder"]
@@ -481,26 +468,35 @@ class GUI(Tk):
 	def bd_menu(self):
 		if self.setupMenu.hidden:
 			self.dumbFixMenu.grid_remove()
+			self.dumbFixMenu2.grid_remove()
+			self.version.grid(column=0, row=69, sticky=(W, S), columnspan=2)
 			self.decMenu.hide()
 			self.cmpMenu.hide()
 			self.setupMenu.show()
+			self.abtMenu.hide()
 		
 	
 	""" Switches menu to Decompile Menu """
 	def mnc_menu(self):
 		if self.decMenu.hidden:
 			self.dumbFixMenu.grid_remove()
+			self.dumbFixMenu2.grid_remove()
+			self.version.grid(column=0, row=69, sticky=(W, S), columnspan=2)
 			self.setupMenu.hide()
 			self.cmpMenu.hide()
 			self.decMenu.show()
+			self.abtMenu.hide()
 	
 	""" Switches menu to Compile Menu """
 	def cmp_menu(self):
 		if self.cmpMenu.hidden:
 			self.setupMenu.hide()
 			self.dumbFixMenu.grid(column=0, row=2, sticky="nsew", columnspan=10)
+			self.dumbFixMenu2.grid_remove()
+			self.version.grid(column=0, row=69, sticky=(W, S), columnspan=2)
 			self.cmpMenu.show()
 			self.decMenu.hide()
+			self.abtMenu.hide()
 			print(f"width: {self.winfo_width()} height: {self.winfo_height()}")
 	
 	def bmp(self):
