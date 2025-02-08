@@ -64,6 +64,42 @@ class SetupMenu():
                     w.configure(fg=self.thme["txt"])
                 except:
                     pass
+    
+    def changeTheme(self, newTheme):
+        self.thme = newTheme
+        style=ttk.Style()
+        style.theme_use('clam')
+        style.configure("TCombobox", fieldbackground=self.thme["ent"])
+        for w in self.master.winfo_children():
+            if w.winfo_class() == "Button":
+                w.configure(bg=self.thme["btn"][0])
+                w.configure(highlightbackground=self.thme["btn"][1])
+                w.configure(activebackground=self.thme["btn"][2])
+                w.configure(fg=self.thme["txt"])
+            elif w.winfo_class() == "Entry":
+                w.configure(bg=self.thme["ent"])
+                w.configure(fg=self.thme["txt"])
+            elif isinstance(w, ttk.Combobox):
+                pass
+                w.configure(foreground='white')
+                # w["menu"].config(bg=self.thme["btn"][1])
+            elif isinstance(w, Text):
+                w.configure(bg=self.thme["ent"])
+                w.configure(fg=self.thme["txt"])
+            elif w.winfo_class() == "Checkbutton":
+                w.configure(bg=self.thme["bg"])
+                w.configure(highlightbackground=self.thme["bg"])
+                w.configure(activebackground=self.thme["bg"])
+                w.configure(fg=self.thme["txt"])
+                w.configure(selectcolor=self.thme["ent"])
+            else:
+                w.configure(bg=self.thme["bg"])
+                try:
+                    w.configure(fg=self.thme["txt"])
+                except:
+                    pass
+
+
     def hide(self):
         self.hidden = True
         for w in self.master.winfo_children():
@@ -158,6 +194,11 @@ class DecompMenu():
                     w.configure(fg=self.thme["txt"])
                 except:
                     pass
+    
+    def changeTheme(self, newTheme):
+        self.thme = newTheme
+        self.applyTheme(self.master)
+        self.applyTheme(self.advOpt)
     
     def hide(self):
         self.hidden = True
@@ -414,6 +455,13 @@ class CompMenu():
                     w.configure(fg=self.thme["txt"])
                 except:
                     pass
+    
+    def changeTheme(self, newTheme):
+        self.thme = newTheme
+        self.applyTheme(self.master)
+        self.applyTheme(self.advOpt)
+        self.applyTheme(self.selects)
+
     def hide(self):
         self.hidden = True
         for w in self.master.winfo_children():
@@ -664,6 +712,10 @@ class AboutMenu():
                     w.configure(fg=self.thme["txt"])
                 except:
                     pass
+    
+    def changeTheme(self, newTheme):
+        self.thme = newTheme
+        self.applyTheme(self.master)
 
     def hide(self):
         self.hidden = True
@@ -678,13 +730,21 @@ class AboutMenu():
         self.nameLabel.grid(column=1, row=3)
 
 class OptionsMenu():
-    def __init__(self, master, thme:dict, startHidden:bool=False):
+    def __init__(self, master, thme:dict, thmecallback, startHidden:bool=False):
         self.hidden = startHidden
         self.master = master
         self.thme = thme
-        # Text
+        # Grabbing options
+        jsf = open('save/options.json', 'r')
+        js = jsf.read()
+        jsf.close()
+        self.options = json.loads(js)
+        # Options
         self.setupLabel = Label(master, text=f"Theme: ", background=thme["bg"], foreground=thme["txt"])
         self.nameLabel = Label(master, text="Starting directory: ", background=thme["bg"], fg=thme["txt"])
+        themes = ["Freeman", "Shephard", "Calhoun", "Cross"]
+        self.themeCBox = ttk.Combobox(master, cursor="hand2", values=themes)
+        self.themeCBox.bind("<<ComboboxSelected>>", thmecallback)
         # Tooltips
         self.githubTT = ToolTip(self.setupLabel, "Changes the program's theme, current options are: Freeman, Shephard, Calhoun and Cross.", background=thme["tt"], foreground=thme["txt"])
         self.gameBtt = ToolTip(self.nameLabel, "Sets the directory that the built-in file explorer will start in, the default is the documents folder.", background=thme["tt"], foreground=thme["txt"])
@@ -711,7 +771,6 @@ class OptionsMenu():
             elif isinstance(w, ttk.Combobox):
                 pass
                 w.configure(foreground='white')
-                # w["menu"].config(bg=self.thme["btn"][1])
             elif isinstance(w, Text):
                 w.configure(bg=self.thme["ent"])
                 w.configure(fg=self.thme["txt"])
@@ -727,6 +786,10 @@ class OptionsMenu():
                     w.configure(fg=self.thme["txt"])
                 except:
                     pass
+    
+    def changeTheme(self, newTheme):
+        self.thme = newTheme
+        self.applyTheme(self.master)
 
     def hide(self):
         self.hidden = True
@@ -735,4 +798,5 @@ class OptionsMenu():
     def show(self):
         self.hidden = False
         self.setupLabel.grid(column=1, row=1, sticky="w")
+        self.themeCBox.grid(column=2, row=1, sticky="w")
         self.nameLabel.grid(column=1, row=2, sticky="w")

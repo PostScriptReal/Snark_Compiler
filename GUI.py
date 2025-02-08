@@ -289,13 +289,13 @@ class GUI(Tk):
 		buttons = []
 
 		# Create Window
-		frame = Frame(self, borderwidth=2, relief="sunken", bg=thCol["bg"])
-		frame.grid(column=6, row=2, sticky=(N, E, S, W))
-		header = Frame(frame, borderwidth=2, bg=thCol["bg"])
-		header.grid(column=1, row=1, sticky=(N, W, E), columnspan=69)
-		mtbtns = Frame(frame, borderwidth=2, bg=thCol["bg"])
+		self.frame = Frame(self, borderwidth=2, relief="sunken", bg=thCol["bg"])
+		self.frame.grid(column=6, row=2, sticky=(N, E, S, W))
+		self.header = Frame(self.frame, borderwidth=2, bg=thCol["bg"])
+		self.header.grid(column=1, row=1, sticky=(N, W, E), columnspan=69)
+		mtbtns = Frame(self.frame, borderwidth=2, bg=thCol["bg"])
 		mtbtns.grid(column=1, row=9, sticky=(S), columnspan=10)
-		menu = Frame(frame, borderwidth=2, bg=thCol["bg"])
+		menu = Frame(self.frame, borderwidth=2, bg=thCol["bg"])
 		menu.grid(column=0, row=2, sticky=(W, S), columnspan=10)
 		"""
 		For whatever reason, I can't get the menus past the Decompile menu
@@ -303,107 +303,50 @@ class GUI(Tk):
 		them to work properly.
 		Tkinter is really starting to hold me hostage here.
 		"""
-		self.dumbFixMenu = Frame(frame, borderwidth=2, bg=thCol["bg"])
-		self.dumbFixMenu2 = Frame(frame, borderwidth=2, bg=thCol["bg"])
-		self.dumbFixMenu3 = Frame(frame, borderwidth=2, bg=thCol["bg"])
+		self.dumbFixMenu = Frame(self.frame, borderwidth=2, bg=thCol["bg"])
+		self.dumbFixMenu2 = Frame(self.frame, borderwidth=2, bg=thCol["bg"])
+		self.dumbFixMenu3 = Frame(self.frame, borderwidth=2, bg=thCol["bg"])
 		self.columnconfigure(6, weight=1)
 		self.rowconfigure(2, weight=1)
 
 		# Create Header Buttons
-		self.dupe_button = Button(header, text="Games", command=self.bd_menu, bg=thCol["btn"][0], cursor="hand2")
+		self.dupe_button = Button(self.header, text="Games", command=self.bd_menu, bg=thCol["btn"][0], cursor="hand2")
 		self.dupe_button.grid(column=0, row=0, sticky=(N))
 
-		self.cmpiler_button = Button(header, text="Compilers", command=self.bd_menu, bg=thCol["btn"][0], cursor="hand2")
+		self.cmpiler_button = Button(self.header, text="Compilers", command=self.bd_menu, bg=thCol["btn"][0], cursor="hand2")
 		self.cmpiler_button.grid(column=1, row=0, sticky=(N))
 
-		self.mat_button = Button(header, text="Decompile", command=self.mnc_menu, bg=thCol["btn"][0], cursor="hand2")
+		self.mat_button = Button(self.header, text="Decompile", command=self.mnc_menu, bg=thCol["btn"][0], cursor="hand2")
 		self.mat_button.grid(column=2, row=0, sticky=(N))
 
-		self.comp_button = Button(header, text="Compile", command=self.cmp_menu, bg=thCol["btn"][0], cursor="hand2")
+		self.comp_button = Button(self.header, text="Compile", command=self.cmp_menu, bg=thCol["btn"][0], cursor="hand2")
 		self.comp_button.grid(column=3, row=0, sticky=(N))
 
-		self.scripts = Button(header, text="Scripts", command=self.scripts, bg=thCol["btn"][0], cursor="hand2")
+		self.scripts = Button(self.header, text="Scripts", command=self.scripts, bg=thCol["btn"][0], cursor="hand2")
 		self.scripts.grid(column=4, row=0, sticky=(N))
 		
-		self.options = Button(header, text="Options", command=self.optionsMenu, bg=thCol["btn"][0], cursor="hand2")
+		self.options = Button(self.header, text="Options", command=self.optionsMenu, bg=thCol["btn"][0], cursor="hand2")
 		self.options.grid(column=6, row=0, sticky=(N))
 
-		self.help = Button(header, text="Help", command=self.help, bg=thCol["btn"][0], cursor="hand2")
+		self.help = Button(self.header, text="Help", command=self.help, bg=thCol["btn"][0], cursor="hand2")
 		self.help.grid(column=7, row=0, sticky=(N))
 		
-		self.aboutB = Button(header, text="About", command=self.about, cursor="hand2")
+		self.aboutB = Button(self.header, text="About", command=self.about, cursor="hand2")
 		self.aboutB.grid(column=5, row=0, sticky=(N))
 
 		self.setupMenu = SetupMenu(menu, thCol)
 		self.decMenu = DecompMenu(menu, thCol, True)
 		self.cmpMenu = CompMenu(self.dumbFixMenu, thCol, True)
 		self.abtMenu = AboutMenu(self.dumbFixMenu2, thCol, True)
-		self.optMenu = OptionsMenu(self.dumbFixMenu3, thCol, True)
-
-		"""self.tile_label = Label(frame, text="Path to SMDs")
-		self.tile_label.grid(column=2, row=3)
-
-		self.path = StringVar()
-		if self.save_paths and not self.bonez["path"] == "":
-			self.path.set(self.bonez["path"])
-		self.tname_entry = Entry(frame, textvariable=self.path, width=50)
-		self.tname_entry.grid(column=3, row=3, sticky=(E, W))
-
-		self.save_button = Button(frame, text="Open QC", command=self.openfile)
-		self.save_button.grid(column=5, row=3, sticky=(S))
-
-		self.dir_button = Button(frame, text="Open Folder", command=self.opendir)
-		self.dir_button.grid(column=7, row=3, sticky=(S))
-
-		self.base_label = Label(frame, text="Select Base Bone")
-		self.base_label.grid(column=2, row=5, sticky=(S))
-
-		self.b_bone = StringVar()
-		self.bname_entry = Entry(frame, textvariable=self.b_bone, width=50)
-		self.bname_entry.grid(column=3, row=5, sticky=(N))
-
-		self.new_label = Label(frame, text="Select New Bone")
-		self.new_label.grid(column=2, row=6, sticky=(S))
-
-		self.n_bone = StringVar()
-		self.nname_entry = Entry(frame, textvariable=self.n_bone, width=50)
-		self.nname_entry.grid(column=3, row=6, sticky=(N))
-
-		self.parent_label = Label(frame, text="Select Parent Bone")
-		self.parent_label.grid(column=2, row=7, sticky=(S))
-
-		self.p_bone = StringVar()
-		self.pname_entry = Entry(frame, textvariable=self.p_bone, width=50)
-		self.pname_entry.grid(column=3, row=7, sticky=(N, E, W))
-
-		self.action_button = Button(mtbtns, text="Dupe", command=self.dupe)
-		self.action_button.grid(column=1, row=9, sticky=(S))
-
-		self.bmp_button = Button(mtbtns, text="File Ext", command=self.bmp)
-		self.matrn_button = Button(mtbtns, text="Fix Pointer", command=self.matrename)
-
-		self.ref_label = Label(frame, text="Type Finder Value")
-
-		self.ref = StringVar()
-		self.ref_entry = Entry(frame, textvariable=self.ref, width=50)
-
-		self.rename_label = Label(frame, text="String Part To Rename")
-
-		self.rename = StringVar()
-		self.rename_entry = Entry(frame, textvariable=self.rename, width=50)
-
-		self.replace_label = Label(frame, text="String Part To Replace")
-
-		self.replace = StringVar()
-		self.replace_entry = Entry(frame, textvariable=self.replace, width=50)"""
+		self.optMenu = OptionsMenu(self.dumbFixMenu3, thCol, self.changeTheme, True)
 
 		vnum = open('version.txt', "r")
 		self.ver = vnum.read().replace("(OS)", sys.platform)
-		self.version = Label(frame, text=self.ver, background=thCol["bg"], fg=thCol["txt"])
+		self.version = Label(self.frame, text=self.ver, background=thCol["bg"], fg=thCol["txt"])
 		self.version.grid(column=0, row=69, sticky=(W, S), columnspan=2)
 
 		# Applying theme
-		for w in header.winfo_children():
+		for w in self.header.winfo_children():
 			w.configure(bg=thCol["btn"][0])
 			w.configure(highlightbackground=thCol["btn"][1])
 			w.configure(activebackground=thCol["btn"][2])
@@ -418,6 +361,68 @@ class GUI(Tk):
 	def help(self):
 		browser.open_new('https://github.com/PostScriptReal/Snark_Compiler/wiki')
 	
+	def changeTheme(self, a):
+		self.selTheme = self.optMenu.themeCBox.get()
+		
+		thCol = {}
+		# Defining colours for the theme
+		if self.selTheme == "Freeman":
+			thCol = {
+				"bg": "#ff862d",
+				# First value is inactive colour, 2nd hover and 3rd being the active colour
+				"btn": ["#eb6524", "#ed763c", "#ee8d5e"],
+				"ent": "#e3573d",
+				"txt": "white",
+				"tt": "#dc5200"
+			}
+		elif self.selTheme == "Shephard":
+			thCol = {
+				"bg": "#11da00",
+				# First value is inactive colour, 2nd hover and 3rd being the active colour
+				"btn": ["#27be07", "#2ad008", "#31e50c"],
+				"ent": "#4dc011",
+				"txt": "white",
+				"tt": "#14a000"
+			}
+		elif self.selTheme == "Calhoun":
+			thCol = {
+				"bg": "#4741ff",
+				# First value is inactive colour, 2nd hover and 3rd being the active colour
+				"btn": ["#1f2deb", "#333fec", "#4f5aed"],
+				"ent": "#5074e6",
+				"txt": "white",
+				"tt": "#0006f8"
+			}
+		elif self.selTheme == "Cross":
+			thCol = {
+				"bg": "#ff362d",
+				# First value is inactive colour, 2nd hover and 3rd being the active colour
+				"btn": ["#eb242f", "#ed3c46", "#ee5e66"],
+				"ent": "#e33d63",
+				"txt": "white",
+				"tt": "#dc0002"
+			}
+		self.setupMenu.changeTheme(thCol)
+		self.abtMenu.changeTheme(thCol)
+		self.cmpMenu.changeTheme(thCol)
+		self.decMenu.changeTheme(thCol)
+		self.optMenu.changeTheme(thCol)
+		self.setupMenu.master.config(bg=thCol["bg"])
+		self.cmpMenu.master.config(bg=thCol["bg"])
+		self.abtMenu.master.config(bg=thCol["bg"])
+		self.optMenu.master.config(bg=thCol["bg"])
+		self.frame.config(bg=thCol["bg"])
+		self.header.config(bg=thCol["bg"])
+		self.version.config(bg=thCol["bg"])
+		for w in self.header.winfo_children():
+			w.configure(bg=thCol["btn"][0])
+			w.configure(highlightbackground=thCol["btn"][1])
+			w.configure(activebackground=thCol["btn"][2])
+			try:
+				w.configure(fg=thCol["txt"])
+			except:
+				pass
+	
 	def about(self):
 		if self.abtMenu.hidden:
 			self.setupMenu.hide()
@@ -431,7 +436,7 @@ class GUI(Tk):
 			self.optMenu.hide()
 	
 	def optionsMenu(self):
-		if self.abtMenu.hidden:
+		if self.optMenu.hidden:
 			self.setupMenu.hide()
 			self.dumbFixMenu3.grid(column=0, row=2, sticky="nsew", columnspan=10)
 			self.dumbFixMenu.grid_remove()
