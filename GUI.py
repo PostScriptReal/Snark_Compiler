@@ -209,16 +209,7 @@ class GUI(Tk):
 		jsf = open('save/options.json', 'r')
 		js = jsf.read()
 		jsf.close()
-		count = -1
-		newjs = ''
-		for l in js:
-			if l.find('//') != -1:
-				js.pop(count)
-				continue
-			newjs += l
-		if not js[len(js)-1] == '}':
-			newjs += '}'
-		self.options = json.loads(newjs)
+		self.options = json.loads(js)
 	
 	def check_version(self):
 		url = "https://github.com/PostScriptReal/PS-SMD-Tools/raw/refs/heads/main/version.txt"
@@ -243,7 +234,9 @@ class GUI(Tk):
 		else:
 			self.fixGUI = False
 			self.geometry("569x411")
-		self.selTheme = "Calhoun"
+		# Get Options
+		self.get_options()
+		self.selTheme = self.options["theme"]
 		
 		thCol = {}
 		# Defining colours for the theme
@@ -283,8 +276,6 @@ class GUI(Tk):
 				"txt": "white",
 				"tt": "#dc0002"
 			}
-		# Get Options
-		self.get_options()
 		if self.options["save_paths"]:
 			self.save_paths = True
 			js = open("save/paths.json", 'r')
@@ -306,8 +297,15 @@ class GUI(Tk):
 		mtbtns.grid(column=1, row=9, sticky=(S), columnspan=10)
 		menu = Frame(frame, borderwidth=2, bg=thCol["bg"])
 		menu.grid(column=0, row=2, sticky=(W, S), columnspan=10)
+		"""
+		For whatever reason, I can't get the menus past the Decompile menu
+		to show up, so I have to make separate Frame objects in order to get
+		them to work properly.
+		Tkinter is really starting to hold me hostage here.
+		"""
 		self.dumbFixMenu = Frame(frame, borderwidth=2, bg=thCol["bg"])
 		self.dumbFixMenu2 = Frame(frame, borderwidth=2, bg=thCol["bg"])
+		self.dumbFixMenu3 = Frame(frame, borderwidth=2, bg=thCol["bg"])
 		self.columnconfigure(6, weight=1)
 		self.rowconfigure(2, weight=1)
 
@@ -340,6 +338,7 @@ class GUI(Tk):
 		self.decMenu = DecompMenu(menu, thCol, True)
 		self.cmpMenu = CompMenu(self.dumbFixMenu, thCol, True)
 		self.abtMenu = AboutMenu(self.dumbFixMenu2, thCol, True)
+		self.optMenu = OptionsMenu(self.dumbFixMenu3, thCol, True)
 
 		"""self.tile_label = Label(frame, text="Path to SMDs")
 		self.tile_label.grid(column=2, row=3)
@@ -424,15 +423,29 @@ class GUI(Tk):
 			self.setupMenu.hide()
 			self.dumbFixMenu2.grid(column=0, row=2, sticky="nsew", columnspan=10)
 			self.dumbFixMenu.grid_remove()
+			self.dumbFixMenu3.grid_remove()
 			self.version.grid_remove()
 			self.abtMenu.show()
 			self.cmpMenu.hide()
 			self.decMenu.hide()
-			print(f"width: {self.winfo_width()} height: {self.winfo_height()}")
+			self.optMenu.hide()
+	
+	def optionsMenu(self):
+		if self.abtMenu.hidden:
+			self.setupMenu.hide()
+			self.dumbFixMenu3.grid(column=0, row=2, sticky="nsew", columnspan=10)
+			self.dumbFixMenu.grid_remove()
+			self.dumbFixMenu2.grid_remove()
+			self.version.grid(column=0, row=69, sticky=(W, S), columnspan=2)
+			self.abtMenu.show()
+			self.cmpMenu.hide()
+			self.decMenu.hide()
+			self.optMenu.show()
 	
 	def openfile(self):
-		# startdir = self.options["startFolder"]
-		startDir = os.path.expanduser("~/Documents")
+		startDir = self.options["startFolder"]
+		if startDir.startswith("~"):
+			startDir = os.path.expanduser(startDir)
 		fileTypes = [("Quake Compile Files", "*.qc"), ("All Files", "*.*")]
 		self.path.set(askopenfilename(title="Select QC", initialdir=startDir, filetypes=fileTypes))
 		self.qcDATA = QCHandler(self.path.get())
@@ -469,11 +482,13 @@ class GUI(Tk):
 		if self.setupMenu.hidden:
 			self.dumbFixMenu.grid_remove()
 			self.dumbFixMenu2.grid_remove()
+			self.dumbFixMenu3.grid_remove()
 			self.version.grid(column=0, row=69, sticky=(W, S), columnspan=2)
 			self.decMenu.hide()
 			self.cmpMenu.hide()
 			self.setupMenu.show()
 			self.abtMenu.hide()
+			self.optMenu.hide()
 		
 	
 	""" Switches menu to Decompile Menu """
@@ -481,11 +496,13 @@ class GUI(Tk):
 		if self.decMenu.hidden:
 			self.dumbFixMenu.grid_remove()
 			self.dumbFixMenu2.grid_remove()
+			self.dumbFixMenu3.grid_remove()
 			self.version.grid(column=0, row=69, sticky=(W, S), columnspan=2)
 			self.setupMenu.hide()
 			self.cmpMenu.hide()
 			self.decMenu.show()
 			self.abtMenu.hide()
+			self.optMenu.hide()
 	
 	""" Switches menu to Compile Menu """
 	def cmp_menu(self):
@@ -493,11 +510,13 @@ class GUI(Tk):
 			self.setupMenu.hide()
 			self.dumbFixMenu.grid(column=0, row=2, sticky="nsew", columnspan=10)
 			self.dumbFixMenu2.grid_remove()
+			self.dumbFixMenu3.grid_remove()
 			self.version.grid(column=0, row=69, sticky=(W, S), columnspan=2)
 			self.cmpMenu.show()
 			self.decMenu.hide()
 			self.abtMenu.hide()
-			print(f"width: {self.winfo_width()} height: {self.winfo_height()}")
+			self.optMenu.hide()
+			# print(f"width: {self.winfo_width()} height: {self.winfo_height()}")
 	
 	def bmp(self):
 		# Initialising Pointer fix function
@@ -529,10 +548,6 @@ class GUI(Tk):
 	def scripts(self):
 		# Opens Script selection window
 		inst = ScriptWin()
-
-	def optionsMenu(self):
-		# Opens options window
-		inst = OptWin()
 	
 	def exec_script(self, script):
 		# Script parsing and execution function

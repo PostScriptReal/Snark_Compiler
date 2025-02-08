@@ -16,6 +16,7 @@ class SetupMenu():
     def __init__(self, master, thme:dict, startHidden:bool=False):
         self.hidden = startHidden
         self.master = master
+        self.thme = thme
         gOptions = ["Half-Life", "Sven Co-op"]
         gText = StringVar()
         gText.set(gOptions[0])
@@ -32,24 +33,37 @@ class SetupMenu():
             self.nameEntry.grid(column=2, row=4, sticky=(W))
         
         # Applying theme
+        style=ttk.Style()
+        style.theme_use('clam')
+        style.configure("TCombobox", fieldbackground=self.thme["ent"])
         for w in master.winfo_children():
             if w.winfo_class() == "Button":
-                w.configure(bg=thme["btn"][0])
-                w.configure(highlightbackground=thme["btn"][1])
-                w.configure(activebackground=thme["btn"][2])
+                w.configure(bg=self.thme["btn"][0])
+                w.configure(highlightbackground=self.thme["btn"][1])
+                w.configure(activebackground=self.thme["btn"][2])
+                w.configure(fg=self.thme["txt"])
             elif w.winfo_class() == "Entry":
-                pass
-                # w.configure(bg=thme["ent"])
+                w.configure(bg=self.thme["ent"])
+                w.configure(fg=self.thme["txt"])
             elif isinstance(w, ttk.Combobox):
                 pass
-                w.configure(foreground='black')
-                # w["menu"].config(bg=thme["btn"][1])
+                w.configure(foreground='white')
+                # w["menu"].config(bg=self.thme["btn"][1])
+            elif isinstance(w, Text):
+                w.configure(bg=self.thme["ent"])
+                w.configure(fg=self.thme["txt"])
+            elif w.winfo_class() == "Checkbutton":
+                w.configure(bg=self.thme["bg"])
+                w.configure(highlightbackground=self.thme["bg"])
+                w.configure(activebackground=self.thme["bg"])
+                w.configure(fg=self.thme["txt"])
+                w.configure(selectcolor=self.thme["ent"])
             else:
-                w.configure(bg=thme["bg"])
-            try:
-                w.configure(fg=thCol["txt"])
-            except:
-                pass
+                w.configure(bg=self.thme["bg"])
+                try:
+                    w.configure(fg=self.thme["txt"])
+                except:
+                    pass
     def hide(self):
         self.hidden = True
         for w in self.master.winfo_children():
@@ -113,6 +127,9 @@ class DecompMenu():
         self.logOutput = self.logVal.get()
 
     def applyTheme(self, master):
+        style= ttk.Style()
+        style.theme_use('clam')
+        style.configure("TCombobox", fieldbackground=self.thme["ent"])
         for w in master.winfo_children():
             if w.winfo_class() == "Button":
                 w.configure(bg=self.thme["btn"][0])
@@ -120,11 +137,11 @@ class DecompMenu():
                 w.configure(activebackground=self.thme["btn"][2])
                 w.configure(fg=self.thme["txt"])
             elif w.winfo_class() == "Entry":
-                pass
-                # w.configure(bg=self.thme["ent"])
+                w.configure(bg=self.thme["ent"])
+                w.configure(fg=self.thme["txt"])
             elif isinstance(w, ttk.Combobox):
                 pass
-                w.configure(foreground='black')
+                w.configure(foreground='white')
                 # w["menu"].config(bg=self.thme["btn"][1])
             elif isinstance(w, Text):
                 w.configure(bg=self.thme["ent"])
@@ -162,13 +179,15 @@ class DecompMenu():
         self.console.show()
     
     def findMDL(self):
-        # startdir = self.options["startFolder"]
-        startDir = os.path.expanduser("~/Documents")
+        startDir = self.options["startFolder"]
+        if startDir.startswith("~"):
+            startDir = os.path.expanduser(startDir)
         fileTypes = [("GoldSRC Model", "*.mdl"), ("All Files", "*.*")]
         self.name.set(askopenfilename(title="Select MDL", initialdir=startDir, filetypes=fileTypes))
     def output(self):
-        # startdir = self.options["startFolder"]
-        startDir = os.path.expanduser("~/Documents")
+        startDir = self.options["startFolder"]
+        if startDir.startswith("~"):
+            startDir = os.path.expanduser(startDir)
         self.out.set(askdirectory(title="Select Output Folder", initialdir=startDir))
     
     def startDecomp(self):
@@ -364,6 +383,9 @@ class CompMenu():
             self.pf2Chk.grid(column=1, row=2, sticky="w")
 
     def applyTheme(self, master):
+        style= ttk.Style()
+        style.theme_use('clam')
+        style.configure("TCombobox", fieldbackground=self.thme["ent"])
         for w in master.winfo_children():
             if w.winfo_class() == "Button":
                 w.configure(bg=self.thme["btn"][0])
@@ -371,11 +393,11 @@ class CompMenu():
                 w.configure(activebackground=self.thme["btn"][2])
                 w.configure(fg=self.thme["txt"])
             elif w.winfo_class() == "Entry":
-                pass
-                # w.configure(bg=self.thme["ent"])
+                w.configure(bg=self.thme["ent"])
+                w.configure(fg=self.thme["txt"])
             elif isinstance(w, ttk.Combobox):
                 pass
-                w.configure(foreground='black')
+                w.configure(foreground='white')
                 # w["menu"].config(bg=self.thme["btn"][1])
             elif isinstance(w, Text):
                 w.configure(bg=self.thme["ent"])
@@ -439,13 +461,15 @@ class CompMenu():
         self.console.show()
     
     def findMDL(self):
-        # startdir = self.options["startFolder"]
-        startDir = os.path.expanduser("~/Documents")
+        startDir = self.options["startFolder"]
+        if startDir.startswith("~"):
+            startDir = os.path.expanduser(startDir)
         fileTypes = [("Quake Compile Files", "*.qc"), ("All Files", "*.*")]
         self.name.set(askopenfilename(title="Select QC", initialdir=startDir, filetypes=fileTypes))
     def output(self):
-        # startdir = self.options["startFolder"]
-        startDir = os.path.expanduser("~/Documents")
+        startDir = self.options["startFolder"]
+        if startDir.startswith("~"):
+            startDir = os.path.expanduser(startDir)
         self.out.set(askdirectory(title="Select Output Folder", initialdir=startDir))
     
     def getCompilerOptions(self):
@@ -609,6 +633,9 @@ class AboutMenu():
         self.applyTheme(master)
     
     def applyTheme(self, master):
+        style= ttk.Style()
+        style.theme_use('clam')
+        style.configure("TCombobox", fieldbackground=self.thme["ent"])
         for w in master.winfo_children():
             if w.winfo_class() == "Button":
                 w.configure(bg=self.thme["btn"][0])
@@ -616,11 +643,11 @@ class AboutMenu():
                 w.configure(activebackground=self.thme["btn"][2])
                 w.configure(fg=self.thme["txt"])
             elif w.winfo_class() == "Entry":
-                pass
-                # w.configure(bg=self.thme["ent"])
+                w.configure(bg=self.thme["ent"])
+                w.configure(fg=self.thme["txt"])
             elif isinstance(w, ttk.Combobox):
                 pass
-                w.configure(foreground='black')
+                w.configure(foreground='white')
                 # w["menu"].config(bg=self.thme["btn"][1])
             elif isinstance(w, Text):
                 w.configure(bg=self.thme["ent"])
@@ -649,3 +676,63 @@ class AboutMenu():
         self.gameBLogo.grid(column=1,row=1, padx=(50,0))
         self.setupLabel.grid(column=1, row=2)
         self.nameLabel.grid(column=1, row=3)
+
+class OptionsMenu():
+    def __init__(self, master, thme:dict, startHidden:bool=False):
+        self.hidden = startHidden
+        self.master = master
+        self.thme = thme
+        # Text
+        self.setupLabel = Label(master, text=f"Theme: ", background=thme["bg"], foreground=thme["txt"])
+        self.nameLabel = Label(master, text="Starting directory: ", background=thme["bg"], fg=thme["txt"])
+        # Tooltips
+        self.githubTT = ToolTip(self.setupLabel, "Changes the program's theme, current options are: Freeman, Shephard, Calhoun and Cross.", background=thme["tt"], foreground=thme["txt"])
+        self.gameBtt = ToolTip(self.nameLabel, "Sets the directory that the built-in file explorer will start in, the default is the documents folder.", background=thme["tt"], foreground=thme["txt"])
+        if not startHidden:
+            self.setupLabel.grid(column=1, row=1)
+            self.nameLabel.grid(column=1, row=2)
+        
+        # Applying theme
+        self.applyTheme(master)
+    
+    def applyTheme(self, master):
+        style=ttk.Style()
+        style.theme_use('clam')
+        style.configure("TCombobox", fieldbackground=self.thme["ent"])
+        for w in master.winfo_children():
+            if w.winfo_class() == "Button":
+                w.configure(bg=self.thme["btn"][0])
+                w.configure(highlightbackground=self.thme["btn"][1])
+                w.configure(activebackground=self.thme["btn"][2])
+                w.configure(fg=self.thme["txt"])
+            elif w.winfo_class() == "Entry":
+                w.configure(bg=self.thme["ent"])
+                w.configure(fg=self.thme["txt"])
+            elif isinstance(w, ttk.Combobox):
+                pass
+                w.configure(foreground='white')
+                # w["menu"].config(bg=self.thme["btn"][1])
+            elif isinstance(w, Text):
+                w.configure(bg=self.thme["ent"])
+                w.configure(fg=self.thme["txt"])
+            elif w.winfo_class() == "Checkbutton":
+                w.configure(bg=self.thme["bg"])
+                w.configure(highlightbackground=self.thme["bg"])
+                w.configure(activebackground=self.thme["bg"])
+                w.configure(fg=self.thme["txt"])
+                w.configure(selectcolor=self.thme["ent"])
+            else:
+                w.configure(bg=self.thme["bg"])
+                try:
+                    w.configure(fg=self.thme["txt"])
+                except:
+                    pass
+
+    def hide(self):
+        self.hidden = True
+        for w in self.master.winfo_children():
+            w.grid_remove()
+    def show(self):
+        self.hidden = False
+        self.setupLabel.grid(column=1, row=1, sticky="w")
+        self.nameLabel.grid(column=1, row=2, sticky="w")

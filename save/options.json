@@ -1,13 +1,5 @@
 {
-     "backup_smd": true,
-     "bone_offset": [
-          [
-               "bone name",
-               0,
-               0,
-               0
-          ]
-     ],
+     "theme": "Freeman",
      "save_paths": false,
-     "startFolder": ""
+     "startFolder": "~/Documents"
 }
