@@ -211,6 +211,12 @@ class GUI(Tk):
 		jsf.close()
 		self.options = json.loads(js)
 	
+	def save_options(self):
+		newjson = json.dumps(self.options, sort_keys=True, indent=5)
+		opts = open('save/options.json', 'w')
+		opts.write(newjson)
+		opts.close()
+	
 	def check_version(self):
 		url = "https://github.com/PostScriptReal/PS-SMD-Tools/raw/refs/heads/main/version.txt"
 		webVer = urlopen(url).read().decode('utf-8')
@@ -338,7 +344,7 @@ class GUI(Tk):
 		self.decMenu = DecompMenu(menu, thCol, True)
 		self.cmpMenu = CompMenu(self.dumbFixMenu, thCol, True)
 		self.abtMenu = AboutMenu(self.dumbFixMenu2, thCol, True)
-		self.optMenu = OptionsMenu(self.dumbFixMenu3, thCol, self.changeTheme, True)
+		self.optMenu = OptionsMenu(self.dumbFixMenu3, thCol, self.changeTheme, self.updateOpt, True)
 
 		vnum = open('version.txt', "r")
 		self.ver = vnum.read().replace("(OS)", sys.platform)
@@ -363,6 +369,11 @@ class GUI(Tk):
 	
 	def changeTheme(self, a):
 		self.selTheme = self.optMenu.themeCBox.get()
+		# Refreshing options because for some reason not doing this causes errors.
+		# Computers are so dumb man.
+		self.get_options()
+		self.options["theme"] = self.optMenu.themeCBox.get()
+		self.save_options()
 		
 		thCol = {}
 		# Defining colours for the theme
@@ -434,6 +445,13 @@ class GUI(Tk):
 			self.cmpMenu.hide()
 			self.decMenu.hide()
 			self.optMenu.hide()
+	
+	def updateOpt(self, key, val):
+		self.setupMenu.updateOpt(key, val)
+		self.abtMenu.updateOpt(key, val)
+		self.cmpMenu.updateOpt(key, val)
+		self.decMenu.updateOpt(key, val)
+		self.optMenu.updateOpt(key, val)
 	
 	def optionsMenu(self):
 		if self.optMenu.hidden:

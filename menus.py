@@ -17,6 +17,10 @@ class SetupMenu():
         self.hidden = startHidden
         self.master = master
         self.thme = thme
+        # Setting up options
+        js = open("save/options.json", 'r')
+        self.options = json.loads(js.read())
+        js.close()
         gOptions = ["Half-Life", "Sven Co-op"]
         gText = StringVar()
         gText.set(gOptions[0])
@@ -98,7 +102,9 @@ class SetupMenu():
                     w.configure(fg=self.thme["txt"])
                 except:
                     pass
-
+    
+    def updateOpt(self, key, value):
+        self.options[key] = value
 
     def hide(self):
         self.hidden = True
@@ -126,6 +132,10 @@ class DecompMenu():
         self.master = master
         self.advOpt = Frame(master, borderwidth=2, bg=thme["bg"], relief="sunken")
         self.thme = thme
+        # Setting up options
+        js = open("save/options.json", 'r')
+        self.options = json.loads(js.read())
+        js.close()
         self.setupLabel = Label(master, text="MDL Input: ")
         self.nameLabel = Label(master, text="Output: ")
         self.name = StringVar()
@@ -203,6 +213,9 @@ class DecompMenu():
         self.outputTT.changeTheme(newTheme["bg"], newTheme["txt"])
         self.logChkTT.changeTheme(newTheme["bg"], newTheme["txt"])
     
+    def updateOpt(self, key, value):
+        self.options[key] = value
+
     def hide(self):
         self.hidden = True
         for w in self.master.winfo_children():
@@ -291,6 +304,13 @@ class CompMenu():
         self.master = master
         self.svengine = False
         self.logOutput = False
+        # Setting up JSON stuff
+        js = open("save/compilers.json", 'r')
+        self.fullCJS = json.loads(js.read())
+        js.close()
+        js = open("save/options.json", 'r')
+        self.options = json.loads(js.read())
+        js.close()
         self.selects = Frame(master, borderwidth=2, bg=thme["bg"])
         self.advOpt = Frame(master, borderwidth=2, bg=thme["bg"], relief="sunken")
         self.thme = thme
@@ -417,9 +437,7 @@ class CompMenu():
             self.groupSB.lock()
     
     def compilerStuff(self, compiler):
-        js = open("save/compilers.json", 'r')
-        fullJS = json.loads(js.read())
-        self.compJS = fullJS["compilers"][self.compSel.get()]
+        self.compJS = self.fullCJS["compilers"][self.compSel.get()]
         if self.compJS["type"].lower() == "svengine":
             self.svengine = True
             self.keepBonesChk.grid(column=1, row=2, sticky="w")
@@ -483,6 +501,9 @@ class CompMenu():
         self.angleSB.changeTheme(newTheme["ent"], newTheme["btn"][0], newTheme["txt"])
         self.groupSB.changeTheme(newTheme["ent"], newTheme["btn"][0], newTheme["txt"])
 
+    def updateOpt(self, key, value):
+        self.options[key] = value
+    
     def hide(self):
         self.hidden = True
         for w in self.master.winfo_children():
@@ -675,6 +696,10 @@ class AboutMenu():
         self.hidden = startHidden
         self.master = master
         self.thme = thme
+        # Setting up options
+        js = open("save/options.json", 'r')
+        self.options = json.loads(js.read())
+        js.close()
         # Images
         self.snarkLogoPNG = PhotoImage(file="logo128.png")
         self.gitLogoPNG = PhotoImage(file="images/github.png")
@@ -739,6 +764,9 @@ class AboutMenu():
         self.githubTT.changeTheme(newTheme["bg"], newTheme["txt"])
         self.gameBtt.changeTheme(newTheme["bg"], newTheme["txt"])
 
+    def updateOpt(self, key, value):
+        self.options[key] = value
+    
     def hide(self):
         self.hidden = True
         for w in self.master.winfo_children():
@@ -752,10 +780,11 @@ class AboutMenu():
         self.nameLabel.grid(column=1, row=3)
 
 class OptionsMenu():
-    def __init__(self, master, thme:dict, thmecallback, startHidden:bool=False):
+    def __init__(self, master, thme:dict, thmecallback, updFunc, startHidden:bool=False):
         self.hidden = startHidden
         self.master = master
         self.thme = thme
+        self.updFunc = updFunc
         # Grabbing options
         jsf = open('save/options.json', 'r')
         js = jsf.read()
@@ -767,9 +796,14 @@ class OptionsMenu():
         themes = ["Freeman", "Shephard", "Calhoun", "Cross"]
         self.themeCBox = ttk.Combobox(master, cursor="hand2", values=themes)
         self.themeCBox.bind("<<ComboboxSelected>>", thmecallback)
+        self.startFSV = StringVar(master, value=self.options["startFolder"])
+        # I just realised I shortened the name so it looks like it's name is Start Fent.
+        # I promise you there is no illicit drugs to be found anywhere in the program lol.
+        self.startFent = Entry(master, textvariable=self.startFSV)
+        self.setSF = Button(master, text="Set Start Folder", cursor="hand2", command=self.chSF)
         # Tooltips
-        self.themeTT = ToolTip(self.setupLabel, "Changes the program's theme, current options are: Freeman, Shephard, Calhoun and Cross.", background=thme["tt"], foreground=thme["txt"])
-        self.startFolderTT = ToolTip(self.nameLabel, "Sets the directory that the built-in file explorer will start in, the default is the documents folder.", background=thme["tt"], foreground=thme["txt"])
+        self.themeTT = ToolTip(self.themeCBox, "Changes the program's theme, current options are: Freeman, Shephard, Calhoun and Cross.", background=thme["tt"], foreground=thme["txt"])
+        self.startFolderTT = ToolTip(self.startFent, "Sets the directory that the built-in file explorer will start in, the default is the documents folder.", background=thme["tt"], foreground=thme["txt"])
         if not startHidden:
             self.setupLabel.grid(column=1, row=1)
             self.nameLabel.grid(column=1, row=2)
@@ -814,6 +848,32 @@ class OptionsMenu():
         self.applyTheme(self.master)
         self.themeTT.changeTheme(newTheme["bg"], newTheme["txt"])
         self.startFolderTT.changeTheme(newTheme["bg"], newTheme["txt"])
+    
+    def chSF(self):
+        path = askdirectory(title="Set starting directory for this file explorer")
+        if not path == "":
+            if path.startswith("/home") and sys.platform == "linux":
+                path = path[1:]
+                pos = path.find("/", 5)
+                tarLen = len(path) - pos
+                while len(path) > tarLen:
+                    path = path[1:]
+                path = "~" + path
+            print(path)
+            self.startFSV.set(path)
+            self.options["startFolder"] = path
+            self.save_options()
+            self.updFunc("startFolder", path)
+
+    
+    def save_options(self):
+        newjson = json.dumps(self.options, sort_keys=True, indent=5)
+        opts = open('save/options.json', 'w')
+        opts.write(newjson)
+        opts.close()
+    
+    def updateOpt(self, key, value):
+        self.options[key] = value
 
     def hide(self):
         self.hidden = True
@@ -824,3 +884,5 @@ class OptionsMenu():
         self.setupLabel.grid(column=1, row=1, sticky="w")
         self.themeCBox.grid(column=2, row=1, sticky="w")
         self.nameLabel.grid(column=1, row=2, sticky="w")
+        self.startFent.grid(column=2, row=2, sticky="w")
+        self.setSF.grid(column=3, row=2, sticky="w")

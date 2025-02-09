@@ -1,5 +1,5 @@
 {
-     "theme": "Freeman",
      "save_paths": false,
-     "startFolder": "~/Documents"
+     "startFolder": "~/Documents",
+     "theme": "Freeman"
 }
