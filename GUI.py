@@ -243,6 +243,13 @@ class GUI(Tk):
 		# Get Options
 		self.get_options()
 		self.selTheme = self.options["theme"]
+
+		# Loading in window icon
+		try:
+			ico = PhotoImage(file=f"icon-{sys.platform}.png")
+		except:
+			ico = PhotoImage(file="icon-win32.png")
+		self.iconphoto(True, ico)
 		
 		thCol = {}
 		# Defining colours for the theme
