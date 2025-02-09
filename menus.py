@@ -199,6 +199,9 @@ class DecompMenu():
         self.thme = newTheme
         self.applyTheme(self.master)
         self.applyTheme(self.advOpt)
+        self.mdlTT.changeTheme(newTheme["bg"], newTheme["txt"])
+        self.outputTT.changeTheme(newTheme["bg"], newTheme["txt"])
+        self.logChkTT.changeTheme(newTheme["bg"], newTheme["txt"])
     
     def hide(self):
         self.hidden = True
@@ -339,7 +342,7 @@ class CompMenu():
         self.rNormalChk = Checkbutton(self.advOpt, text="-r", variable=self.rNormalB)
         self.angleB = BooleanVar(self.advOpt, value=False)
         self.angleChk = Checkbutton(self.advOpt, text="-a", variable=self.angleB, command=self.angleSBhandler)
-        self.angleSB = BoolSpinbox(self.advOpt, range=[0,360], bg=thme["ent"], fg=thme["txt"])
+        self.angleSB = BoolSpinbox(self.advOpt, range=[0,360], bg=thme["ent"], bBG=thme["btn"][0], fg=thme["txt"])
         self.hitboxB = BooleanVar(self.advOpt, value=False)
         self.hitboxChk = Checkbutton(self.advOpt, text="-h", variable=self.hitboxB)
         self.keepBonesB = BooleanVar(self.advOpt, value=False)
@@ -352,7 +355,8 @@ class CompMenu():
         self.flipChk = Checkbutton(self.advOpt, text="-f", variable=self.flipB)
         self.groupB = BooleanVar(self.advOpt, value=False)
         self.groupChk = Checkbutton(self.advOpt, text="-g", variable=self.groupB, command=self.groupSBhandler)
-        self.groupSB = BoolSpinbox(self.advOpt, range=[0,4096], bg=thme["ent"], fg=thme["txt"], increment=16)
+        self.groupSB = BoolSpinbox(self.advOpt, range=[0,4096], bg=thme["ent"], bBG=thme["btn"][0], fg=thme["txt"], increment=16)
+        self.groupSB.entry.config(width=4)
         self.pf2B = BooleanVar(self.advOpt, value=False)
         self.pf2Chk = Checkbutton(self.advOpt, text="-p", variable=self.pf2B)
         # Tooltips
@@ -389,6 +393,8 @@ class CompMenu():
         self.applyTheme(master)
         self.applyTheme(self.advOpt)
         self.applyTheme(self.selects)
+        self.angleSB.changeTheme(thme["ent"], thme["btn"][0], thme["txt"])
+        self.groupSB.changeTheme(thme["ent"], thme["btn"][0], thme["txt"])
     def setLog(self):
         self.logOutput = self.logVal.get()
     
@@ -405,7 +411,7 @@ class CompMenu():
             self.angleSB.lock()
     
     def groupSBhandler(self):
-        if self.angleB.get():
+        if self.groupB.get():
             self.groupSB.unlock()
         else:
             self.groupSB.lock()
@@ -461,6 +467,21 @@ class CompMenu():
         self.applyTheme(self.master)
         self.applyTheme(self.advOpt)
         self.applyTheme(self.selects)
+        self.logChkTT.changeTheme(newTheme["bg"], newTheme["txt"])
+        self.dashTChkTT.changeTheme(newTheme["bg"], newTheme["txt"])
+        self.rNormalTT.changeTheme(newTheme["bg"], newTheme["txt"])
+        self.angleSBtt.changeTheme(newTheme["bg"], newTheme["txt"])
+        self.angleChkTT.changeTheme(newTheme["bg"], newTheme["txt"])
+        self.keepBonesChkTT.changeTheme(newTheme["bg"], newTheme["txt"])
+        self.ignoreChkTT.changeTheme(newTheme["bg"], newTheme["txt"])
+        self.bNormChkTT.changeTheme(newTheme["bg"], newTheme["txt"])
+        self.flipChkTT.changeTheme(newTheme["bg"], newTheme["txt"])
+        self.groupChkTT.changeTheme(newTheme["bg"], newTheme["txt"])
+        self.pf2ChkTT.changeTheme(newTheme["bg"], newTheme["txt"])
+        self.mdlTT.changeTheme(newTheme["bg"], newTheme["txt"])
+        self.outputTT.changeTheme(newTheme["bg"], newTheme["txt"])
+        self.angleSB.changeTheme(newTheme["ent"], newTheme["btn"][0], newTheme["txt"])
+        self.groupSB.changeTheme(newTheme["ent"], newTheme["btn"][0], newTheme["txt"])
 
     def hide(self):
         self.hidden = True
@@ -526,13 +547,12 @@ class CompMenu():
         # Setting up the variables in lists for easy checking
         if self.svengine:
             self.boolVars = [self.dashTbool.get(),self.rNormalB.get(),self.bNormB.get(),
-            self.flipB.get(),self.angleB.get(),self.hitboxB.get(),self.ignoreB.get(),self.pf2B.get(),self.groupB.get()]
-            conVars = ["-t", "-r", "-n", "-f", "-a", "-h", "-i", "-p", "-g"]
+            self.flipB.get(),self.angleB.get(),self.hitboxB.get(),self.ignoreB.get(),self.keepBonesB.get(),self.groupB.get()]
+            conVars = ["-t", "-r", "-n", "-f", "-a", "-h", "-i", "-k", "-g"]
         else:
             self.boolVars = [self.dashTbool.get(),self.rNormalB.get(),self.bNormB.get(),
-            self.flipB.get(),self.angleB.get(),self.hitboxB.get(),self.ignoreB.get(),self.keepBonesB.get(),self.groupB.get()]
-            print()
-            conVars = ["-t", "-r", "-n", "-f", "-a", "-h", "-i", "-k", "-g"]
+            self.flipB.get(),self.angleB.get(),self.hitboxB.get(),self.ignoreB.get(),self.pf2B.get(),self.groupB.get()]
+            conVars = ["-t", "-r", "-n", "-f", "-a", "-h", "-i", "-p", "-g"]
         optionEn = False
         # Using the index method so that I can check if any of these options are enabled.
         # If it gives an error, that means that none of the options are enabled.
@@ -546,8 +566,8 @@ class CompMenu():
         if optionEn:
             # Using a while loop as it is faster than a for loop
             while oID < len(self.boolVars)-1:
-                print(oID)
                 oID += 1
+                print(oID)
                 if self.boolVars[oID]:
                     if conVars[oID] == "-t":
                         uInput = self.dashTvar.get()
@@ -716,6 +736,8 @@ class AboutMenu():
     def changeTheme(self, newTheme):
         self.thme = newTheme
         self.applyTheme(self.master)
+        self.githubTT.changeTheme(newTheme["bg"], newTheme["txt"])
+        self.gameBtt.changeTheme(newTheme["bg"], newTheme["txt"])
 
     def hide(self):
         self.hidden = True
@@ -746,8 +768,8 @@ class OptionsMenu():
         self.themeCBox = ttk.Combobox(master, cursor="hand2", values=themes)
         self.themeCBox.bind("<<ComboboxSelected>>", thmecallback)
         # Tooltips
-        self.githubTT = ToolTip(self.setupLabel, "Changes the program's theme, current options are: Freeman, Shephard, Calhoun and Cross.", background=thme["tt"], foreground=thme["txt"])
-        self.gameBtt = ToolTip(self.nameLabel, "Sets the directory that the built-in file explorer will start in, the default is the documents folder.", background=thme["tt"], foreground=thme["txt"])
+        self.themeTT = ToolTip(self.setupLabel, "Changes the program's theme, current options are: Freeman, Shephard, Calhoun and Cross.", background=thme["tt"], foreground=thme["txt"])
+        self.startFolderTT = ToolTip(self.nameLabel, "Sets the directory that the built-in file explorer will start in, the default is the documents folder.", background=thme["tt"], foreground=thme["txt"])
         if not startHidden:
             self.setupLabel.grid(column=1, row=1)
             self.nameLabel.grid(column=1, row=2)
@@ -790,6 +812,8 @@ class OptionsMenu():
     def changeTheme(self, newTheme):
         self.thme = newTheme
         self.applyTheme(self.master)
+        self.themeTT.changeTheme(newTheme["bg"], newTheme["txt"])
+        self.startFolderTT.changeTheme(newTheme["bg"], newTheme["txt"])
 
     def hide(self):
         self.hidden = True

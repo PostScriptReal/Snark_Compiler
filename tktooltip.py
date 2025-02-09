@@ -42,6 +42,10 @@ class ToolTip(object):
         label = tk.Label(self.window, text=self.text, justify='left', padx=4, pady=2, wraplength=250,
             background=self.bg, foreground=self.fg, relief='flat', borderwidth=0)
         label.pack(ipadx=1)
+    
+    def changeTheme(self, background, foreground):
+        self.bg = background
+        self.fg = foreground
 
     def close(self, event=None):
         if self.window:

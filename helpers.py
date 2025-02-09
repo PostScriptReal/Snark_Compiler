@@ -82,8 +82,8 @@ class BoolEntry():
 
 class BoolSpinbox():
 
-    def __init__(self, master, range=[0,1], increment=1, bg="white", fg="black"):
-        self.entry = Spinbox(master, state="disabled", from_=range[0], to=range[1], bg=bg, buttonbackground=bg, fg=fg, increment=increment, width=3)
+    def __init__(self, master, range=[0,1], increment=1, bg="white", bBG="bisque", fg="black"):
+        self.entry = Spinbox(master, state="disabled", from_=range[0], to=range[1], bg=bg, buttonbackground=bBG, fg=fg, increment=increment, width=3)
     
     def grid(self, column=0, row=0, padx=0, pady=0, sticky="nsew"):
         self.entry.grid(column=column, row=row, padx=padx, pady=pady, sticky=sticky)
@@ -96,6 +96,10 @@ class BoolSpinbox():
     
     def get(self):
         return self.entry.get()
+    def changeTheme(self, newBG, newBbg, newFG):
+        self.entry.config(bg=newBG)
+        self.entry.config(buttonbackground=newBbg)
+        self.entry.config(fg=newFG)
 
 class QCHandler:
 
