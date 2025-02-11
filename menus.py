@@ -796,6 +796,16 @@ class OptionsMenu():
         self.setupLabel = Label(master, text=f"Theme: ", background=thme["bg"], foreground=thme["txt"])
         self.nameLabel = Label(master, text="Starting directory: ", background=thme["bg"], fg=thme["txt"])
         themes = ["Freeman", "Shephard", "Calhoun", "Cross"]
+        usrThemes = self.checkNewThemes()
+        if not usrThemes == False:
+            count = -1
+            while count < len(usrThemes)-1:
+                count += 1
+                t = usrThemes[count]
+                if t.endswith('json'):
+                    themes.append(t.replace(".json", ""))
+                elif t.endswith('jsonc'):
+                    themes.append(t.replace(".jsonc", ""))
         self.themeCBox = ttk.Combobox(master, cursor="hand2", values=themes)
         self.themeCBox.bind("<<ComboboxSelected>>", thmecallback)
         self.startFSV = StringVar(master, value=self.options["startFolder"])
@@ -813,6 +823,13 @@ class OptionsMenu():
         
         # Applying theme
         self.applyTheme(master)
+    
+    def checkNewThemes(self):
+        tList = os.listdir("themes/")
+        tList.remove("template.jsonc")
+        if len(tList) >= 1:
+            return tList
+        return False
     
     def applyTheme(self, master):
         style=ttk.Style()

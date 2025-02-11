@@ -1,0 +1,19 @@
+{
+    // This is a .jsonc file, it's json but with the added ability to comment on stuff, JS-style.
+    // Check the comments so you can see what each value corresponds to in regards to theming!
+    // And btw, this template is a direct copy of the 'Freeman' theme.
+    // This value is for the background of the application.
+    "bg": "#ff862d",
+    /*  
+        For the buttons, the first value is used when the button isn't being interacted with,
+        the 2nd one is used when you hover over the button,
+        and the 3rd one is used for when you click the button.
+    */
+    "btn": ["#eb6524", "#ed763c", "#ee8d5e"],
+    // This value is for anything that has a text input, this includes the file entries, console and dropdown menus.
+    "ent": "#e3573d",
+    // Very self explanatory, you should keep the colour white unless you want to end up having trouble reading text.
+    "txt": "white",
+    // This is a unique background colour meant for the tooltips you get when you hover over something important.
+    "tt": "#dc5200"
+}

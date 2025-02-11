@@ -13,6 +13,7 @@ import sys
 from urllib.request import urlopen
 from helpers import *
 from menus import *
+import jsonc
 
 selected_scr = ''
 scr_dat = ''
@@ -291,6 +292,24 @@ class GUI(Tk):
 				"txt": "white",
 				"tt": "#dc0002"
 			}
+		else:
+			if os.path.exists(f'themes/{self.selTheme}.jsonc'):
+				fp = open(f'themes/{self.selTheme}.jsonc', 'r')
+				thCol = jsonc.load(fp)
+			elif os.path.exists(f'themes/{self.selTheme}.json'):
+				fp = open(f'themes/{self.selTheme}.json', 'r')
+				thCol = json.loads(fp.read())
+			else:
+				print('Cannot find the theme, is it a .json or .jsonc file?')
+				print('Defaulting to the Freeman theme.')
+				thCol = {
+					"bg": "#ff862d",
+					# First value is inactive colour, 2nd hover and 3rd being the active colour
+					"btn": ["#eb6524", "#ed763c", "#ee8d5e"],
+					"ent": "#e3573d",
+					"txt": "white",
+					"tt": "#dc5200"
+				}
 		if self.options["save_paths"]:
 			self.save_paths = True
 			js = open("save/paths.json", 'r')
@@ -417,6 +436,24 @@ class GUI(Tk):
 				"txt": "white",
 				"tt": "#dc0002"
 			}
+		else:
+			if os.path.exists(f'themes/{self.selTheme}.jsonc'):
+				f = open(f'themes/{self.selTheme}.jsonc', 'r')
+				thCol = jsonc.load(f)
+			elif os.path.exists(f'themes/{self.selTheme}.json'):
+				f = open(f'themes/{self.selTheme}.json', 'r')
+				thCol = json.loads(f.read())
+			else:
+				print('Cannot find the theme, is it a .json or .jsonc file?')
+				print('Defaulting to the Freeman theme.')
+				thCol = {
+					"bg": "#ff862d",
+					# First value is inactive colour, 2nd hover and 3rd being the active colour
+					"btn": ["#eb6524", "#ed763c", "#ee8d5e"],
+					"ent": "#e3573d",
+					"txt": "white",
+					"tt": "#dc5200"
+				}
 		self.setupMenu.changeTheme(thCol)
 		self.abtMenu.changeTheme(thCol)
 		self.cmpMenu.changeTheme(thCol)
