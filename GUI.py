@@ -218,7 +218,7 @@ class GUI(Tk):
 		opts.close()
 	
 	def check_version(self):
-		url = "https://github.com/PostScriptReal/PS-SMD-Tools/raw/refs/heads/main/version.txt"
+		url = "https://github.com/PostScriptReal/Snark_Compiler/raw/refs/heads/main/version.txt"
 		webVer = urlopen(url).read().decode('utf-8')
 		print(webVer)
 
@@ -355,11 +355,6 @@ class GUI(Tk):
 		self.abtMenu = AboutMenu(self.dumbFixMenu2, thCol, True)
 		self.optMenu = OptionsMenu(self.dumbFixMenu3, thCol, self.changeTheme, self.updateOpt, True)
 
-		vnum = open('version.txt', "r")
-		self.ver = vnum.read().replace("(OS)", sys.platform)
-		self.version = Label(self.frame, text=self.ver, background=thCol["bg"], fg=thCol["txt"])
-		self.version.grid(column=0, row=69, sticky=(W, S), columnspan=2)
-
 		# Applying theme
 		for w in self.header.winfo_children():
 			w.configure(bg=thCol["btn"][0])
@@ -433,7 +428,6 @@ class GUI(Tk):
 		self.optMenu.master.config(bg=thCol["bg"])
 		self.frame.config(bg=thCol["bg"])
 		self.header.config(bg=thCol["bg"])
-		self.version.config(bg=thCol["bg"])
 		for w in self.header.winfo_children():
 			w.configure(bg=thCol["btn"][0])
 			w.configure(highlightbackground=thCol["btn"][1])
@@ -449,7 +443,6 @@ class GUI(Tk):
 			self.dumbFixMenu2.grid(column=0, row=2, sticky="nsew", columnspan=10)
 			self.dumbFixMenu.grid_remove()
 			self.dumbFixMenu3.grid_remove()
-			self.version.grid_remove()
 			self.abtMenu.show()
 			self.cmpMenu.hide()
 			self.decMenu.hide()
@@ -468,7 +461,6 @@ class GUI(Tk):
 			self.dumbFixMenu3.grid(column=0, row=2, sticky="nsew", columnspan=10)
 			self.dumbFixMenu.grid_remove()
 			self.dumbFixMenu2.grid_remove()
-			self.version.grid(column=0, row=69, sticky=(W, S), columnspan=2)
 			self.abtMenu.show()
 			self.cmpMenu.hide()
 			self.decMenu.hide()
@@ -515,7 +507,6 @@ class GUI(Tk):
 			self.dumbFixMenu.grid_remove()
 			self.dumbFixMenu2.grid_remove()
 			self.dumbFixMenu3.grid_remove()
-			self.version.grid(column=0, row=69, sticky=(W, S), columnspan=2)
 			self.decMenu.hide()
 			self.cmpMenu.hide()
 			self.setupMenu.show()
@@ -529,7 +520,6 @@ class GUI(Tk):
 			self.dumbFixMenu.grid_remove()
 			self.dumbFixMenu2.grid_remove()
 			self.dumbFixMenu3.grid_remove()
-			self.version.grid(column=0, row=69, sticky=(W, S), columnspan=2)
 			self.setupMenu.hide()
 			self.cmpMenu.hide()
 			self.decMenu.show()
@@ -543,7 +533,6 @@ class GUI(Tk):
 			self.dumbFixMenu.grid(column=0, row=2, sticky="nsew", columnspan=10)
 			self.dumbFixMenu2.grid_remove()
 			self.dumbFixMenu3.grid_remove()
-			self.version.grid(column=0, row=69, sticky=(W, S), columnspan=2)
 			self.cmpMenu.show()
 			self.decMenu.hide()
 			self.abtMenu.hide()

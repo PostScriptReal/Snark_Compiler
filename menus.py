@@ -149,7 +149,7 @@ class DecompMenu():
         self.logChk = Checkbutton(self.advOpt, text="Write log to file", variable=self.logVal, command=self.setLog)
         self.logChkTT = ToolTip(self.logChk, "Writes the log in the terminal below as a text file inside the logs folder.", background=thme["tt"], foreground=thme["txt"])
         self.decomp = Button(master, text='Decompile', command=self.startDecomp, cursor="hand2")
-        self.console = Console(master, 'Start a decompile and the terminal output will appear here!', 0, 4, self.conFix, 12)
+        self.console = Console(master, 'Start a decompile and the terminal output will appear here!', 0, 4, self.conFix, 14)
         if not startHidden:
             self.setupLabel.grid(column=0, row=0, sticky=(W))
             self.nameLabel.grid(column=0, row=1, sticky=(W))
@@ -395,7 +395,7 @@ class CompMenu():
         self.outputTT = ToolTip(self.outBrowse, "OPTIONAL, if an output folder is not specified, then it will place the compiled model in a models subfolder of where the QC file is located.", background=thme["tt"], foreground=thme["txt"])
         
         self.decomp = Button(master, text='Compile', command=self.startCompile, cursor="hand2")
-        self.console = Console(master, 'Currently no warnings or errors!', 0, 5, self.conFix, 10)
+        self.console = Console(master, 'Currently no warnings or errors!', 0, 5, self.conFix, 12)
         if not startHidden:
             self.setupLabel.grid(column=0, row=0, sticky=(W))
             self.nameLabel.grid(column=0, row=1, sticky=(W))
@@ -804,6 +804,7 @@ class OptionsMenu():
         # Tooltips
         self.themeTT = ToolTip(self.themeCBox, "Changes the program's theme, current options are: Freeman, Shephard, Calhoun and Cross.", background=thme["tt"], foreground=thme["txt"])
         self.startFolderTT = ToolTip(self.startFent, "Sets the directory that the built-in file explorer will start in, the default is the documents folder.", background=thme["tt"], foreground=thme["txt"])
+        self.startFolderTT = ToolTip(self.setSF, "Sets the directory that the built-in file explorer will start in, the default is the documents folder.", background=thme["tt"], foreground=thme["txt"])
         if not startHidden:
             self.setupLabel.grid(column=1, row=1)
             self.nameLabel.grid(column=1, row=2)
