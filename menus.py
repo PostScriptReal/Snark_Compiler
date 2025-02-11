@@ -209,9 +209,9 @@ class DecompMenu():
         self.thme = newTheme
         self.applyTheme(self.master)
         self.applyTheme(self.advOpt)
-        self.mdlTT.changeTheme(newTheme["bg"], newTheme["txt"])
-        self.outputTT.changeTheme(newTheme["bg"], newTheme["txt"])
-        self.logChkTT.changeTheme(newTheme["bg"], newTheme["txt"])
+        self.mdlTT.changeTheme(newTheme["tt"], newTheme["txt"])
+        self.outputTT.changeTheme(newTheme["tt"], newTheme["txt"])
+        self.logChkTT.changeTheme(newTheme["tt"], newTheme["txt"])
     
     def updateOpt(self, key, value):
         self.options[key] = value
@@ -227,8 +227,8 @@ class DecompMenu():
         self.nameLabel.grid(column=0, row=1, sticky=(W))
         self.nameEntry.grid(column=1, row=0, padx=(5,0))
         self.outputEntry.grid(column=1, row=1, padx=(5,0))
-        self.mdlBrowse.grid(column=2, row=0, padx=(6,0))
-        self.outBrowse.grid(column=2, row=1, padx=(6,0))
+        self.mdlBrowse.grid(column=2, row=0, padx=(12,0))
+        self.outBrowse.grid(column=2, row=1, padx=(12,0))
         self.advOpt.grid(column=0, row=2, sticky="nsew", columnspan=10, pady=(20,0))
         self.advOptLabel.grid(column=0, row=0, sticky="w")
         self.logChk.grid(column=0, row=1, sticky="w")
@@ -329,6 +329,7 @@ class CompMenu():
         cText = StringVar()
         cText.set(cOptions[0])
         self.compSel = ttk.Combobox(self.selects, textvariable=cText, values=cOptions, width=8)
+        self.compSel.set(cOptions[0])
         self.compSel.bind("<<ComboboxSelected>>", self.compilerStuff)
         self.gameLabel = Label(self.selects, text="Game Profile: ")
         gList = open("save/games.txt", "r")
@@ -337,6 +338,7 @@ class CompMenu():
         gText = StringVar()
         gText.set(gOptions[0])
         self.gameSel = ttk.Combobox(self.selects, textvariable=gText, values=gOptions, width=10)
+        self.gameSel.set(gOptions[0])
         # self.gameSel.bind("<<ComboboxSelected>>", self.compilerStuff)
 
 
@@ -383,7 +385,7 @@ class CompMenu():
         self.logChkTT = ToolTip(self.logChk, "Writes the log in the terminal below as a text file inside the logs folder.", background=thme["tt"], foreground=thme["txt"])
         self.dashTChkTT = ToolTip(self.dashTChk, "Specify a texture to replace while compiling, you can globally replace all textures by specifying one bitmap or replace a single texture by following this format: \'tex1.bmp,tex2.bmp\'.", background=thme["tt"], foreground=thme["txt"])
         self.rNormalTT = ToolTip(self.rNormalChk, "Tags flipped normals in the console when enabled, useful for finding issues with backface culling.", background=thme["tt"], foreground=thme["txt"])
-        self.angleSBtt = ToolTip(self.angleChk, "Overrides the blend angle of vertex normals, Valve recommends setting this value to 2 according to the HLSDK docs.", background=thme["tt"], foreground=thme["txt"])
+        self.angleSBtt = ToolTip(self.angleChk, "Overrides the blend angle of vertex normals, Valve recommends keeping this value at 2 (the default) according to the HLSDK docs.", background=thme["tt"], foreground=thme["txt"])
         self.angleChkTT = ToolTip(self.hitboxChk, "Dumps hitbox information to the console when enabled.", background=thme["tt"], foreground=thme["txt"])
         self.keepBonesChkTT = ToolTip(self.keepBonesChk, "Tells the compiler to keep all bones, including unweighted bones.", background=thme["tt"], foreground=thme["txt"])
         self.ignoreChkTT = ToolTip(self.ignoreChk, "Tells the compiler to ignore all warnings, useful for if you want to quickly test a model that isn't complete yet.", background=thme["tt"], foreground=thme["txt"])
@@ -485,19 +487,19 @@ class CompMenu():
         self.applyTheme(self.master)
         self.applyTheme(self.advOpt)
         self.applyTheme(self.selects)
-        self.logChkTT.changeTheme(newTheme["bg"], newTheme["txt"])
-        self.dashTChkTT.changeTheme(newTheme["bg"], newTheme["txt"])
-        self.rNormalTT.changeTheme(newTheme["bg"], newTheme["txt"])
-        self.angleSBtt.changeTheme(newTheme["bg"], newTheme["txt"])
-        self.angleChkTT.changeTheme(newTheme["bg"], newTheme["txt"])
-        self.keepBonesChkTT.changeTheme(newTheme["bg"], newTheme["txt"])
-        self.ignoreChkTT.changeTheme(newTheme["bg"], newTheme["txt"])
-        self.bNormChkTT.changeTheme(newTheme["bg"], newTheme["txt"])
-        self.flipChkTT.changeTheme(newTheme["bg"], newTheme["txt"])
-        self.groupChkTT.changeTheme(newTheme["bg"], newTheme["txt"])
-        self.pf2ChkTT.changeTheme(newTheme["bg"], newTheme["txt"])
-        self.mdlTT.changeTheme(newTheme["bg"], newTheme["txt"])
-        self.outputTT.changeTheme(newTheme["bg"], newTheme["txt"])
+        self.logChkTT.changeTheme(newTheme["tt"], newTheme["txt"])
+        self.dashTChkTT.changeTheme(newTheme["tt"], newTheme["txt"])
+        self.rNormalTT.changeTheme(newTheme["tt"], newTheme["txt"])
+        self.angleSBtt.changeTheme(newTheme["tt"], newTheme["txt"])
+        self.angleChkTT.changeTheme(newTheme["tt"], newTheme["txt"])
+        self.keepBonesChkTT.changeTheme(newTheme["tt"], newTheme["txt"])
+        self.ignoreChkTT.changeTheme(newTheme["tt"], newTheme["txt"])
+        self.bNormChkTT.changeTheme(newTheme["tt"], newTheme["txt"])
+        self.flipChkTT.changeTheme(newTheme["tt"], newTheme["txt"])
+        self.groupChkTT.changeTheme(newTheme["tt"], newTheme["txt"])
+        self.pf2ChkTT.changeTheme(newTheme["tt"], newTheme["txt"])
+        self.mdlTT.changeTheme(newTheme["tt"], newTheme["txt"])
+        self.outputTT.changeTheme(newTheme["tt"], newTheme["txt"])
         self.angleSB.changeTheme(newTheme["ent"], newTheme["btn"][0], newTheme["txt"])
         self.groupSB.changeTheme(newTheme["ent"], newTheme["btn"][0], newTheme["txt"])
 
@@ -515,8 +517,8 @@ class CompMenu():
         self.nameLabel.grid(column=0, row=1, sticky=(W))
         self.nameEntry.grid(column=1, row=0, padx=(18, 0))
         self.outputEntry.grid(column=1, row=1, padx=(18,0))
-        self.mdlBrowse.grid(column=2, row=0, padx=(6,0))
-        self.outBrowse.grid(column=2, row=1, padx=(6,0))
+        self.mdlBrowse.grid(column=2, row=0, padx=(7,0))
+        self.outBrowse.grid(column=2, row=1, padx=(7,0))
         self.selects.grid(column=0, row=2, sticky="nsew", columnspan=10)
         self.compLabel.grid(column=0, row=0)
         self.compSel.grid(column=1, row=0, padx=(0,10))
@@ -804,7 +806,7 @@ class OptionsMenu():
         # Tooltips
         self.themeTT = ToolTip(self.themeCBox, "Changes the program's theme, current options are: Freeman, Shephard, Calhoun and Cross.", background=thme["tt"], foreground=thme["txt"])
         self.startFolderTT = ToolTip(self.startFent, "Sets the directory that the built-in file explorer will start in, the default is the documents folder.", background=thme["tt"], foreground=thme["txt"])
-        self.startFolderTT = ToolTip(self.setSF, "Sets the directory that the built-in file explorer will start in, the default is the documents folder.", background=thme["tt"], foreground=thme["txt"])
+        self.startFolderTT2 = ToolTip(self.setSF, "Sets the directory that the built-in file explorer will start in, the default is the documents folder.", background=thme["tt"], foreground=thme["txt"])
         if not startHidden:
             self.setupLabel.grid(column=1, row=1)
             self.nameLabel.grid(column=1, row=2)
@@ -847,8 +849,9 @@ class OptionsMenu():
     def changeTheme(self, newTheme):
         self.thme = newTheme
         self.applyTheme(self.master)
-        self.themeTT.changeTheme(newTheme["bg"], newTheme["txt"])
-        self.startFolderTT.changeTheme(newTheme["bg"], newTheme["txt"])
+        self.themeTT.changeTheme(newTheme["tt"], newTheme["txt"])
+        self.startFolderTT.changeTheme(newTheme["tt"], newTheme["txt"])
+        self.startFolderTT2.changeTheme(newTheme["tt"], newTheme["txt"])
     
     def chSF(self):
         path = askdirectory(title="Set starting directory for this file explorer")
