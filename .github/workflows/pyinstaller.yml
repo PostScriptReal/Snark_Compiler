@@ -19,6 +19,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install pyinstaller
+          pip install jsoncparser
       - name: Run PyInstaller
         run: |
           pyinstaller --noconfirm --onedir --console --icon "icon-win32.ico" --name "Snark" --add-data "version.txt:." --add-data "activities.txt:." --add-data "logo128.png:." --add-data "icon-win32.ico:." --add-data "icon-linux.png:." --add-data "LICENSE:." --add-data "README.md:." --add-data "save:save/" --add-data "third_party:third_party/" --add-data "images:images/" --add-data "logs:logs/"  "GUI.py"
