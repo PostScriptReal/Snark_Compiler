@@ -340,6 +340,7 @@ class GUI(Tk):
 		self.dumbFixMenu = Frame(self.frame, borderwidth=2, bg=thCol["bg"])
 		self.dumbFixMenu2 = Frame(self.frame, borderwidth=2, bg=thCol["bg"])
 		self.dumbFixMenu3 = Frame(self.frame, borderwidth=2, bg=thCol["bg"])
+		self.dumbFixMenu4 = Frame(self.frame, borderwidth=2, bg=thCol["bg"])
 		self.columnconfigure(6, weight=1)
 		self.rowconfigure(2, weight=1)
 
@@ -347,7 +348,7 @@ class GUI(Tk):
 		self.dupe_button = Button(self.header, text="Games", command=self.bd_menu, bg=thCol["btn"][0], cursor="hand2")
 		self.dupe_button.grid(column=0, row=0, sticky=(N))
 
-		self.cmpiler_button = Button(self.header, text="Compilers", command=self.bd_menu, bg=thCol["btn"][0], cursor="hand2")
+		self.cmpiler_button = Button(self.header, text="Compilers", command=self.cmpSetupMenu, bg=thCol["btn"][0], cursor="hand2")
 		self.cmpiler_button.grid(column=1, row=0, sticky=(N))
 
 		self.mat_button = Button(self.header, text="Decompile", command=self.mnc_menu, bg=thCol["btn"][0], cursor="hand2")
@@ -369,6 +370,7 @@ class GUI(Tk):
 		self.aboutB.grid(column=5, row=0, sticky=(N))
 
 		self.setupMenu = SetupMenu(menu, thCol)
+		self.compSetMenu = CompSetupMenu(self.dumbFixMenu4, thCol, True)
 		self.decMenu = DecompMenu(menu, thCol, True)
 		self.cmpMenu = CompMenu(self.dumbFixMenu, thCol, True)
 		self.abtMenu = AboutMenu(self.dumbFixMenu2, thCol, True)
@@ -477,9 +479,11 @@ class GUI(Tk):
 	def about(self):
 		if self.abtMenu.hidden:
 			self.setupMenu.hide()
+			self.compSetMenu.hide()
 			self.dumbFixMenu2.grid(column=0, row=2, sticky="nsew", columnspan=10)
 			self.dumbFixMenu.grid_remove()
 			self.dumbFixMenu3.grid_remove()
+			self.dumbFixMenu4.grid_remove()
 			self.abtMenu.show()
 			self.cmpMenu.hide()
 			self.decMenu.hide()
@@ -487,6 +491,7 @@ class GUI(Tk):
 	
 	def updateOpt(self, key, val):
 		self.setupMenu.updateOpt(key, val)
+		self.compSetMenu.updateOpt(key, val)
 		self.abtMenu.updateOpt(key, val)
 		self.cmpMenu.updateOpt(key, val)
 		self.decMenu.updateOpt(key, val)
@@ -495,10 +500,12 @@ class GUI(Tk):
 	def optionsMenu(self):
 		if self.optMenu.hidden:
 			self.setupMenu.hide()
+			self.compSetMenu.hide()
 			self.dumbFixMenu3.grid(column=0, row=2, sticky="nsew", columnspan=10)
+			self.dumbFixMenu4.grid_remove()
 			self.dumbFixMenu.grid_remove()
 			self.dumbFixMenu2.grid_remove()
-			self.abtMenu.show()
+			self.abtMenu.hide()
 			self.cmpMenu.hide()
 			self.decMenu.hide()
 			self.optMenu.show()
@@ -544,9 +551,24 @@ class GUI(Tk):
 			self.dumbFixMenu.grid_remove()
 			self.dumbFixMenu2.grid_remove()
 			self.dumbFixMenu3.grid_remove()
+			self.dumbFixMenu4.grid_remove()
 			self.decMenu.hide()
 			self.cmpMenu.hide()
 			self.setupMenu.show()
+			self.compSetMenu.hide()
+			self.abtMenu.hide()
+			self.optMenu.hide()
+	
+	def cmpSetupMenu(self):
+		if self.compSetMenu.hidden:
+			self.dumbFixMenu.grid_remove()
+			self.dumbFixMenu2.grid_remove()
+			self.dumbFixMenu3.grid_remove()
+			self.dumbFixMenu4.grid(column=0, row=2, sticky="nsew", columnspan=10)
+			self.decMenu.hide()
+			self.cmpMenu.hide()
+			self.compSetMenu.show()
+			self.setupMenu.hide()
 			self.abtMenu.hide()
 			self.optMenu.hide()
 		
@@ -557,19 +579,23 @@ class GUI(Tk):
 			self.dumbFixMenu.grid_remove()
 			self.dumbFixMenu2.grid_remove()
 			self.dumbFixMenu3.grid_remove()
+			self.dumbFixMenu4.grid_remove()
 			self.setupMenu.hide()
 			self.cmpMenu.hide()
 			self.decMenu.show()
 			self.abtMenu.hide()
 			self.optMenu.hide()
+			self.compSetMenu.hide()
 	
 	""" Switches menu to Compile Menu """
 	def cmp_menu(self):
 		if self.cmpMenu.hidden:
 			self.setupMenu.hide()
+			self.compSetMenu.hide()
 			self.dumbFixMenu.grid(column=0, row=2, sticky="nsew", columnspan=10)
 			self.dumbFixMenu2.grid_remove()
 			self.dumbFixMenu3.grid_remove()
+			self.dumbFixMenu4.grid_remove()
 			self.cmpMenu.show()
 			self.decMenu.hide()
 			self.abtMenu.hide()

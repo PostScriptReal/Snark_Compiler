@@ -11,6 +11,7 @@ import datetime
 from helpers import BoolEntry, Console, BoolSpinbox, QCHandler, HyperlinkImg
 import json
 import sys
+import jsonc
 
 class SetupMenu():
     def __init__(self, master, thme:dict, startHidden:bool=False):
@@ -22,9 +23,8 @@ class SetupMenu():
         self.options = json.loads(js.read())
         js.close()
         gOptions = ["Half-Life", "Sven Co-op"]
-        gText = StringVar()
-        gText.set(gOptions[0])
-        self.gameSel = ttk.Combobox(master, textvariable=gText, values=gOptions)
+        self.gameSel = ttk.Combobox(master, values=gOptions)
+        self.gameSel.current(0)
         self.setupLabel = Label(master, text="Game Setup", background=thme["bg"], foreground=thme["txt"])
         self.nameLabel = Label(master, text="Name: ", background=thme["bg"], foreground=thme["txt"])
         self.name = StringVar()
@@ -116,6 +116,148 @@ class SetupMenu():
         self.setupLabel.grid(column=1, row=3, sticky=(W), padx=(10, 0))
         self.nameLabel.grid(column=1, row=4, sticky=(W))
         self.nameEntry.grid(column=2, row=4, sticky=(W))
+
+class CompSetupMenu():
+    def __init__(self, master, thme:dict, startHidden:bool=False):
+        self.hidden = startHidden
+        self.master = master
+        self.thme = thme
+        self.hiddenEdit = True
+        # Setting up options
+        js = open("save/options.json", 'r')
+        self.options = json.loads(js.read())
+        js.close()
+        js = open("save/compilers.jsonc", 'r')
+        self.fullCJS = jsonc.load(js)
+        self.fullCJS = self.fullCJS["compilers"]
+        js.close()
+        cOptions = ["GoldSRC", "Svengine"]
+        self.selComp = "GoldSRC"
+        self.gameSel = ttk.Combobox(master, values=cOptions)
+        self.gameSel.current(0)
+        self.gameSel.bind("<<ComboboxSelected>>", self.chComp)
+        self.setupLabel = Label(master, text="Compiler Setup", background=thme["bg"], foreground=thme["txt"])
+        self.nameLabel = Label(master, text="Name: ", background=thme["bg"], foreground=thme["txt"])
+        self.pathLabel = Label(master, text="Custom path: ", background=thme["bg"], foreground=thme["txt"])
+        self.name = StringVar()
+        self.name.set(cOptions[0])
+        self.nameEntry = Entry(master, textvariable=self.name, width=50)
+        self.csPath = StringVar()
+        self.csPath.set(self.fullCJS["GoldSRC"]["path"]["custom"])
+        self.csPathEntry = Entry(master, textvariable=self.csPath, width=50)
+        if not startHidden:
+            self.gameSel.grid(column=1, row=2)
+            self.setupLabel.grid(column=1, row=3, sticky=(W), padx=(10, 0))
+            self.nameLabel.grid(column=1, row=4, sticky=(W))
+            self.nameEntry.grid(column=2, row=4, sticky=(W))
+        
+        # Applying theme
+        style=ttk.Style()
+        style.theme_use('clam')
+        style.configure("TCombobox", fieldbackground=self.thme["ent"])
+        for w in master.winfo_children():
+            if w.winfo_class() == "Button":
+                w.configure(bg=self.thme["btn"][0])
+                w.configure(highlightbackground=self.thme["btn"][1])
+                w.configure(activebackground=self.thme["btn"][2])
+                w.configure(fg=self.thme["txt"])
+            elif w.winfo_class() == "Entry":
+                w.configure(bg=self.thme["ent"])
+                w.configure(fg=self.thme["txt"])
+            elif isinstance(w, ttk.Combobox):
+                pass
+                w.configure(foreground='white')
+                # w["menu"].config(bg=self.thme["btn"][1])
+            elif isinstance(w, Text):
+                w.configure(bg=self.thme["ent"])
+                w.configure(fg=self.thme["txt"])
+            elif w.winfo_class() == "Checkbutton":
+                w.configure(bg=self.thme["bg"])
+                w.configure(highlightbackground=self.thme["bg"])
+                w.configure(activebackground=self.thme["bg"])
+                w.configure(fg=self.thme["txt"])
+                w.configure(selectcolor=self.thme["ent"])
+            else:
+                w.configure(bg=self.thme["bg"])
+                try:
+                    w.configure(fg=self.thme["txt"])
+                except:
+                    pass
+    
+    def changeTheme(self, newTheme):
+        self.thme = newTheme
+        style=ttk.Style()
+        style.theme_use('clam')
+        style.configure("TCombobox", fieldbackground=self.thme["ent"])
+        for w in self.master.winfo_children():
+            if w.winfo_class() == "Button":
+                w.configure(bg=self.thme["btn"][0])
+                w.configure(highlightbackground=self.thme["btn"][1])
+                w.configure(activebackground=self.thme["btn"][2])
+                w.configure(fg=self.thme["txt"])
+            elif w.winfo_class() == "Entry":
+                w.configure(bg=self.thme["ent"])
+                w.configure(fg=self.thme["txt"])
+            elif isinstance(w, ttk.Combobox):
+                pass
+                w.configure(foreground='white')
+                # w["menu"].config(bg=self.thme["btn"][1])
+            elif isinstance(w, Text):
+                w.configure(bg=self.thme["ent"])
+                w.configure(fg=self.thme["txt"])
+            elif w.winfo_class() == "Checkbutton":
+                w.configure(bg=self.thme["bg"])
+                w.configure(highlightbackground=self.thme["bg"])
+                w.configure(activebackground=self.thme["bg"])
+                w.configure(fg=self.thme["txt"])
+                w.configure(selectcolor=self.thme["ent"])
+            else:
+                w.configure(bg=self.thme["bg"])
+                try:
+                    w.configure(fg=self.thme["txt"])
+                except:
+                    pass
+    
+    def updateOpt(self, key, value):
+        self.options[key] = value
+    
+    def chComp(self, e):
+        self.selComp = self.gameSel.get()
+        self.name.set(self.selComp)
+        self.csPath.set(self.fullCJS[self.selComp]["path"]["custom"])
+        # If editing options were removed and the compiler doesn't have editing disabled
+        if self.hiddenEdit and not self.fullCJS[self.selComp]["disableEdit"]:
+            self.hiddenEdit = False
+            self.nameLabel.grid(column=1, row=4, sticky=(W))
+            self.nameEntry.grid(column=2, row=4, sticky=(W))
+            self.pathLabel.grid(column=1, row=5, sticky="w")
+            self.csPathEntry.grid(column=2, row=5, sticky="w")
+        # If editing options were available and the compiler has editing disabled
+        elif not self.hiddenEdit and self.fullCJS[self.selComp]["disableEdit"]:
+            self.hiddenEdit = True
+            self.nameLabel.grid_remove()
+            self.nameEntry.grid_remove()
+            self.pathLabel.grid(column=1, row=4, sticky="w")
+            self.csPathEntry.grid(column=2, row=4, sticky="w")
+
+    def hide(self):
+        self.hidden = True
+        for w in self.master.winfo_children():
+            w.grid_remove()
+    def show(self):
+        self.hidden = False
+        self.gameSel.grid(column=1, row=2)
+        self.setupLabel.grid(column=1, row=3, sticky=(W), padx=(10, 0))
+        if not self.fullCJS[self.selComp]["disableEdit"]:
+            self.hiddenEdit = False
+            self.nameLabel.grid(column=1, row=4, sticky=(W))
+            self.nameEntry.grid(column=2, row=4, sticky=(W))
+            self.pathLabel.grid(column=1, row=5, sticky="w")
+            self.csPathEntry.grid(column=2, row=5, sticky="w")
+        else:
+            self.hiddenEdit = True
+            self.pathLabel.grid(column=1, row=4, sticky="w")
+            self.csPathEntry.grid(column=2, row=4, sticky="w")
 
 class DecompMenu():
     def __init__(self, master, thme:dict, startHidden:bool=False):
@@ -305,8 +447,8 @@ class CompMenu():
         self.svengine = False
         self.logOutput = False
         # Setting up JSON stuff
-        js = open("save/compilers.json", 'r')
-        self.fullCJS = json.loads(js.read())
+        js = open("save/compilers.jsonc", 'r')
+        self.fullCJS = jsonc.load(js)
         js.close()
         js = open("save/options.json", 'r')
         self.options = json.loads(js.read())
@@ -623,19 +765,35 @@ class CompMenu():
         tOutput = ''
         compilerPath = ''
         compilerFound = False
+        forceDefault = self.options["forceDefPaths"]
         try:
-            paths = self.compJS["path"]["default"][sys.platform]
-            for p in paths:
-                if os.path.exists(os.path.expanduser(p)):
-                    print(p)
-                    compilerPath = os.path.expanduser(p)
-                    compilerFound = True
-                    break
-            if not compilerFound:
+            if forceDefault:
+                paths = self.compJS["path"]["default"][sys.platform]
+                for p in paths:
+                    if os.path.exists(os.path.expanduser(p)):
+                        print(p)
+                        compilerPath = os.path.expanduser(p)
+                        compilerFound = True
+                        break
+                if not compilerFound:
+                    paths = self.compJS["path"]["custom"]
+                    if os.path.exists(paths):
+                        compilerPath = paths
+                        compilerFound = True
+            else:
                 paths = self.compJS["path"]["custom"]
-                if os._exists(paths):
-                    compilerPath = paths
-                    compilerFound = True
+                if not paths == "":
+                    if os.path.exists(paths):
+                        compilerPath = paths
+                        compilerFound = True
+                else:
+                    paths = self.compJS["path"]["default"][sys.platform]
+                    for p in paths:
+                        if os.path.exists(os.path.expanduser(p)):
+                            print(p)
+                            compilerPath = os.path.expanduser(p)
+                            compilerFound = True
+                            break
         except:
             self.console.setOutput("ERROR: Couldn't find compiler, have you selected one?")
             return
@@ -647,7 +805,7 @@ class CompMenu():
         if qcRelChk.cbarFrmt:
             mdl = qcRelChk.newQCPath
 
-        if sys.platform == 'linux':
+        if sys.platform == 'linux' and compilerFound:
             # I will check if it is a native executable anyway for future proofing
             # Pretty much all StudioMDL compilers are windows executables only
             if compilerPath.endswith(".exe"):
@@ -662,36 +820,39 @@ class CompMenu():
                     tOutput = subprocess.getoutput(f'\"{compilerPath}\" \"{mdl}\"')
                 else:
                     tOutput = subprocess.getoutput(f'\"{compilerPath}\" {cOpts} \"{mdl}\"')
-        elif sys.platform == 'win32':
+        elif sys.platform == 'win32' and compilerFound:
             if cOpts == None:
                 tOutput = subprocess.getoutput(f'\"{compilerPath}\" \"{mdl}\"')
             else:
                 tOutput = subprocess.getoutput(f'\"{compilerPath}\" {cOpts} \"{mdl}\"')
+        else:
+            self.console.setOutput("ERROR: Couldn't find compiler, have you installed it?")
         # I don't have a Mac so I can't compile mdldec to Mac targets :(
         # So instead I have to use wine for Mac systems
         """elif sys.platform == 'darwin':
             tOutput = subprocess.getoutput(f'wine third_party/mdldec_win32.exe \"{mdl}\"')"""
-        print(tOutput)
-        self.console.setOutput(tOutput)
-        # Removing temporary QC file used to compile model when the QC file supplied had used relative pathing
-        if qcRelChk.cbarFrmt:
-            os.remove(mdl)
-        if self.logOutput:
-            date = datetime.datetime.now()
-            curDate = f"{date.strftime('%d')}-{date.strftime('%m')}-{date.strftime('%Y')}-{date.strftime('%H')}-{date.strftime('%M')}-{date.strftime('%S')}"
-            log = open(f"logs/compile-{curDate}.txt", 'w')
-            log.write(tOutput)
-            log.close()
-        # Moving the compiled MDL file to the output folder
-        mdlFolder = ""
-        if output == "" or output == None:
-            mdlFolder = qcRelChk.qcLoc
-            mdlFolder = os.path.join(mdlFolder, "models/")
-        else:
-            mdlFolder = output
-        mdlF = qcRelChk.getMDLname()
-        shutil.copy(mdlF, os.path.join(mdlFolder, mdlF))
-        os.remove(mdlF)
+        if not compilerFound:
+            print(tOutput)
+            self.console.setOutput(tOutput)
+            # Removing temporary QC file used to compile model when the QC file supplied had used relative pathing
+            if qcRelChk.cbarFrmt:
+                os.remove(mdl)
+            if self.logOutput:
+                date = datetime.datetime.now()
+                curDate = f"{date.strftime('%d')}-{date.strftime('%m')}-{date.strftime('%Y')}-{date.strftime('%H')}-{date.strftime('%M')}-{date.strftime('%S')}"
+                log = open(f"logs/compile-{curDate}.txt", 'w')
+                log.write(tOutput)
+                log.close()
+            # Moving the compiled MDL file to the output folder
+            mdlFolder = ""
+            if output == "" or output == None:
+                mdlFolder = qcRelChk.qcLoc
+                mdlFolder = os.path.join(mdlFolder, "models/")
+            else:
+                mdlFolder = output
+            mdlF = qcRelChk.getMDLname()
+            shutil.copy(mdlF, os.path.join(mdlFolder, mdlF))
+            os.remove(mdlF)
 
 class AboutMenu():
     def __init__(self, master, thme:dict, startHidden:bool=False):
@@ -763,8 +924,8 @@ class AboutMenu():
     def changeTheme(self, newTheme):
         self.thme = newTheme
         self.applyTheme(self.master)
-        self.githubTT.changeTheme(newTheme["bg"], newTheme["txt"])
-        self.gameBtt.changeTheme(newTheme["bg"], newTheme["txt"])
+        self.githubTT.changeTheme(newTheme["tt"], newTheme["txt"])
+        self.gameBtt.changeTheme(newTheme["tt"], newTheme["txt"])
 
     def updateOpt(self, key, value):
         self.options[key] = value
@@ -813,10 +974,14 @@ class OptionsMenu():
         # I promise you there is no illicit drugs to be found anywhere in the program lol.
         self.startFent = Entry(master, textvariable=self.startFSV)
         self.setSF = Button(master, text="Set Start Folder", cursor="hand2", command=self.chSF)
+        self.forceDefB = BooleanVar(master, value=self.options["forceDefPaths"])
+        self.fdLabel = Label(master, text="Prioritise default paths:")
+        self.forceDefault = Checkbutton(master, command=self.chFDP, variable=self.forceDefB)
         # Tooltips
-        self.themeTT = ToolTip(self.themeCBox, "Changes the program's theme, current options are: Freeman, Shephard, Calhoun and Cross.", background=thme["tt"], foreground=thme["txt"])
+        self.themeTT = ToolTip(self.themeCBox, "Changes the program's theme, the built-in themes are: Freeman, Shephard, Calhoun and Cross.", background=thme["tt"], foreground=thme["txt"])
         self.startFolderTT = ToolTip(self.startFent, "Sets the directory that the built-in file explorer will start in, the default is the documents folder.", background=thme["tt"], foreground=thme["txt"])
         self.startFolderTT2 = ToolTip(self.setSF, "Sets the directory that the built-in file explorer will start in, the default is the documents folder.", background=thme["tt"], foreground=thme["txt"])
+        self.forceDefTT = ToolTip(self.forceDefault, "By default, Snark prioritises the custom path you set over the default paths for compilers, enabling this will prioritise the default paths instead, meaning that Snark won't use the custom path if it finds the compiler in its default path.", background=thme["tt"], foreground=thme["txt"])
         if not startHidden:
             self.setupLabel.grid(column=1, row=1)
             self.nameLabel.grid(column=1, row=2)
@@ -885,6 +1050,11 @@ class OptionsMenu():
             self.options["startFolder"] = path
             self.save_options()
             self.updFunc("startFolder", path)
+    
+    def chFDP(self):
+        self.options["forceDefPaths"] = self.forceDefB.get()
+        self.save_options()
+        self.updFunc("forceDefPaths", self.forceDefB.get())
 
     
     def save_options(self):
@@ -907,3 +1077,5 @@ class OptionsMenu():
         self.nameLabel.grid(column=1, row=2, sticky="w")
         self.startFent.grid(column=2, row=2, sticky="w")
         self.setSF.grid(column=3, row=2, sticky="w")
+        self.fdLabel.grid(column=1, row=3, sticky="w")
+        self.forceDefault.grid(column=2, row=3, sticky="w")

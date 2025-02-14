@@ -1,4 +1,5 @@
 {
+     "forceDefPaths": false,
      "save_paths": false,
      "startFolder": "~/Documents",
      "theme": "Freeman"
