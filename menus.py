@@ -450,6 +450,9 @@ class CompMenu():
         js = open("save/compilers.jsonc", 'r')
         self.fullCJS = jsonc.load(js)
         js.close()
+        js = open("save/profiles.json", 'r')
+        self.profiles = json.loads(js.read())
+        js.close()
         js = open("save/options.json", 'r')
         self.options = json.loads(js.read())
         js.close()
@@ -463,25 +466,22 @@ class CompMenu():
         self.out = StringVar()
         self.outputEntry = Entry(master, textvariable=self.out, width=self.widthFix)
         self.mdlBrowse = Button(master, text='Browse', command=self.findMDL, cursor="hand2")
+        self.mdlBrowse.bind("<FocusOut>", self.inputHandler)
         self.outBrowse = Button(master, text='Browse', command=self.output, cursor="hand2")
         self.compLabel = Label(self.selects, text="Compiler: ")
         cList = open("save/compilers.txt", "r")
         cOptions = cList.read().split('\n')
         cOptions.pop(len(cOptions)-1)
-        cText = StringVar()
-        cText.set(cOptions[0])
-        self.compSel = ttk.Combobox(self.selects, textvariable=cText, values=cOptions, width=8)
-        self.compSel.set(cOptions[0])
+        self.compSel = ttk.Combobox(self.selects, values=cOptions, width=8)
+        self.compSel.current(0)
         self.compSel.bind("<<ComboboxSelected>>", self.compilerStuff)
         self.gameLabel = Label(self.selects, text="Game Profile: ")
         gList = open("save/games.txt", "r")
         gOptions = gList.read().split('\n')
         gOptions.pop(len(gOptions)-1)
-        gText = StringVar()
-        gText.set(gOptions[0])
-        self.gameSel = ttk.Combobox(self.selects, textvariable=gText, values=gOptions, width=10)
-        self.gameSel.set(gOptions[0])
-        # self.gameSel.bind("<<ComboboxSelected>>", self.compilerStuff)
+        self.gameSel = ttk.Combobox(self.selects, values=gOptions, width=10)
+        self.gameSel.current(0)
+        self.gameSel.bind("<<ComboboxSelected>>", self.compatChk)
 
 
         # Advanced Options
@@ -562,6 +562,11 @@ class CompMenu():
     def setLog(self):
         self.logOutput = self.logVal.get()
     
+    def inputHandler(self):
+        print("Entry Lost Focus")
+        self.name.set(self.nameEntry.get())
+        self.compatChk()
+    
     def dashThandler(self):
         if self.dashTbool.get():
             self.dashT.unlock()
@@ -580,7 +585,7 @@ class CompMenu():
         else:
             self.groupSB.lock()
     
-    def compilerStuff(self, compiler):
+    def compilerStuff(self, event):
         self.compJS = self.fullCJS["compilers"][self.compSel.get()]
         if self.compJS["type"].lower() == "svengine":
             self.svengine = True
@@ -590,6 +595,7 @@ class CompMenu():
             self.svengine = False
             self.keepBonesChk.grid_remove()
             self.pf2Chk.grid(column=1, row=2, sticky="w")
+        self.compatChk()
 
     def applyTheme(self, master):
         style= ttk.Style()
@@ -700,6 +706,23 @@ class CompMenu():
             startDir = os.path.expanduser(startDir)
         fileTypes = [("Quake Compile Files", "*.qc"), ("All Files", "*.*")]
         self.name.set(askopenfilename(title="Select QC", initialdir=startDir, filetypes=fileTypes))
+        self.compatChk()
+    
+    def compatChk(self, e=False):
+        if not self.name.get() == "":
+            handler = QCHandler(self.name.get())
+            gameDat = self.profiles["profiles"][self.gameSel.get()]
+            compDat = self.fullCJS["compilers"][self.compSel.get()]
+            warnings = []
+            if compDat["capabilities"]["1024px"]:
+                # If the game doesn't support higher resolution textures, then give a warning in the console
+                if not gameDat["capabilities"]["1024px"] and handler.check1024px():
+                    warnings.append("WARNING: The selected game does not allow support for textures higher than 512x512, please downscale the offending textures or you will have errors compiling the model")
+            if len(warnings) != 0:
+                self.console.setOutput("\n".join(warnings))
+            else:
+                self.console.setOutput('Currently no warnings or errors!')
+
     def output(self):
         startDir = self.options["startFolder"]
         if startDir.startswith("~"):
@@ -969,6 +992,7 @@ class OptionsMenu():
                     themes.append(t.replace(".jsonc", ""))
         self.themeCBox = ttk.Combobox(master, cursor="hand2", values=themes)
         self.themeCBox.bind("<<ComboboxSelected>>", thmecallback)
+        self.themeCBox.set(self.options["theme"])
         self.startFSV = StringVar(master, value=self.options["startFolder"])
         # I just realised I shortened the name so it looks like it's name is Start Fent.
         # I promise you there is no illicit drugs to be found anywhere in the program lol.

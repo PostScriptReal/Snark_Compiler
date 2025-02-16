@@ -8,6 +8,7 @@
                 "flatshade": false,
                 "1024px": false,
                 "unlockedChrome": false
+            }
         },
         "Sven Co-op": {
             "compiler": "svengine",
@@ -19,6 +20,5 @@
                 "unlockedChrome": true
             }
         }
-    }
     }
 }

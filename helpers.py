@@ -7,6 +7,7 @@ import subprocess
 import shutil
 import datetime
 import webbrowser as browser
+import get_image_size
 
 class FuncMenu():
 
@@ -177,6 +178,56 @@ class QCHandler:
                         break
                 break
         return mdlName[:-1]
+    
+    def check1024px(self):
+        checks = 0
+        count = -1
+        newCDtex = ""
+        self.newQC = self.qcf
+        self.newQCPath = ""
+        self.found1024 = False
+        while checks < 1:
+            count += 1
+            qcL = self.qcf[count]
+            if qcL.startswith("$cdtex"):
+                if qcL.find('\"./textures/\"') != -1:
+                    cdTex = 1
+                    checks += 1
+                elif qcL.find('\".\"') != -1:
+                    cdTex = 2
+                    checks += 1
+        if cdTex != 0:
+            if cdTex == 1:
+                count = -1
+                texPath = os.path.join(self.qcLoc, "textures/")
+                textures = os.listdir(texPath)
+                while count < len(textures)-1:
+                    count += 1
+                    tex = textures[count]
+                    try:
+                        width, height = get_image_size.get_image_size(os.path.join(texPath,tex))
+                    except get_image_size.UnknownImageFormat:
+                        width, height = -1, -1
+                    if width > 512 or height > 512:
+                        self.found1024 = True
+            elif cdTex == 2:
+                count = -1
+                textures = os.listdir(self.qcLoc)
+                while count < len(textures)-1:
+                    count += 1
+                    if not textures[count].endswith('.bmp'):
+                        textures.pop(count)
+                count = -1
+                while count < len(textures)-1:
+                    count += 1
+                    tex = textures[count]
+                    try:
+                        width, height = get_image_size.get_image_size(os.path.join(self.qcLoc,tex))
+                    except get_image_size.UnknownImageFormat:
+                        width, height = -1, -1
+                    if width > 512 or height > 512:
+                        self.found1024 = True
+        return self.found1024
 
 class HyperlinkImg():
 
