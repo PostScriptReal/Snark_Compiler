@@ -204,30 +204,95 @@ class QCHandler:
                 while count < len(textures)-1:
                     count += 1
                     tex = textures[count]
-                    try:
-                        width, height = get_image_size.get_image_size(os.path.join(texPath,tex))
-                    except get_image_size.UnknownImageFormat:
-                        width, height = -1, -1
-                    if width > 512 or height > 512:
-                        self.found1024 = True
+                    fTex = os.path.join(self.qcLoc,tex)
+                    if os.path.isfile(fTex):
+                        try:
+                            width, height = get_image_size.get_image_size(os.path.join(self.qcLoc,tex))
+                        except get_image_size.UnknownImageFormat:
+                            width, height = -1, -1
+                        if width > 512 or height > 512:
+                            self.found1024 = True
             elif cdTex == 2:
                 count = -1
-                textures = os.listdir(self.qcLoc)
-                while count < len(textures)-1:
+                files = os.listdir(self.qcLoc)
+                textures = []
+                while count < len(files)-1:
                     count += 1
-                    if not textures[count].endswith('.bmp'):
-                        textures.pop(count)
+                    if files[count].endswith('.bmp'):
+                        textures.append(files[count])
                 count = -1
                 while count < len(textures)-1:
                     count += 1
                     tex = textures[count]
-                    try:
-                        width, height = get_image_size.get_image_size(os.path.join(self.qcLoc,tex))
-                    except get_image_size.UnknownImageFormat:
-                        width, height = -1, -1
-                    if width > 512 or height > 512:
-                        self.found1024 = True
+                    fTex = os.path.join(self.qcLoc,tex)
+                    if os.path.isfile(fTex):
+                        try:
+                            width, height = get_image_size.get_image_size(os.path.join(self.qcLoc,tex))
+                        except get_image_size.UnknownImageFormat:
+                            width, height = -1, -1
+                        if width > 512 or height > 512:
+                            self.found1024 = True
         return self.found1024
+    
+    def checkCHROME(self):
+        checks = 0
+        count = -1
+        newCDtex = ""
+        texmodes = []
+        self.newQC = self.qcf
+        self.newQCPath = ""
+        self.fndUnlChr = False
+        while count < len(self.qcf)-1:
+            count += 1
+            qcL = self.qcf[count]
+            if qcL.startswith("$cdtex"):
+                if qcL.find('\"./textures/\"') != -1:
+                    cdTex = 1
+                    checks += 1
+                elif qcL.find('\".\"') != -1:
+                    cdTex = 2
+                    checks += 1
+        if cdTex != 0:
+            if cdTex == 1:
+                count = -1
+                texPath = os.path.join(self.qcLoc, "textures/")
+                textures = os.listdir(texPath)
+                while count < len(textures)-1:
+                    count += 1
+                    tex = textures[count]
+                    fTex = os.path.join(self.qcLoc,tex)
+                    texL = tex.lower()
+                    print(tex)
+                    if texL.find("chrome") != -1 and os.path.isfile(fTex):
+                        try:
+                            width, height = get_image_size.get_image_size(os.path.join(texPath,tex))
+                        except get_image_size.UnknownImageFormat:
+                            width, height = -1, -1
+                        if not width == 64 or not height == 64:
+                            self.fndUnlChr = True
+            elif cdTex == 2:
+                count = -1
+                files = os.listdir(self.qcLoc)
+                textures = []
+                while count < len(files)-1:
+                    count += 1
+                    if files[count].endswith('.bmp'):
+                        textures.append(files[count])
+                count = -1
+                while count < len(textures)-1:
+                    count += 1
+                    tex = textures[count]
+                    fTex = os.path.join(self.qcLoc,tex)
+                    texL = tex.lower()
+                    print(tex)
+                    if texL.find("chrome") != -1 and os.path.isfile(fTex):
+                        try:
+                            width, height = get_image_size.get_image_size(fTex)
+                        except get_image_size.UnknownImageFormat:
+                            width, height = -1, -1
+                        if not width == 64 or not height == 64:
+                            self.fndUnlChr = True
+        return self.fndUnlChr
 
 class HyperlinkImg():
 

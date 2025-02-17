@@ -717,7 +717,22 @@ class CompMenu():
             if compDat["capabilities"]["1024px"]:
                 # If the game doesn't support higher resolution textures, then give a warning in the console
                 if not gameDat["capabilities"]["1024px"] and handler.check1024px():
-                    warnings.append("WARNING: The selected game does not allow support for textures higher than 512x512, please downscale the offending textures or you will have errors compiling the model")
+                    warnings.append("WARNING: The selected game does not support textures higher than 512x512, please downscale the offending textures!")
+            else:
+                if handler.check1024px() and gameDat["capabilities"]["unlockedChrome"]:
+                    warnings.append("WARNING: The selected compiler does not support textures higher than 512x512, please downscale the offending textures!")
+                elif handler.check1024px():
+                    warnings.append("WARNING: The selected compiler and game does not support textures higher than 512x512, please downscale the offending textures!")
+            if compDat["capabilities"]["unlockedChrome"]:
+                # If the game doesn't support chrome textures that aren't 64x64, then give a warning in the console
+                if not gameDat["capabilities"]["unlockedChrome"] and handler.checkCHROME():
+                    warnings.append("WARNING: There are one or more chrome textures that aren't at a fixed resolution of 64x64, please fix that as the selected game does not support this!")
+            else:
+                if handler.checkCHROME() and gameDat["capabilities"]["unlockedChrome"]:
+                    warnings.append("WARNING: There are one or more chrome textures that aren't at a fixed resolution of 64x64, please fix that as the selected compiler does not support this!")
+                elif handler.checkCHROME():
+                    warnings.append("WARNING: There are one or more chrome textures that aren't at a fixed resolution of 64x64, please fix that as the selected compiler and game does not support this!")
+            # Update the console
             if len(warnings) != 0:
                 self.console.setOutput("\n".join(warnings))
             else:
@@ -854,7 +869,7 @@ class CompMenu():
         # So instead I have to use wine for Mac systems
         """elif sys.platform == 'darwin':
             tOutput = subprocess.getoutput(f'wine third_party/mdldec_win32.exe \"{mdl}\"')"""
-        if not compilerFound:
+        if compilerFound:
             print(tOutput)
             self.console.setOutput(tOutput)
             # Removing temporary QC file used to compile model when the QC file supplied had used relative pathing
@@ -1058,6 +1073,7 @@ class OptionsMenu():
         self.themeTT.changeTheme(newTheme["tt"], newTheme["txt"])
         self.startFolderTT.changeTheme(newTheme["tt"], newTheme["txt"])
         self.startFolderTT2.changeTheme(newTheme["tt"], newTheme["txt"])
+        self.forceDefTT.changeTheme(newTheme["tt"], newTheme["txt"])
     
     def chSF(self):
         path = askdirectory(title="Set starting directory for this file explorer")
