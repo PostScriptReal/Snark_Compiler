@@ -129,9 +129,11 @@ class CompSetupMenu():
         js.close()
         js = open("save/compilers.jsonc", 'r')
         self.fullCJS = jsonc.load(js)
-        self.fullCJS = self.fullCJS["compilers"]
+        self.compDat = self.fullCJS["compilers"]
         js.close()
-        cOptions = ["GoldSRC", "Svengine"]
+        cList = open("save/compilers.txt", "r")
+        cOptions = cList.read().split('\n')
+        cOptions.pop(len(cOptions)-1)
         self.selComp = "GoldSRC"
         self.gameSel = ttk.Combobox(master, values=cOptions)
         self.gameSel.current(0)
@@ -143,8 +145,9 @@ class CompSetupMenu():
         self.name.set(cOptions[0])
         self.nameEntry = Entry(master, textvariable=self.name, width=50)
         self.csPath = StringVar()
-        self.csPath.set(self.fullCJS["GoldSRC"]["path"]["custom"])
+        self.csPath.set(self.compDat["GoldSRC"]["path"]["custom"])
         self.csPathEntry = Entry(master, textvariable=self.csPath, width=50)
+        self.csPathEntry.bind("<FocusOut>", self.inputHandler)
         if not startHidden:
             self.gameSel.grid(column=1, row=2)
             self.setupLabel.grid(column=1, row=3, sticky=(W), padx=(10, 0))
@@ -183,6 +186,14 @@ class CompSetupMenu():
                     w.configure(fg=self.thme["txt"])
                 except:
                     pass
+    
+    def inputHandler(self, e=False):
+        self.csPath.set(self.csPathEntry.get())
+        self.compDat[self.gameSel.get()]["path"]["custom"] = self.csPath.get()
+        self.fullCJS["compilers"] = self.compDat
+        js = open("save/compilers.jsonc", 'w')
+        jsonc.dump(self.fullCJS, js)
+        js.close()
     
     def changeTheme(self, newTheme):
         self.thme = newTheme
@@ -224,16 +235,16 @@ class CompSetupMenu():
     def chComp(self, e):
         self.selComp = self.gameSel.get()
         self.name.set(self.selComp)
-        self.csPath.set(self.fullCJS[self.selComp]["path"]["custom"])
+        self.csPath.set(self.compDat[self.selComp]["path"]["custom"])
         # If editing options were removed and the compiler doesn't have editing disabled
-        if self.hiddenEdit and not self.fullCJS[self.selComp]["disableEdit"]:
+        if self.hiddenEdit and not self.compDat[self.selComp]["disableEdit"]:
             self.hiddenEdit = False
             self.nameLabel.grid(column=1, row=4, sticky=(W))
             self.nameEntry.grid(column=2, row=4, sticky=(W))
             self.pathLabel.grid(column=1, row=5, sticky="w")
             self.csPathEntry.grid(column=2, row=5, sticky="w")
         # If editing options were available and the compiler has editing disabled
-        elif not self.hiddenEdit and self.fullCJS[self.selComp]["disableEdit"]:
+        elif not self.hiddenEdit and self.compDat[self.selComp]["disableEdit"]:
             self.hiddenEdit = True
             self.nameLabel.grid_remove()
             self.nameEntry.grid_remove()
@@ -248,7 +259,7 @@ class CompSetupMenu():
         self.hidden = False
         self.gameSel.grid(column=1, row=2)
         self.setupLabel.grid(column=1, row=3, sticky=(W), padx=(10, 0))
-        if not self.fullCJS[self.selComp]["disableEdit"]:
+        if not self.compDat[self.selComp]["disableEdit"]:
             self.hiddenEdit = False
             self.nameLabel.grid(column=1, row=4, sticky=(W))
             self.nameEntry.grid(column=2, row=4, sticky=(W))
@@ -282,6 +293,7 @@ class DecompMenu():
         self.nameLabel = Label(master, text="Output: ")
         self.name = StringVar()
         self.nameEntry = Entry(master, textvariable=self.name, width=self.widthFix)
+        self.nameEntry.bind("<FocusOut>", self.inputHandler)
         self.out = StringVar()
         self.outputEntry = Entry(master, textvariable=self.out, width=self.widthFix)
         self.mdlBrowse = Button(master, text='Browse', command=self.findMDL, cursor="hand2")
@@ -313,6 +325,9 @@ class DecompMenu():
         self.applyTheme(self.advOpt)
     def setLog(self):
         self.logOutput = self.logVal.get()
+    
+    def inputHandler(self, e=False):
+        self.name.set(self.nameEntry.get())
 
     def applyTheme(self, master):
         style= ttk.Style()
@@ -463,10 +478,10 @@ class CompMenu():
         self.nameLabel = Label(master, text="Output: ")
         self.name = StringVar()
         self.nameEntry = Entry(master, textvariable=self.name, width=self.widthFix)
+        self.nameEntry.bind("<FocusOut>", self.inputHandler)
         self.out = StringVar()
         self.outputEntry = Entry(master, textvariable=self.out, width=self.widthFix)
         self.mdlBrowse = Button(master, text='Browse', command=self.findMDL, cursor="hand2")
-        self.mdlBrowse.bind("<FocusOut>", self.inputHandler)
         self.outBrowse = Button(master, text='Browse', command=self.output, cursor="hand2")
         self.compLabel = Label(self.selects, text="Compiler: ")
         cList = open("save/compilers.txt", "r")
@@ -562,8 +577,7 @@ class CompMenu():
     def setLog(self):
         self.logOutput = self.logVal.get()
     
-    def inputHandler(self):
-        print("Entry Lost Focus")
+    def inputHandler(self, e=False):
         self.name.set(self.nameEntry.get())
         self.compatChk()
     
@@ -913,7 +927,9 @@ class AboutMenu():
         vnum = open('version.txt', "r")
         self.ver = vnum.read().replace("(OS)", sys.platform)
         self.setupLabel = Label(master, text=f"Snark {self.ver} by:", background=thme["bg"], foreground=thme["txt"])
-        credits = ["PostScript", "\nusing:", "MDLDec by Flying With Gauss", "get_image_size by Paulo Scardine", "TkTooltip by DaedalicEntertainment"]
+        credits = ["PostScript", "\nusing:", "MDLDec by Flying With Gauss", "get_image_size by Paulo Scardine", "TkTooltip by DaedalicEntertainment",
+            "JSONC by John Carter"
+        ]
         self.nameLabel = Label(master, text="\n".join(credits), background=thme["bg"], fg=thme["txt"])
         # Tooltips
         self.githubTT = ToolTip(self.githubLogo.link, "Source Code and Releases on Github", background=thme["tt"], foreground=thme["txt"])

@@ -58,5 +58,9 @@
 			<td><a href="https://github.com/PostScriptReal/python-ui/blob/master/tktooltip.py">tktooltip (custom fork, original at </a><a href="https://github.com/DaedalicEntertainment/python-ui/blob/master/tktooltip.py">python-ui)</a></td>
 			<td>MIT</td>
 		</tr>
+		<tr>
+			<td><a href="https://github.com/jfcarter2358/jsonc">jsonc</a></td>
+			<td>MIT</td>
+		</tr>
 	</table>
 </div>

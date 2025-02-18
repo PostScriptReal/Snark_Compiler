@@ -526,21 +526,6 @@ class GUI(Tk):
 		startDir = os.path.expanduser("~/Documents")
 		self.path.set(askdirectory(title="Select Anims Folder", initialdir=startDir))
 
-	def dupe(self):
-		# Initialising Bone Duping function
-		inst = Dupe()
-		# Grabbing all values from input boxes
-		qcSelect = QCWin(self.qcDATA, inst, 'd', [self.b_bone.get(),self.n_bone.get(),self.p_bone.get()])
-		""""if qcSelect.finished:
-			loc = self.path.get()
-			base = self.b_bone.get()
-			new = self.n_bone.get()
-			parent = self.p_bone.get()
-			# Checking if specified location is a folder or file, batch dupe is performed if a folder, otherwise a single dupe is performed
-			if loc.endswith('.smd'):
-				inst.single_dupe(loc, base, new, parent)
-			else:
-				inst.batch_dupe(loc, base, new, parent)"""
 	def dupe_scr(self, base, new, parent, qc):
 		# Alternate bone duping function for scripts
 		qc.startScript(batch=qc.batch, values=[base, new, parent])
