@@ -14,27 +14,28 @@ import sys
 import jsonc
 
 class SetupMenu():
-    def __init__(self, master, thme:dict, startHidden:bool=False):
+    def __init__(self, master, thme:dict, startHidden:bool=False, allowGUI:bool=True):
         self.hidden = startHidden
         self.master = master
         self.thme = thme
-        # Setting up options
-        js = open("save/options.json", 'r')
-        self.options = json.loads(js.read())
-        js.close()
-        gOptions = ["Half-Life", "Sven Co-op"]
-        self.gameSel = ttk.Combobox(master, values=gOptions)
-        self.gameSel.current(0)
-        self.setupLabel = Label(master, text="Game Setup", background=thme["bg"], foreground=thme["txt"])
-        self.nameLabel = Label(master, text="Name: ", background=thme["bg"], foreground=thme["txt"])
-        self.name = StringVar()
-        self.name.set(gOptions[0])
-        self.nameEntry = Entry(master, textvariable=self.name, width=50)
-        if not startHidden:
-            self.gameSel.grid(column=1, row=2)
-            self.setupLabel.grid(column=1, row=3, sticky=(W), padx=(10, 0))
-            self.nameLabel.grid(column=1, row=4, sticky=(W))
-            self.nameEntry.grid(column=2, row=4, sticky=(W))
+        self.allowGUI = allowGUI
+        if allowGUI:
+            # Setting up options
+            js = open("save/options.json", 'r')
+            self.options = json.loads(js.read())
+            js.close()
+            gOptions = ["Half-Life", "Sven Co-op"]
+            self.gameSel = ttk.Combobox(master, values=gOptions)
+            self.gameSel.current(0)
+            self.setupLabel = Label(master, text="Game Setup", background=thme["bg"], foreground=thme["txt"])
+            self.nameLabel = Label(master, text="Name: ", background=thme["bg"], foreground=thme["txt"])
+            self.name = StringVar()
+            self.name.set(gOptions[0])
+            self.nameEntry = Entry(master, textvariable=self.name, width=50)
+            if not startHidden:
+                self.show()
+        else:
+            self.setupLabel = Label(master, text="This menu will be completed soon, for now you can add new games by manually editing\nprofiles.json to add a new entry, then add the new game in games.txt.")
         
         # Applying theme
         style=ttk.Style()
@@ -112,17 +113,21 @@ class SetupMenu():
             w.grid_remove()
     def show(self):
         self.hidden = False
-        self.gameSel.grid(column=1, row=2)
-        self.setupLabel.grid(column=1, row=3, sticky=(W), padx=(10, 0))
-        self.nameLabel.grid(column=1, row=4, sticky=(W))
-        self.nameEntry.grid(column=2, row=4, sticky=(W))
+        if self.allowGUI:
+            self.gameSel.grid(column=1, row=2)
+            self.setupLabel.grid(column=1, row=3, sticky=(W), padx=(10, 0))
+            self.nameLabel.grid(column=1, row=4, sticky=(W))
+            self.nameEntry.grid(column=2, row=4, sticky=(W))
+        else:
+            self.setupLabel.grid(column=1, row=3, sticky=(W), padx=(10, 0))
 
 class CompSetupMenu():
-    def __init__(self, master, thme:dict, startHidden:bool=False):
+    def __init__(self, master, thme:dict, updFunc, startHidden:bool=False):
         self.hidden = startHidden
         self.master = master
         self.thme = thme
         self.hiddenEdit = True
+        self.updFunc = updFunc
         # Setting up options
         js = open("save/options.json", 'r')
         self.options = json.loads(js.read())
@@ -149,10 +154,7 @@ class CompSetupMenu():
         self.csPathEntry = Entry(master, textvariable=self.csPath, width=50)
         self.csPathEntry.bind("<FocusOut>", self.inputHandler)
         if not startHidden:
-            self.gameSel.grid(column=1, row=2)
-            self.setupLabel.grid(column=1, row=3, sticky=(W), padx=(10, 0))
-            self.nameLabel.grid(column=1, row=4, sticky=(W))
-            self.nameEntry.grid(column=2, row=4, sticky=(W))
+            self.show()
         
         # Applying theme
         style=ttk.Style()
@@ -194,6 +196,7 @@ class CompSetupMenu():
         js = open("save/compilers.jsonc", 'w')
         jsonc.dump(self.fullCJS, js)
         js.close()
+        self.updFunc(self.gameSel.get(), self.csPath.get())
     
     def changeTheme(self, newTheme):
         self.thme = newTheme
@@ -305,17 +308,7 @@ class DecompMenu():
         self.decomp = Button(master, text='Decompile', command=self.startDecomp, cursor="hand2")
         self.console = Console(master, 'Start a decompile and the terminal output will appear here!', 0, 4, self.conFix, 14)
         if not startHidden:
-            self.setupLabel.grid(column=0, row=0, sticky=(W))
-            self.nameLabel.grid(column=0, row=1, sticky=(W))
-            self.nameEntry.grid(column=1, row=0)
-            self.outputEntry.grid(column=1, row=1)
-            self.mdlBrowse.grid(column=2, row=0, padx=(6,0))
-            self.outBrowse.grid(column=2, row=1, padx=(6,0))
-            self.advOpt.grid(column=0, row=2, sticky="nsew", columnspan=10, pady=(20,0))
-            self.advOptLabel.grid(column=0, row=0, sticky="w")
-            self.logChk.grid(column=0, row=1, sticky="w")
-            self.decomp.grid(column=0, row=3, pady=(25,0))
-            self.console.show()
+            self.show()
         
         self.mdlTT = ToolTip(self.mdlBrowse, "REQUIRED, specifies the MDL file used to decompile a model, you cannot leave this blank.", background=thme["tt"], foreground=thme["txt"])
         self.outputTT = ToolTip(self.outBrowse, "REQUIRED, you must specify an output folder to place all files into.", background=thme["tt"], foreground=thme["txt"])
@@ -556,17 +549,7 @@ class CompMenu():
         self.decomp = Button(master, text='Compile', command=self.startCompile, cursor="hand2")
         self.console = Console(master, 'Currently no warnings or errors!', 0, 5, self.conFix, 12)
         if not startHidden:
-            self.setupLabel.grid(column=0, row=0, sticky=(W))
-            self.nameLabel.grid(column=0, row=1, sticky=(W))
-            self.nameEntry.grid(column=1, row=0)
-            self.outputEntry.grid(column=1, row=1)
-            self.mdlBrowse.grid(column=2, row=0, padx=(6,0))
-            self.outBrowse.grid(column=2, row=1, padx=(6,0))
-            self.advOpt.grid(column=0, row=2, sticky="nsew", columnspan=10, pady=(20,0))
-            self.advOptLabel.grid(column=0, row=0, sticky="w")
-            self.logChk.grid(column=0, row=1, sticky="w")
-            self.decomp.grid(column=0, row=3, pady=(40,0))
-            self.console.show()
+            self.show()
         
         # Applying theme
         self.applyTheme(master)
@@ -667,6 +650,11 @@ class CompMenu():
 
     def updateOpt(self, key, value):
         self.options[key] = value
+    
+    def updateComp(self, comp, value):
+        self.fullCJS["compilers"][comp]["path"]["custom"] = value
+        if self.compSel.get() == comp:
+            self.compJS["paths"]["custom"] = value
     
     def hide(self):
         self.hidden = True
@@ -935,9 +923,7 @@ class AboutMenu():
         self.githubTT = ToolTip(self.githubLogo.link, "Source Code and Releases on Github", background=thme["tt"], foreground=thme["txt"])
         self.gameBtt = ToolTip(self.gameBLogo.link, "Official Download page on Gamebanana", background=thme["tt"], foreground=thme["txt"])
         if not startHidden:
-            self.snarkLogo.grid(column=1,row=0)
-            self.setupLabel.grid(column=1, row=1)
-            self.nameLabel.grid(column=1, row=2)
+            self.show()
         
         # Applying theme
         self.applyTheme(master)
@@ -1038,8 +1024,7 @@ class OptionsMenu():
         self.startFolderTT2 = ToolTip(self.setSF, "Sets the directory that the built-in file explorer will start in, the default is the documents folder.", background=thme["tt"], foreground=thme["txt"])
         self.forceDefTT = ToolTip(self.forceDefault, "By default, Snark prioritises the custom path you set over the default paths for compilers, enabling this will prioritise the default paths instead, meaning that Snark won't use the custom path if it finds the compiler in its default path.", background=thme["tt"], foreground=thme["txt"])
         if not startHidden:
-            self.setupLabel.grid(column=1, row=1)
-            self.nameLabel.grid(column=1, row=2)
+            self.show()
         
         # Applying theme
         self.applyTheme(master)

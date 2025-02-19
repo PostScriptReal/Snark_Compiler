@@ -1,12 +1,12 @@
 {
     "compilers": {
-        "GoldSRC":{
+        "GoldSRC": {
             "path": {
                 "default": {
                     // Any path value that uses a list has multiple directories that Snark searches for,
                     // In the case of Windows, the 1st string is for 64-bit installs of Steam, while the 2nd one is for 32-bit installs.
                     "win32": [
-                        "C:/Program Files (x86)/Steam/steamapps/common/Half-Life SDK/Model Tools/studiomdl.exe", 
+                        "C:/Program Files (x86)/Steam/steamapps/common/Half-Life SDK/Model Tools/studiomdl.exe",
                         "C:/Program Files/Steam/steamapps/common/Half-Life SDK/Model Tools/studiomdl.exe"
                     ],
                     /*  I was planning on having MacOS support, but I decided against that since A. I don't have a Mac to test it on,
@@ -30,11 +30,11 @@
             },
             "disableEdit": true
         },
-        "Svengine":{
+        "Svengine": {
             "path": {
                 "default": {
                     "win32": [
-                        "C:/Program Files (x86)/Steam/steamapps/common/Sven Co-op SDK/modelling/studiomdl.exe", 
+                        "C:/Program Files (x86)/Steam/steamapps/common/Sven Co-op SDK/modelling/studiomdl.exe",
                         "C:/Program Files/Steam/steamapps/common/Sven Co-op SDK/modelling/studiomdl.exe"
                     ],
                     "linux": [
@@ -43,7 +43,7 @@
                         "~/snap/steam/common/Steam/steamapps/common/Sven Co-op SDK/modelling/studiomdl.exe"
                     ]
                 },
-                "custom": ""
+                "custom": "/home/postscript/Documents/studiomdl.exe"
             },
             "type": "Svengine",
             "capabilities": {

@@ -22,10 +22,13 @@ class Flags:
 
 	def __init__(self):
 		# Enables Developer mode, which disables automatic updates and enables extra logging
-		self.devMode = True
+		self.devMode = False
 		# Flag specifically for Snark, scripts are currently not implemented yet and is a copy of the scripting system from SMD Tools v1.1
 		# This will allow me to disable the functionality for it until I come up with a proper implementation
 		self.allowScripts = False
+		# Another flag for Snark, it disables booting to the "games" menu and makes the menu show a "This menu will be completed soon" message
+		# instead of showing the (very much) incomplete menu
+		self.allowGames = False
 
 class Interp:
 
@@ -369,8 +372,10 @@ class GUI(Tk):
 		self.aboutB = Button(self.header, text="About", command=self.about, cursor="hand2")
 		self.aboutB.grid(column=5, row=0, sticky=(N))
 
-		self.setupMenu = SetupMenu(menu, thCol)
-		self.compSetMenu = CompSetupMenu(self.dumbFixMenu4, thCol, True)
+		self.setupMenu = SetupMenu(menu, thCol, not self.flags.allowGames, self.flags.allowGames)
+		if not self.flags.allowGames:
+			self.dumbFixMenu4.grid(column=0, row=2, sticky="nsew", columnspan=10)
+		self.compSetMenu = CompSetupMenu(self.dumbFixMenu4, thCol, self.updateComps, self.flags.allowGames)
 		self.decMenu = DecompMenu(menu, thCol, True)
 		self.cmpMenu = CompMenu(self.dumbFixMenu, thCol, True)
 		self.abtMenu = AboutMenu(self.dumbFixMenu2, thCol, True)
@@ -496,6 +501,9 @@ class GUI(Tk):
 		self.cmpMenu.updateOpt(key, val)
 		self.decMenu.updateOpt(key, val)
 		self.optMenu.updateOpt(key, val)
+	
+	def updateComps(self, comp, val):
+		self.cmpMenu.updateComp(comp, val)
 	
 	def optionsMenu(self):
 		if self.optMenu.hidden:
