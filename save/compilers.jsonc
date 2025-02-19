@@ -43,7 +43,7 @@
                         "~/snap/steam/common/Steam/steamapps/common/Sven Co-op SDK/modelling/studiomdl.exe"
                     ]
                 },
-                "custom": "/home/postscript/Documents/studiomdl.exe"
+                "custom": ""
             },
             "type": "Svengine",
             "capabilities": {
