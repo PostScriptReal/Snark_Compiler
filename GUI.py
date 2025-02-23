@@ -279,7 +279,7 @@ class GUI(Tk):
 			self.geometry("609x491")
 		else:
 			self.fixGUI = False
-			self.geometry("569x411")
+			self.geometry("521x443")
 		# Get Options
 		self.get_options()
 		self.selTheme = self.options["theme"]
