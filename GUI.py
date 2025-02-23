@@ -285,12 +285,7 @@ class GUI(Tk):
 		self.selTheme = self.options["theme"]
 
 		# Loading in window icon
-		if sys.platform == "win32":
-			ico = PhotoImage(file=f"icon-{sys.platform}.ico")
-		elif sys.platform == "linux":
-			ico = PhotoImage(file=f"icon-{sys.platform}.png")
-		else:
-			ico = PhotoImage(file="icon-win32.ico")
+		ico = PhotoImage(file="icon-linux.png")
 		self.iconphoto(True, ico)
 		
 		thCol = {}
