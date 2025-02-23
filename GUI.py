@@ -425,7 +425,10 @@ class GUI(Tk):
 				pass
 
 		if not self.flags.devMode:
-			self.check_version()
+			try:
+				self.check_version()
+			except:
+				print("Unable to check latest version, are you connected to the internet?")
 
 	def help(self):
 		if not self.compSetMenu.hidden:
