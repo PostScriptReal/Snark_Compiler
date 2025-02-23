@@ -19,25 +19,53 @@ class SetupMenu():
         self.master = master
         self.thme = thme
         self.allowGUI = allowGUI
-        if allowGUI:
-            # Setting up options
-            js = open("save/options.json", 'r')
-            self.options = json.loads(js.read())
-            js.close()
-            gOptions = ["Half-Life", "Sven Co-op"]
-            self.gameSel = ttk.Combobox(master, values=gOptions)
-            self.gameSel.current(0)
-            self.setupLabel = Label(master, text="Game Setup", background=thme["bg"], foreground=thme["txt"])
-            self.nameLabel = Label(master, text="Name: ", background=thme["bg"], foreground=thme["txt"])
-            self.name = StringVar()
-            self.name.set(gOptions[0])
-            self.nameEntry = Entry(master, textvariable=self.name, width=50)
-            if not startHidden:
-                self.show()
-        else:
-            self.setupLabel = Label(master, text="This menu will be completed soon, for now you can add new games by manually editing\nprofiles.json to add a new entry, then add the new game in games.txt.")
-        
+        self.advOpt = Frame(master, borderwidth=2, bg=thme["bg"], relief="sunken")
+
+        # Setting up options
+        js = open("save/options.json", 'r')
+        self.options = json.loads(js.read())
+        js.close()
+        js = open("save/profiles.json", 'r')
+        self.fullGamePFs = json.loads(js.read())
+        self.gamePFs = self.fullGamePFs["profiles"]
+        js.close()
+        gList = open("save/games.txt", "r")
+        gOptions = gList.read().split('\n')
+        gOptions.pop(len(gOptions)-1)
+        self.gameSel = ttk.Combobox(master, values=gOptions)
+        self.gameSel.current(0)
+        self.setupLabel = Label(master, text="Game Setup", background=thme["bg"], foreground=thme["txt"])
+        self.nameLabel = Label(master, text="Name: ", background=thme["bg"], foreground=thme["txt"])
+        self.typeLabel = Label(master, text="Engine type:")
+        tOpts = ["GoldSRC", "Svengine"]
+        self.typeSel = ttk.Combobox(master, values=tOpts, width=8)
+        self.typeSel.set(self.gamePFs[self.gameSel.get()]["type"])
+        self.name = StringVar()
+        self.name.set(gOptions[0])
+        self.nameEntry = Entry(master, textvariable=self.name, width=50)
+        # Capability options
+        self.hrBool = BooleanVar(self.advOpt, False)
+        self.highRes = Checkbutton(self.advOpt, text="High Resolution BMPs", variable=self.hrBool)
+        self.ucBool = BooleanVar(self.advOpt, False)
+        self.unlockChrome = Checkbutton(self.advOpt, text="Unlocked Chrome", variable=self.ucBool)
+        self.fsBool = BooleanVar(self.advOpt, False)
+        self.flatShade = Checkbutton(self.advOpt, text="Flatshade", variable=self.fsBool)
+        self.fbBool = BooleanVar(self.advOpt, False)
+        self.fullBright = Checkbutton(self.advOpt, text="Fullbright", variable=self.fbBool)
+        # Tooltips
+        self.typeTT = ToolTip(self.typeSel, "The Engine type variable is used to check if the compiler supports the features that an engine has, for example if you set the type to Svengine, you'll have the -k compiler option show up.", thme["tt"], thme["txt"])
+        self.highResTT = ToolTip(self.highRes, "Check this if the game supports having textures with a resolution higher than 512x512.", thme["tt"], thme["txt"])
+        self.unlockChromeTT = ToolTip(self.unlockChrome, "Check this if the game supports having Chrome textures with a resolution other than 64x64.", thme["tt"], thme["txt"])
+        self.flatShadeTT = ToolTip(self.flatShade, "Check this if the game supports having other texrendermodes like flatshade.", thme["tt"], thme["txt"])
+        self.fullBrightTT = ToolTip(self.fullBright, "Check this if the game supports the fullbright flag for models.", thme["tt"], thme["txt"])
+        if not startHidden:
+            self.show()
+
         # Applying theme
+        self.applyTheme(master)
+        self.applyTheme(self.advOpt)
+    
+    def applyTheme(self, master):
         style=ttk.Style()
         style.theme_use('clam')
         style.configure("TCombobox", fieldbackground=self.thme["ent"])
@@ -72,37 +100,13 @@ class SetupMenu():
     
     def changeTheme(self, newTheme):
         self.thme = newTheme
-        style=ttk.Style()
-        style.theme_use('clam')
-        style.configure("TCombobox", fieldbackground=self.thme["ent"])
-        for w in self.master.winfo_children():
-            if w.winfo_class() == "Button":
-                w.configure(bg=self.thme["btn"][0])
-                w.configure(highlightbackground=self.thme["btn"][1])
-                w.configure(activebackground=self.thme["btn"][2])
-                w.configure(fg=self.thme["txt"])
-            elif w.winfo_class() == "Entry":
-                w.configure(bg=self.thme["ent"])
-                w.configure(fg=self.thme["txt"])
-            elif isinstance(w, ttk.Combobox):
-                pass
-                w.configure(foreground='white')
-                # w["menu"].config(bg=self.thme["btn"][1])
-            elif isinstance(w, Text):
-                w.configure(bg=self.thme["ent"])
-                w.configure(fg=self.thme["txt"])
-            elif w.winfo_class() == "Checkbutton":
-                w.configure(bg=self.thme["bg"])
-                w.configure(highlightbackground=self.thme["bg"])
-                w.configure(activebackground=self.thme["bg"])
-                w.configure(fg=self.thme["txt"])
-                w.configure(selectcolor=self.thme["ent"])
-            else:
-                w.configure(bg=self.thme["bg"])
-                try:
-                    w.configure(fg=self.thme["txt"])
-                except:
-                    pass
+        self.applyTheme(self.master)
+        self.applyTheme(self.advOpt)
+        self.highResTT.changeTheme(self.thme["tt"], self.thme["txt"])
+        self.typeTT.changeTheme(self.thme["tt"], self.thme["txt"])
+        self.unlockChromeTT.changeTheme(self.thme["tt"], self.theme["txt"])
+        self.flatShadeTT.changeTheme(self.thme["tt"], self.theme["txt"])
+        self.fullBrightTT.changeTheme(self.thme["tt"], self.theme["txt"])
     
     def updateOpt(self, key, value):
         self.options[key] = value
@@ -113,13 +117,17 @@ class SetupMenu():
             w.grid_remove()
     def show(self):
         self.hidden = False
-        if self.allowGUI:
-            self.gameSel.grid(column=1, row=2)
-            self.setupLabel.grid(column=1, row=3, sticky=(W), padx=(10, 0))
-            self.nameLabel.grid(column=1, row=4, sticky=(W))
-            self.nameEntry.grid(column=2, row=4, sticky=(W))
-        else:
-            self.setupLabel.grid(column=1, row=3, sticky=(W), padx=(10, 0))
+        self.gameSel.grid(column=1, row=2)
+        self.setupLabel.grid(column=1, row=3, sticky=(W), padx=(10, 0))
+        self.nameLabel.grid(column=1, row=4, sticky=(W))
+        self.nameEntry.grid(column=2, row=4, sticky=(W))
+        self.typeLabel.grid(column=1, row=5, sticky=(W))
+        self.typeSel.grid(column=2, row=5, sticky=(W))
+        self.advOpt.grid(column=1, row=6, sticky="nsew", columnspan=10, pady=(20,0))
+        self.highRes.grid(column=0, row=0, sticky="w")
+        self.unlockChrome.grid(column=1,row=0,sticky="w")
+        self.flatShade.grid(column=2,row=0,sticky="w")
+        self.fullBright.grid(column=3,row=0,sticky="w")
 
 class CompSetupMenu():
     def __init__(self, master, thme:dict, updFunc, startHidden:bool=False):

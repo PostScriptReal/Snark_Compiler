@@ -28,7 +28,7 @@ class Flags:
 		self.allowScripts = False
 		# Another flag for Snark, it disables booting to the "games" menu and makes the menu show a "This menu will be completed soon" message
 		# instead of showing the (very much) incomplete menu
-		self.allowGames = False
+		self.allowGames = True
 
 class Interp:
 
@@ -395,7 +395,10 @@ class GUI(Tk):
 			self.check_version()
 
 	def help(self):
-		browser.open_new('https://github.com/PostScriptReal/Snark_Compiler/wiki')
+		if not self.setupMenu.hidden and not self.flags.allowGames:
+			browser.open_new('https://github.com/PostScriptReal/Snark_Compiler/wiki/Getting-around-the-limitations-of-the-Snark-GUI')
+		else:
+			browser.open_new('https://github.com/PostScriptReal/Snark_Compiler/wiki')
 	
 	def changeTheme(self, a):
 		self.selTheme = self.optMenu.themeCBox.get()
