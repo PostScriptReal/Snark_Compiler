@@ -308,3 +308,36 @@ class HyperlinkImg():
             browser.open_new("https://github.com/PostScriptReal/Snark_Compiler")
         elif id == 1:
             browser.open_new("https://gamebanana.com/tools/games/5250")
+
+class Game():
+
+    def __init__(self, name, isCustom):
+        self.name = name
+        self.isCustom = isCustom
+
+class GamesHandler():
+
+    def __init__(self, gList):
+        count = -1
+        self.games = []
+        self.gNames = []
+        while count < len(gList)-1:
+            count += 1
+            g = gList[count]
+            if g.endswith("~"):
+                a = Game(g[:-1], True)
+                self.games.append(a)
+                self.gNames.append(g[:-1])
+            else:
+                a = Game(g, False)
+                self.games.append(a)
+                self.gNames.append(g)
+    
+    def checkCustom(self, name):
+        count = -1
+        while count < len(self.games)-1:
+            count += 1
+            g = self.games[count]
+            if g.name == name and g.isCustom:
+                return True
+        return False

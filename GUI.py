@@ -170,7 +170,8 @@ class OptWin:
 
 class GetNewVersion:
 
-	def __init__(self, version):
+	def __init__(self, version, theme):
+		self.thme = theme
 		self.nroot = Tk()
 		v = version.split("-")[0]
 		self.win(v)
@@ -179,7 +180,7 @@ class GetNewVersion:
 	def win(self, ver):
 		self.nroot.title(f"Version {ver} is out!")
 
-		frame = Frame(self.nroot, borderwidth=2, relief="sunken")
+		frame = Frame(self.nroot, borderwidth=2, relief="sunken", bg=self.thme["bg"])
 		frame.grid(column=1, row=1, sticky=(N, E, S, W))
 		self.nroot.columnconfigure(1, weight=1)
 		self.nroot.rowconfigure(1, weight=1)
@@ -193,6 +194,41 @@ class GetNewVersion:
 		self.dlButton.grid(column=0, row=1, sticky=(S))
 		self.noButton = Button(buttons, text="No", command=self.closeWin)
 		self.noButton.grid(column=1, row=1, sticky=(S))
+		self.applyTheme(frame)
+		self.applyTheme(buttons)
+	
+	def applyTheme(self, master):
+		style=ttk.Style()
+		style.theme_use('clam')
+		style.configure("TCombobox", fieldbackground=self.thme["ent"])
+		for w in master.winfo_children():
+			if w.winfo_class() == "Button":
+				w.configure(bg=self.thme["btn"][0])
+				w.configure(highlightbackground=self.thme["btn"][1])
+				w.configure(activebackground=self.thme["btn"][2])
+				w.configure(fg=self.thme["txt"])
+			elif w.winfo_class() == "Entry":
+				w.configure(bg=self.thme["ent"])
+				w.configure(fg=self.thme["txt"])
+			elif isinstance(w, ttk.Combobox):
+				pass
+				w.configure(foreground='white')
+				# w["menu"].config(bg=self.thme["btn"][1])
+			elif isinstance(w, Text):
+				w.configure(bg=self.thme["ent"])
+				w.configure(fg=self.thme["txt"])
+			elif w.winfo_class() == "Checkbutton":
+				w.configure(bg=self.thme["bg"])
+				w.configure(highlightbackground=self.thme["bg"])
+				w.configure(activebackground=self.thme["bg"])
+				w.configure(fg=self.thme["txt"])
+				w.configure(selectcolor=self.thme["ent"])
+			else:
+				w.configure(bg=self.thme["bg"])
+				try:
+					w.configure(fg=self.thme["txt"])
+				except:
+					pass
 	
 	def releasesPage(self):
 		browser.open_new("https://github.com/PostScriptReal/Snark_Compiler/releases/latest")
@@ -231,7 +267,7 @@ class GUI(Tk):
 		curVer = vFile.read()
 
 		if curVer != webVer:
-			a = GetNewVersion(webVer)
+			a = GetNewVersion(webVer, self.chkVerTheme)
 
 	def __init__(self):
 		super().__init__()
@@ -321,6 +357,8 @@ class GUI(Tk):
 			self.matfix = self.sPaths["matFix"]
 		else:
 			self.save_paths = False
+		
+		self.chkVerTheme = thCol
 
 		widgets = []
 		buttons = []
@@ -372,7 +410,7 @@ class GUI(Tk):
 		self.aboutB = Button(self.header, text="About", command=self.about, cursor="hand2")
 		self.aboutB.grid(column=5, row=0, sticky=(N))
 
-		self.setupMenu = SetupMenu(menu, thCol, not self.flags.allowGames, self.flags.allowGames)
+		self.setupMenu = SetupMenu(menu, thCol, self.updateGames, not self.flags.allowGames, self.flags.allowGames)
 		if not self.flags.allowGames:
 			self.dumbFixMenu4.grid(column=0, row=2, sticky="nsew", columnspan=10)
 		self.compSetMenu = CompSetupMenu(self.dumbFixMenu4, thCol, self.updateComps, self.flags.allowGames)
@@ -395,8 +433,8 @@ class GUI(Tk):
 			self.check_version()
 
 	def help(self):
-		if not self.setupMenu.hidden and not self.flags.allowGames:
-			browser.open_new('https://github.com/PostScriptReal/Snark_Compiler/wiki/Getting-around-the-limitations-of-the-Snark-GUI')
+		if not self.compSetMenu.hidden:
+			browser.open_new('https://github.com/PostScriptReal/Snark_Compiler/wiki/Getting-around-the-limitations-of-the-Snark-GUI#adding-compilers')
 		else:
 			browser.open_new('https://github.com/PostScriptReal/Snark_Compiler/wiki')
 	
@@ -469,10 +507,12 @@ class GUI(Tk):
 		self.cmpMenu.changeTheme(thCol)
 		self.decMenu.changeTheme(thCol)
 		self.optMenu.changeTheme(thCol)
+		self.compSetMenu.changeTheme(thCol)
 		self.setupMenu.master.config(bg=thCol["bg"])
 		self.cmpMenu.master.config(bg=thCol["bg"])
 		self.abtMenu.master.config(bg=thCol["bg"])
 		self.optMenu.master.config(bg=thCol["bg"])
+		self.compSetMenu.master.config(bg=thCol["bg"])
 		self.frame.config(bg=thCol["bg"])
 		self.header.config(bg=thCol["bg"])
 		for w in self.header.winfo_children():
@@ -504,6 +544,9 @@ class GUI(Tk):
 		self.cmpMenu.updateOpt(key, val)
 		self.decMenu.updateOpt(key, val)
 		self.optMenu.updateOpt(key, val)
+	
+	def updateGames(self, comp):
+		self.cmpMenu.updateGames(comp)
 	
 	def updateComps(self, comp, val):
 		self.cmpMenu.updateComp(comp, val)

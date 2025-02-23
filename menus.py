@@ -8,18 +8,21 @@ from tkinter.filedialog import askopenfilename, askdirectory
 import subprocess
 import shutil
 import datetime
-from helpers import BoolEntry, Console, BoolSpinbox, QCHandler, HyperlinkImg
+from helpers import BoolEntry, Console, BoolSpinbox, QCHandler, HyperlinkImg, Game, GamesHandler
 import json
 import sys
 import jsonc
 
 class SetupMenu():
-    def __init__(self, master, thme:dict, startHidden:bool=False, allowGUI:bool=True):
+    def __init__(self, master, thme:dict, updFunc, startHidden:bool=False, allowGUI:bool=True):
         self.hidden = startHidden
         self.master = master
         self.thme = thme
         self.allowGUI = allowGUI
+        self.updFunc = updFunc
         self.advOpt = Frame(master, borderwidth=2, bg=thme["bg"], relief="sunken")
+        self.top = Frame(master, borderwidth=2, bg=thme["bg"])
+        self.newGame = False
 
         # Setting up options
         js = open("save/options.json", 'r')
@@ -30,10 +33,13 @@ class SetupMenu():
         self.gamePFs = self.fullGamePFs["profiles"]
         js.close()
         gList = open("save/games.txt", "r")
-        gOptions = gList.read().split('\n')
-        gOptions.pop(len(gOptions)-1)
-        self.gameSel = ttk.Combobox(master, values=gOptions)
+        self.gOptions = gList.read().split('\n')
+        self.gOptions.pop(len(self.gOptions)-1)
+        gList.close()
+        self.games = GamesHandler(self.gOptions)
+        self.gameSel = ttk.Combobox(self.top, values=self.games.gNames)
         self.gameSel.current(0)
+        self.gameSel.bind("<<ComboboxSelected>>", self.chGame)
         self.setupLabel = Label(master, text="Game Setup", background=thme["bg"], foreground=thme["txt"])
         self.nameLabel = Label(master, text="Name: ", background=thme["bg"], foreground=thme["txt"])
         self.typeLabel = Label(master, text="Engine type:")
@@ -41,8 +47,8 @@ class SetupMenu():
         self.typeSel = ttk.Combobox(master, values=tOpts, width=8)
         self.typeSel.set(self.gamePFs[self.gameSel.get()]["type"])
         self.name = StringVar()
-        self.name.set(gOptions[0])
-        self.nameEntry = Entry(master, textvariable=self.name, width=50)
+        self.name.set(self.gOptions[0])
+        self.nameEntry = Entry(master, textvariable=self.name, width=62)
         # Capability options
         self.hrBool = BooleanVar(self.advOpt, False)
         self.highRes = Checkbutton(self.advOpt, text="High Resolution BMPs", variable=self.hrBool)
@@ -58,12 +64,16 @@ class SetupMenu():
         self.unlockChromeTT = ToolTip(self.unlockChrome, "Check this if the game supports having Chrome textures with a resolution other than 64x64.", thme["tt"], thme["txt"])
         self.flatShadeTT = ToolTip(self.flatShade, "Check this if the game supports having other texrendermodes like flatshade.", thme["tt"], thme["txt"])
         self.fullBrightTT = ToolTip(self.fullBright, "Check this if the game supports the fullbright flag for models.", thme["tt"], thme["txt"])
+
+        self.addGame = Button(self.top, text="Add New Game", command=self.addNGame)
+        self.saveGame = Button(self.top, text="Save Game", command=self.saveGame)
         if not startHidden:
             self.show()
 
         # Applying theme
         self.applyTheme(master)
         self.applyTheme(self.advOpt)
+        self.applyTheme(self.top)
     
     def applyTheme(self, master):
         style=ttk.Style()
@@ -98,15 +108,89 @@ class SetupMenu():
                 except:
                     pass
     
+    def addNGame(self):
+        self.gameSel.set("")
+        self.name.set("")
+        self.typeSel.current(0)
+        self.hrBool.set(False)
+        self.ucBool.set(False)
+        self.fsBool.set(False)
+        self.fbBool.set(False)
+        self.newGame = True
+    
+    def saveGame(self):
+        if self.newGame:
+            # Newgrounds Reference!?!?!
+            self.nG = self.name.get()
+            if not self.nG.lower() == "half-life" or not self.nG.lower() == "sven co-op":
+                oList = open("save/games.txt", "w")
+                self.gOptions.append(f"{self.nG}~")
+                nList = '\n'.join(self.gOptions)
+                nList = nList + '\n'
+                oList.write(nList)
+                oList.close()
+                uJS = {
+                    self.nG: {
+                        "type": self.typeSel.get(), 
+                        "capabilities": {
+                            "fullbright": self.fbBool.get(), 
+                            "flatshade": self.fsBool.get(),
+                            "1024px": self.hrBool.get(),
+                            "unlockedChrome": self.ucBool.get()
+                        }
+                    }
+                }
+                js = open(f"save/user/game{self.nG}.json", "w")
+                js.write(json.dumps(uJS, sort_keys=True, indent=5))
+                js.close()
+                self.games = GamesHandler(self.gOptions)
+                self.gameSel["values"] = self.games.gNames
+                self.updFunc(self.games)
+    
     def changeTheme(self, newTheme):
         self.thme = newTheme
         self.applyTheme(self.master)
         self.applyTheme(self.advOpt)
+        self.applyTheme(self.top)
         self.highResTT.changeTheme(self.thme["tt"], self.thme["txt"])
         self.typeTT.changeTheme(self.thme["tt"], self.thme["txt"])
-        self.unlockChromeTT.changeTheme(self.thme["tt"], self.theme["txt"])
-        self.flatShadeTT.changeTheme(self.thme["tt"], self.theme["txt"])
-        self.fullBrightTT.changeTheme(self.thme["tt"], self.theme["txt"])
+        self.unlockChromeTT.changeTheme(self.thme["tt"], self.thme["txt"])
+        self.flatShadeTT.changeTheme(self.thme["tt"], self.thme["txt"])
+        self.fullBrightTT.changeTheme(self.thme["tt"], self.thme["txt"])
+    
+    def chGame(self, e):
+        self.newGame = False
+        self.selComp = self.gameSel.get()
+        self.name.set(self.selComp)
+        if not self.games.checkCustom(self.gameSel.get()):
+            self.typeSel.set(self.gamePFs[self.selComp]["type"])
+            self.hrBool.set(self.gamePFs[self.selComp]["capabilities"]["1024px"])
+            self.ucBool.set(self.gamePFs[self.selComp]["capabilities"]["unlockedChrome"])
+            self.fsBool.set(self.gamePFs[self.selComp]["capabilities"]["flatshade"])
+            self.fbBool.set(self.gamePFs[self.selComp]["capabilities"]["fullbright"])
+        else:
+            js = open(f"save/user/game{self.gameSel.get()}.json", 'r')
+            gJS = json.loads(js.read())
+            gameDat = gJS[self.gameSel.get()]
+            self.typeSel.set(gameDat["type"])
+            self.hrBool.set(gameDat["capabilities"]["1024px"])
+            self.ucBool.set(gameDat["capabilities"]["unlockedChrome"])
+            self.fsBool.set(gameDat["capabilities"]["flatshade"])
+            self.fbBool.set(gameDat["capabilities"]["fullbright"])
+        """# If editing options were removed and the compiler doesn't have editing disabled
+        if self.hiddenEdit and not self.compDat[self.selComp]["disableEdit"]:
+            self.hiddenEdit = False
+            self.nameLabel.grid(column=1, row=4, sticky=(W))
+            self.nameEntry.grid(column=2, row=4, sticky=(W))
+            self.pathLabel.grid(column=1, row=5, sticky="w")
+            self.csPathEntry.grid(column=2, row=5, sticky="w")
+        # If editing options were available and the compiler has editing disabled
+        elif not self.hiddenEdit and self.compDat[self.selComp]["disableEdit"]:
+            self.hiddenEdit = True
+            self.nameLabel.grid_remove()
+            self.nameEntry.grid_remove()
+            self.pathLabel.grid(column=1, row=4, sticky="w")
+            self.csPathEntry.grid(column=2, row=4, sticky="w")"""
     
     def updateOpt(self, key, value):
         self.options[key] = value
@@ -115,9 +199,11 @@ class SetupMenu():
         self.hidden = True
         for w in self.master.winfo_children():
             w.grid_remove()
+
     def show(self):
         self.hidden = False
-        self.gameSel.grid(column=1, row=2)
+        self.top.grid(column=1, row=2, sticky="w", columnspan=10)
+        self.gameSel.grid(column=0, row=0)
         self.setupLabel.grid(column=1, row=3, sticky=(W), padx=(10, 0))
         self.nameLabel.grid(column=1, row=4, sticky=(W))
         self.nameEntry.grid(column=2, row=4, sticky=(W))
@@ -128,6 +214,8 @@ class SetupMenu():
         self.unlockChrome.grid(column=1,row=0,sticky="w")
         self.flatShade.grid(column=2,row=0,sticky="w")
         self.fullBright.grid(column=3,row=0,sticky="w")
+        self.addGame.grid(column=1, row=0, sticky="w", padx=(10,0))
+        self.saveGame.grid(column=2,row=0,sticky="w", padx=(10,0))
 
 class CompSetupMenu():
     def __init__(self, master, thme:dict, updFunc, startHidden:bool=False):
@@ -165,6 +253,9 @@ class CompSetupMenu():
             self.show()
         
         # Applying theme
+        self.applyTheme(master)
+    
+    def applyTheme(self, master):
         style=ttk.Style()
         style.theme_use('clam')
         style.configure("TCombobox", fieldbackground=self.thme["ent"])
@@ -208,37 +299,7 @@ class CompSetupMenu():
     
     def changeTheme(self, newTheme):
         self.thme = newTheme
-        style=ttk.Style()
-        style.theme_use('clam')
-        style.configure("TCombobox", fieldbackground=self.thme["ent"])
-        for w in self.master.winfo_children():
-            if w.winfo_class() == "Button":
-                w.configure(bg=self.thme["btn"][0])
-                w.configure(highlightbackground=self.thme["btn"][1])
-                w.configure(activebackground=self.thme["btn"][2])
-                w.configure(fg=self.thme["txt"])
-            elif w.winfo_class() == "Entry":
-                w.configure(bg=self.thme["ent"])
-                w.configure(fg=self.thme["txt"])
-            elif isinstance(w, ttk.Combobox):
-                pass
-                w.configure(foreground='white')
-                # w["menu"].config(bg=self.thme["btn"][1])
-            elif isinstance(w, Text):
-                w.configure(bg=self.thme["ent"])
-                w.configure(fg=self.thme["txt"])
-            elif w.winfo_class() == "Checkbutton":
-                w.configure(bg=self.thme["bg"])
-                w.configure(highlightbackground=self.thme["bg"])
-                w.configure(activebackground=self.thme["bg"])
-                w.configure(fg=self.thme["txt"])
-                w.configure(selectcolor=self.thme["ent"])
-            else:
-                w.configure(bg=self.thme["bg"])
-                try:
-                    w.configure(fg=self.thme["txt"])
-                except:
-                    pass
+        self.applyTheme(self.master)
     
     def updateOpt(self, key, value):
         self.options[key] = value
@@ -495,7 +556,9 @@ class CompMenu():
         gList = open("save/games.txt", "r")
         gOptions = gList.read().split('\n')
         gOptions.pop(len(gOptions)-1)
-        self.gameSel = ttk.Combobox(self.selects, values=gOptions, width=10)
+        gOptions = GamesHandler(gOptions)
+        self.games = gOptions
+        self.gameSel = ttk.Combobox(self.selects, values=gOptions.gNames, width=10)
         self.gameSel.current(0)
         self.gameSel.bind("<<ComboboxSelected>>", self.compatChk)
 
@@ -664,6 +727,10 @@ class CompMenu():
         if self.compSel.get() == comp:
             self.compJS["paths"]["custom"] = value
     
+    def updateGames(self, game):
+        self.games = game
+        self.gameSel["values"] = self.games.gNames
+    
     def hide(self):
         self.hidden = True
         for w in self.master.winfo_children():
@@ -721,7 +788,12 @@ class CompMenu():
     def compatChk(self, e=False):
         if not self.name.get() == "":
             handler = QCHandler(self.name.get())
-            gameDat = self.profiles["profiles"][self.gameSel.get()]
+            if not self.games.checkCustom(self.gameSel.get()):
+                gameDat = self.profiles["profiles"][self.gameSel.get()]
+            else:
+                js = open(f"save/user/game{self.gameSel.get()}.json", 'r')
+                gJS = json.loads(js.read())
+                gameDat = gJS[self.gameSel.get()]
             compDat = self.fullCJS["compilers"][self.compSel.get()]
             warnings = []
             if compDat["capabilities"]["1024px"]:
