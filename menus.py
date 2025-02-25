@@ -374,7 +374,7 @@ class DecompMenu():
             self.show()
         
         self.mdlTT = ToolTip(self.mdlBrowse, "REQUIRED, specifies the MDL file used to decompile a model, you cannot leave this blank.", background=thme["tt"], foreground=thme["txt"])
-        self.outputTT = ToolTip(self.outBrowse, "REQUIRED, you must specify an output folder to place all files into.", background=thme["tt"], foreground=thme["txt"])
+        self.outputTT = ToolTip(self.outBrowse, "OPTIONAL, if an output folder is not specified, then it will place the decompiled model in a subfolder of where the MDL file is located.", background=thme["tt"], foreground=thme["txt"])
         
         # Applying theme
         self.applyTheme(master)
@@ -463,43 +463,48 @@ class DecompMenu():
     def startDecomp(self):
         mdl = self.name.get()
         output = self.out.get()
-        tOutput = ''
-        if sys.platform == 'linux':
-            tOutput = subprocess.getoutput(f'./third_party/mdldec \"{mdl}\"')
-        elif sys.platform == 'win32':
-            tOutput = subprocess.getoutput(f'third_party/mdldec_win32.exe \"{mdl}\"')
-        # I don't have a Mac so I can't compile mdldec to Mac targets :(
-        # So instead I have to use wine for Mac systems
-        """elif sys.platform == 'darwin':
-            tOutput = subprocess.getoutput(f'wine third_party/mdldec_win32.exe \"{mdl}\"')"""
-        print(tOutput)
-        self.console.setOutput(tOutput)
-        if self.logOutput:
-            date = datetime.datetime.now()
-            curDate = f"{date.strftime('%d')}-{date.strftime('%m')}-{date.strftime('%Y')}-{date.strftime('%H')}-{date.strftime('%M')}-{date.strftime('%S')}"
-            log = open(f"logs/decomp-{curDate}.txt", 'w')
-            log.write(tOutput)
-            log.close()
-        # Moving files to output directory (this is a workaround to a bug with Xash3D's model decompiler)
-        filesToMove = []
-        mdlFolder = os.path.dirname(mdl)
-        anims = os.path.join(mdlFolder, 'anims/')
-        texFolder = os.path.join(mdlFolder, 'textures/')
-        for f in os.listdir(mdlFolder):
-            print(f)
-            if f.endswith("smd") or f.endswith("qc"):
-                shutil.copy(f"{mdlFolder}/{f}", os.path.join(output, f))
-                os.remove(f"{mdlFolder}/{f}")
-        shutil.copytree(anims, os.path.join(output, 'anims/'))
-        shutil.copytree(texFolder, os.path.join(output, 'textures/'))
-        try:
-            shutil.rmtree(anims)
-        except:
-            pass
-        try:
-            shutil.rmtree(texFolder)
-        except:
-            pass
+        if output == "" or output == None:
+            output = os.path.join(os.path.dirname(mdl), "Decompile/")
+            if not os.path.exists(output):
+                os.mkdir(output)
+        else:
+            tOutput = ''
+            if sys.platform == 'linux':
+                tOutput = subprocess.getoutput(f'./third_party/mdldec \"{mdl}\"')
+            elif sys.platform == 'win32':
+                tOutput = subprocess.getoutput(f'third_party/mdldec_win32.exe \"{mdl}\"')
+            # I don't have a Mac so I can't compile mdldec to Mac targets :(
+            # So instead I have to use wine for Mac systems
+            """elif sys.platform == 'darwin':
+                tOutput = subprocess.getoutput(f'wine third_party/mdldec_win32.exe \"{mdl}\"')"""
+            print(tOutput)
+            self.console.setOutput(tOutput)
+            if self.logOutput:
+                date = datetime.datetime.now()
+                curDate = f"{date.strftime('%d')}-{date.strftime('%m')}-{date.strftime('%Y')}-{date.strftime('%H')}-{date.strftime('%M')}-{date.strftime('%S')}"
+                log = open(f"logs/decomp-{curDate}.txt", 'w')
+                log.write(tOutput)
+                log.close()
+            # Moving files to output directory (this is a workaround to a bug with Xash3D's model decompiler)
+            filesToMove = []
+            mdlFolder = os.path.dirname(mdl)
+            anims = os.path.join(mdlFolder, 'anims/')
+            texFolder = os.path.join(mdlFolder, 'textures/')
+            for f in os.listdir(mdlFolder):
+                print(f)
+                if f.endswith("smd") or f.endswith("qc"):
+                    shutil.copy(f"{mdlFolder}/{f}", os.path.join(output, f))
+                    os.remove(f"{mdlFolder}/{f}")
+            shutil.copytree(anims, os.path.join(output, 'anims/'))
+            shutil.copytree(texFolder, os.path.join(output, 'textures/'))
+            try:
+                shutil.rmtree(anims)
+            except:
+                pass
+            try:
+                shutil.rmtree(texFolder)
+            except:
+                pass
 
 class CompMenu():
     def __init__(self, master, thme:dict, startHidden:bool=False):
@@ -609,7 +614,7 @@ class CompMenu():
         self.groupChkTT = ToolTip(self.groupChk, "Sets the maximum group size for sequences in KB", background=thme["tt"], foreground=thme["txt"])
         self.pf2ChkTT = ToolTip(self.pf2Chk, "Forces power of 2 textures when enabled", background=thme["tt"], foreground=thme["txt"])
         self.mdlTT = ToolTip(self.mdlBrowse, "REQUIRED, specifies the QC file used to compile your model, you cannot leave this blank.", background=thme["tt"], foreground=thme["txt"])
-        self.outputTT = ToolTip(self.outBrowse, "OPTIONAL, if an output folder is not specified, then it will place the compiled model in a models subfolder of where the QC file is located.", background=thme["tt"], foreground=thme["txt"])
+        self.outputTT = ToolTip(self.outBrowse, "OPTIONAL, if an output folder is not specified, then it will place the compiled model in a subfolder of where the QC file is located.", background=thme["tt"], foreground=thme["txt"])
         
         self.decomp = Button(master, text='Compile', command=self.startCompile, cursor="hand2")
         self.console = Console(master, 'Currently no warnings or errors!', 0, 5, self.conFix, 12)
