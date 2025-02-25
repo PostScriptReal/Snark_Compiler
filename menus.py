@@ -967,12 +967,23 @@ class CompMenu():
             mdlFolder = ""
             if output == "" or output == None:
                 mdlFolder = qcRelChk.qcLoc
-                mdlFolder = os.path.join(mdlFolder, "models/")
+                mdlFolder = os.path.join(mdlFolder, "models/")\
+                # If there is no models folder, make one!
+                if not os.path.exists(mdlFolder):
+                    os.mkdir(mdlFolder)
             else:
                 mdlFolder = output
             mdlF = qcRelChk.getMDLname()
-            shutil.copy(mdlF, os.path.join(mdlFolder, mdlF))
-            os.remove(mdlF)
+            # I'm doing this instead of directly copying the mdl file because depending on the options used (e.g. $externaltextures),
+            # the compiler will output more than one .mdl file which is needed in order for the compiled model to work.
+            # If you are using $externaltextures, the compiler will output a (mdlname).mdl file and (mdlname)T.mdl file,
+            # both of them are needed as one has the textures for the model and the other contains the model itself.
+            for f in os.listdir(os.getcwd()):
+                if f.startswith(os.path.basename(mdlF)) and f.endswith(".mdl"):
+                    shutil.copy(f, os.path.join(mdlFolder, f))
+                    os.remove(os.path.join(os.getcwd(), f))
+            # shutil.copy(mdlF, os.path.join(mdlFolder, mdlF))
+            # os.remove(mdlF)
 
 class AboutMenu():
     def __init__(self, master, thme:dict, startHidden:bool=False):
