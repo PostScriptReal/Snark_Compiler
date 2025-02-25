@@ -17,8 +17,7 @@
                         "~/.var/app/com.valvesoftware.Steam/.local/share/Steam/steamapps/common/Half-Life SDK/Model Tools/studiomdl.exe",
                         "~/snap/steam/common/Steam/steamapps/common/Half-Life SDK/Model Tools/studiomdl.exe"
                     ]
-                },
-                "custom": ""
+                }
             },
             "type": "GoldSRC",
             "capabilities": {
@@ -43,8 +42,7 @@
                         "~/.var/app/com.valvesoftware.Steam/.local/share/Steam/steamapps/common/Sven Co-op SDK/modelling/studiomdl.exe",
                         "~/snap/steam/common/Steam/steamapps/common/Sven Co-op SDK/modelling/studiomdl.exe"
                     ]
-                },
-                "custom": ""
+                }
             },
             "type": "Svengine",
             "capabilities": {

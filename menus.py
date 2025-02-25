@@ -226,6 +226,9 @@ class CompSetupMenu():
         self.fullCJS = jsonc.load(js)
         self.compDat = self.fullCJS["compilers"]
         js.close()
+        js = open("save/paths.json", 'r')
+        self.csPaths = json.loads(js.read())
+        js.close()
         cList = open("save/compilers.txt", "r")
         cOptions = cList.read().split('\n')
         cOptions.pop(len(cOptions)-1)
@@ -240,9 +243,10 @@ class CompSetupMenu():
         self.name.set(cOptions[0])
         self.nameEntry = Entry(master, textvariable=self.name, width=50)
         self.csPath = StringVar()
-        self.csPath.set(self.compDat["GoldSRC"]["path"]["custom"])
-        self.csPathEntry = Entry(master, textvariable=self.csPath, width=50)
+        self.csPath.set(self.csPaths["GoldSRC"])
+        self.csPathEntry = Entry(master, textvariable=self.csPath, width=40)
         self.csPathEntry.bind("<FocusOut>", self.inputHandler)
+        self.csPathButton = Button(master, text="Save Path", command=self.savePath)
         if not startHidden:
             self.show()
         
@@ -284,10 +288,19 @@ class CompSetupMenu():
     
     def inputHandler(self, e=False):
         self.csPath.set(self.csPathEntry.get())
-        self.compDat[self.gameSel.get()]["path"]["custom"] = self.csPath.get()
-        self.fullCJS["compilers"] = self.compDat
-        js = open("save/compilers.jsonc", 'w')
-        jsonc.dump(self.fullCJS, js)
+        self.csPaths[self.gameSel.get()] = self.csPath.get()
+        js = open("save/paths.json", 'w')
+        nJS = json.dumps(self.csPaths, sort_keys=True, indent=5)
+        js.write(nJS)
+        js.close()
+        self.updFunc(self.gameSel.get(), self.csPath.get())
+    
+    def savePath(self):
+        self.csPath.set(self.csPathEntry.get())
+        self.csPaths[self.gameSel.get()] = self.csPath.get()
+        js = open("save/paths.json", 'w')
+        nJS = json.dumps(self.csPaths, sort_keys=True, indent=5)
+        js.write(nJS)
         js.close()
         self.updFunc(self.gameSel.get(), self.csPath.get())
     
@@ -301,7 +314,7 @@ class CompSetupMenu():
     def chComp(self, e):
         self.selComp = self.gameSel.get()
         self.name.set(self.selComp)
-        self.csPath.set(self.compDat[self.selComp]["path"]["custom"])
+        self.csPath.set(self.csPaths[self.selComp])
         # If editing options were removed and the compiler doesn't have editing disabled
         if self.hiddenEdit and not self.compDat[self.selComp]["disableEdit"]:
             self.hiddenEdit = False
@@ -309,6 +322,7 @@ class CompSetupMenu():
             self.nameEntry.grid(column=2, row=4, sticky=(W))
             self.pathLabel.grid(column=1, row=5, sticky="w")
             self.csPathEntry.grid(column=2, row=5, sticky="w")
+            self.csPathButton.grid(column=3,row=5,sticky="w", padx=(5,0))
         # If editing options were available and the compiler has editing disabled
         elif not self.hiddenEdit and self.compDat[self.selComp]["disableEdit"]:
             self.hiddenEdit = True
@@ -316,6 +330,7 @@ class CompSetupMenu():
             self.nameEntry.grid_remove()
             self.pathLabel.grid(column=1, row=4, sticky="w")
             self.csPathEntry.grid(column=2, row=4, sticky="w")
+            self.csPathButton.grid(column=3,row=4,sticky="w", padx=(5,0))
 
     def hide(self):
         self.hidden = True
@@ -331,10 +346,12 @@ class CompSetupMenu():
             self.nameEntry.grid(column=2, row=4, sticky=(W))
             self.pathLabel.grid(column=1, row=5, sticky="w")
             self.csPathEntry.grid(column=2, row=5, sticky="w")
+            self.csPathButton.grid(column=3,row=5,sticky="w", padx=(5,0))
         else:
             self.hiddenEdit = True
             self.pathLabel.grid(column=1, row=4, sticky="w")
             self.csPathEntry.grid(column=2, row=4, sticky="w")
+            self.csPathButton.grid(column=3,row=4,sticky="w", padx=(5,0))
 
 class DecompMenu():
     def __init__(self, master, thme:dict, startHidden:bool=False):
@@ -525,6 +542,9 @@ class CompMenu():
         # Setting up JSON stuff
         js = open("save/compilers.jsonc", 'r')
         self.fullCJS = jsonc.load(js)
+        js.close()
+        js = open("save/paths.json", 'r')
+        self.csPaths = json.loads(js.read())
         js.close()
         js = open("save/profiles.json", 'r')
         self.profiles = json.loads(js.read())
@@ -722,9 +742,7 @@ class CompMenu():
         self.options[key] = value
     
     def updateComp(self, comp, value):
-        self.fullCJS["compilers"][comp]["path"]["custom"] = value
-        if self.compSel.get() == comp:
-            self.compJS["paths"]["custom"] = value
+        self.csPaths[comp] = value
     
     def updateGames(self, game):
         self.games = game
@@ -915,12 +933,12 @@ class CompMenu():
                         compilerFound = True
                         break
                 if not compilerFound:
-                    paths = self.compJS["path"]["custom"]
+                    paths = self.csPaths[self.compSel.get()]
                     if os.path.exists(paths):
                         compilerPath = paths
                         compilerFound = True
             else:
-                paths = self.compJS["path"]["custom"]
+                paths = self.csPaths[self.compSel.get()]
                 if not paths == "":
                     if os.path.exists(paths):
                         compilerPath = paths
