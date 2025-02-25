@@ -306,13 +306,13 @@ class QCHandler:
             qcL = self.qcf[count]
             noNL = qcL.replace("\n", "")
             if qcL.startswith("$texrendermode"):
-                if rm == 0 and noNL.endswith("fullbright"):
+                if rm == 0 and noNL.endswith("fullbright") or rm == 0 and noNL.endswith('fullbright\"') or rm == 0 and noNL.endswith('fullbright\''):
                     self.fndTRM = True
                     print("FULLBRIGHT FLAG")
-                elif rm == 1 and noNL.endswith("flatshade"):
+                elif rm == 1 and noNL.endswith("flatshade") or rm == 1 and noNL.endswith('flatshade\"') or rm == 0 and noNL.endswith('fullbright\''):
                     self.fndTRM = True
                     print("FLATSHADE FLAG")
-                elif rm == 2 and noNL.endswith("chrome"):
+                elif rm == 2 and noNL.endswith("chrome") or rm == 2 and noNL.endswith('chrome\"') or rm == 2 and noNL.endswith('chrome\''):
                     self.fndTRM = True
                     print("CHROME FLAG")
         return self.fndTRM

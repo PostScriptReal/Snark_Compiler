@@ -433,6 +433,10 @@ class GUI(Tk):
 	def help(self):
 		if not self.compSetMenu.hidden:
 			browser.open_new('https://github.com/PostScriptReal/Snark_Compiler/wiki/Getting-around-the-limitations-of-the-Snark-GUI#adding-compilers')
+		elif not self.cmpMenu.hidden:
+			browser.open_new('https://github.com/PostScriptReal/Snark_Compiler/wiki/How-to-use-Snark#compiling')
+		elif not self.decMenu.hidden:
+			browser.open_new('https://github.com/PostScriptReal/Snark_Compiler/wiki/How-to-use-Snark#decompiling')
 		else:
 			browser.open_new('https://github.com/PostScriptReal/Snark_Compiler/wiki')
 	

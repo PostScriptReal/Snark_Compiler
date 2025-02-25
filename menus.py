@@ -150,7 +150,6 @@ class SetupMenu():
         self.highResTT.changeTheme(self.thme["tt"], self.thme["txt"])
         self.typeTT.changeTheme(self.thme["tt"], self.thme["txt"])
         self.unlockChromeTT.changeTheme(self.thme["tt"], self.thme["txt"])
-        self.flatShadeTT.changeTheme(self.thme["tt"], self.thme["txt"])
         self.fullBrightTT.changeTheme(self.thme["tt"], self.thme["txt"])
     
     def chGame(self, e):
