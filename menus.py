@@ -979,7 +979,7 @@ class CompMenu():
             # If you are using $externaltextures, the compiler will output a (mdlname).mdl file and (mdlname)T.mdl file,
             # both of them are needed as one has the textures for the model and the other contains the model itself.
             for f in os.listdir(os.getcwd()):
-                if f.startswith(os.path.basename(mdlF)) and f.endswith(".mdl"):
+                if f.endswith(".mdl"):
                     shutil.copy(f, os.path.join(mdlFolder, f))
                     os.remove(os.path.join(os.getcwd(), f))
             # shutil.copy(mdlF, os.path.join(mdlFolder, mdlF))
