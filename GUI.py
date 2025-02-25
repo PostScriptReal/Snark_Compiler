@@ -279,7 +279,7 @@ class GUI(Tk):
 			self.geometry("609x491")
 		else:
 			self.fixGUI = False
-			self.geometry("521x443")
+			# self.geometry("521x443")
 		# Get Options
 		self.get_options()
 		self.selTheme = self.options["theme"]
@@ -364,9 +364,9 @@ class GUI(Tk):
 		self.header = Frame(self.frame, borderwidth=2, bg=thCol["bg"])
 		self.header.grid(column=1, row=1, sticky=(N, W, E), columnspan=69)
 		mtbtns = Frame(self.frame, borderwidth=2, bg=thCol["bg"])
-		mtbtns.grid(column=1, row=9, sticky=(S), columnspan=10)
+		mtbtns.grid(column=1, row=9, sticky=(S), columnspan=69)
 		menu = Frame(self.frame, borderwidth=2, bg=thCol["bg"])
-		menu.grid(column=0, row=2, sticky=(W, S), columnspan=10)
+		menu.grid(column=0, row=2, sticky=(W, S), columnspan=69)
 		"""
 		For whatever reason, I can't get the menus past the Decompile menu
 		to show up, so I have to make separate Frame objects in order to get
@@ -380,30 +380,34 @@ class GUI(Tk):
 		self.columnconfigure(6, weight=1)
 		self.rowconfigure(2, weight=1)
 
+		buttonPad = 0
+		if not self.fixGUI:
+			buttonPad = 5
+
 		# Create Header Buttons
 		self.dupe_button = Button(self.header, text="Games", command=self.bd_menu, bg=thCol["btn"][0], cursor="hand2")
-		self.dupe_button.grid(column=0, row=0, sticky=(N))
+		self.dupe_button.grid(column=0, row=0, sticky=(N), ipadx=buttonPad)
 
 		self.cmpiler_button = Button(self.header, text="Compilers", command=self.cmpSetupMenu, bg=thCol["btn"][0], cursor="hand2")
-		self.cmpiler_button.grid(column=1, row=0, sticky=(N))
+		self.cmpiler_button.grid(column=1, row=0, sticky=(N), ipadx=buttonPad)
 
 		self.mat_button = Button(self.header, text="Decompile", command=self.mnc_menu, bg=thCol["btn"][0], cursor="hand2")
-		self.mat_button.grid(column=2, row=0, sticky=(N))
+		self.mat_button.grid(column=2, row=0, sticky=(N), ipadx=buttonPad)
 
 		self.comp_button = Button(self.header, text="Compile", command=self.cmp_menu, bg=thCol["btn"][0], cursor="hand2")
-		self.comp_button.grid(column=3, row=0, sticky=(N))
+		self.comp_button.grid(column=3, row=0, sticky=(N), ipadx=buttonPad)
 
 		self.scripts = Button(self.header, text="Scripts", command=self.scripts, bg=thCol["btn"][0], cursor="hand2")
-		self.scripts.grid(column=4, row=0, sticky=(N))
+		self.scripts.grid(column=4, row=0, sticky=(N), ipadx=buttonPad)
 		
 		self.options = Button(self.header, text="Options", command=self.optionsMenu, bg=thCol["btn"][0], cursor="hand2")
-		self.options.grid(column=6, row=0, sticky=(N))
+		self.options.grid(column=6, row=0, sticky=(N), ipadx=buttonPad)
 
 		self.help = Button(self.header, text="Help", command=self.help, bg=thCol["btn"][0], cursor="hand2")
-		self.help.grid(column=7, row=0, sticky=(N))
+		self.help.grid(column=7, row=0, sticky=(N), ipadx=buttonPad)
 		
 		self.aboutB = Button(self.header, text="About", command=self.about, cursor="hand2")
-		self.aboutB.grid(column=5, row=0, sticky=(N))
+		self.aboutB.grid(column=5, row=0, sticky=(N), ipadx=buttonPad)
 
 		self.setupMenu = SetupMenu(menu, thCol, self.updateGames, not self.flags.allowGames, self.flags.allowGames)
 		if not self.flags.allowGames:
