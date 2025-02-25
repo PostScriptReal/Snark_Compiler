@@ -525,7 +525,7 @@ class DecompMenu():
 class CompMenu():
     def __init__(self, master, thme:dict, startHidden:bool=False):
         self.curFont = font.nametofont('TkDefaultFont').actual()
-        self.widthFix = 52
+        self.widthFix = 50
         self.conFix = 47
         self.advOptFix = True
         if self.curFont["family"].lower() == "nimbus sans l" or sys.platform == "win32":
