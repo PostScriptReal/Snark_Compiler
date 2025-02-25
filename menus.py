@@ -54,15 +54,12 @@ class SetupMenu():
         self.highRes = Checkbutton(self.advOpt, text="High Resolution BMPs", variable=self.hrBool)
         self.ucBool = BooleanVar(self.advOpt, False)
         self.unlockChrome = Checkbutton(self.advOpt, text="Unlocked Chrome", variable=self.ucBool)
-        self.fsBool = BooleanVar(self.advOpt, False)
-        self.flatShade = Checkbutton(self.advOpt, text="Flatshade", variable=self.fsBool)
         self.fbBool = BooleanVar(self.advOpt, False)
         self.fullBright = Checkbutton(self.advOpt, text="Fullbright", variable=self.fbBool)
         # Tooltips
         self.typeTT = ToolTip(self.typeSel, "The Engine type variable is used to check if the compiler supports the features that an engine has, for example if you set the type to Svengine, you'll have the -k compiler option show up.", thme["tt"], thme["txt"])
         self.highResTT = ToolTip(self.highRes, "Check this if the game supports having textures with a resolution higher than 512x512.", thme["tt"], thme["txt"])
         self.unlockChromeTT = ToolTip(self.unlockChrome, "Check this if the game supports having Chrome textures with a resolution other than 64x64.", thme["tt"], thme["txt"])
-        self.flatShadeTT = ToolTip(self.flatShade, "Check this if the game supports having other texrendermodes like flatshade.", thme["tt"], thme["txt"])
         self.fullBrightTT = ToolTip(self.fullBright, "Check this if the game supports the fullbright flag for models.", thme["tt"], thme["txt"])
 
         self.addGame = Button(self.top, text="Add New Game", command=self.addNGame)
@@ -114,7 +111,6 @@ class SetupMenu():
         self.typeSel.current(0)
         self.hrBool.set(False)
         self.ucBool.set(False)
-        self.fsBool.set(False)
         self.fbBool.set(False)
         self.newGame = True
     
@@ -133,8 +129,7 @@ class SetupMenu():
                     self.nG: {
                         "type": self.typeSel.get(), 
                         "capabilities": {
-                            "fullbright": self.fbBool.get(), 
-                            "flatshade": self.fsBool.get(),
+                            "fullbright": self.fbBool.get(),
                             "1024px": self.hrBool.get(),
                             "unlockedChrome": self.ucBool.get()
                         }
@@ -212,7 +207,6 @@ class SetupMenu():
         self.advOpt.grid(column=1, row=6, sticky="nsew", columnspan=10, pady=(20,0))
         self.highRes.grid(column=0, row=0, sticky="w")
         self.unlockChrome.grid(column=1,row=0,sticky="w")
-        self.flatShade.grid(column=2,row=0,sticky="w")
         self.fullBright.grid(column=3,row=0,sticky="w")
         self.addGame.grid(column=1, row=0, sticky="w", padx=(10,0))
         self.saveGame.grid(column=2,row=0,sticky="w", padx=(10,0))
@@ -797,7 +791,7 @@ class CompMenu():
             compDat = self.fullCJS["compilers"][self.compSel.get()]
             warnings = []
             if compDat["capabilities"]["1024px"]:
-                # If the game doesn't support higher resolution textures, then give a warning in the console
+                # If the game doesn't support higher resolution textures, then give a warning in the console.
                 if not gameDat["capabilities"]["1024px"] and handler.check1024px():
                     warnings.append("WARNING: The selected game does not support textures higher than 512x512, please downscale the offending textures!")
             else:
@@ -805,8 +799,9 @@ class CompMenu():
                     warnings.append("WARNING: The selected compiler does not support textures higher than 512x512, please downscale the offending textures!")
                 elif handler.check1024px():
                     warnings.append("WARNING: The selected compiler and game does not support textures higher than 512x512, please downscale the offending textures!")
+            
             if compDat["capabilities"]["unlockedChrome"]:
-                # If the game doesn't support chrome textures that aren't 64x64, then give a warning in the console
+                # If the game doesn't support chrome textures that aren't 64x64, then give a warning in the console.
                 if not gameDat["capabilities"]["unlockedChrome"] and handler.checkCHROME():
                     warnings.append("WARNING: There are one or more chrome textures that aren't at a fixed resolution of 64x64, please fix that as the selected game does not support this!")
             else:
@@ -814,6 +809,25 @@ class CompMenu():
                     warnings.append("WARNING: There are one or more chrome textures that aren't at a fixed resolution of 64x64, please fix that as the selected compiler does not support this!")
                 elif handler.checkCHROME():
                     warnings.append("WARNING: There are one or more chrome textures that aren't at a fixed resolution of 64x64, please fix that as the selected compiler and game does not support this!")
+            
+            if compDat["capabilities"]["fullbright"]:
+                # If the game doesn't support fullbright, then give a warning in the console.
+                if not gameDat["capabilities"]["fullbright"] and handler.checkTRM(0):
+                    warnings.append("WARNING: Model uses a $texrendermode that isn't supported by the game: fullbright")
+            else:
+                if handler.checkTRM(0) and gameDat["capabilities"]["fullbright"]:
+                    warnings.append("WARNING: Model uses a $texrendermode that isn't supported by the compiler: fullbright")
+                elif handler.checkTRM(0):
+                    warnings.append("WARNING: Model uses a $texrendermode that isn't supported by the game and the compiler: fullbright")
+            
+            if not compDat["capabilities"]["flatshade"] and handler.checkTRM(1):
+                # If the compiler doesn't support the flatshade $texrendermode, then give a warning in the console.
+                warnings.append("WARNING: Model uses a $texrendermode that isn't supported by the compiler: flatshade")
+            
+            if not compDat["capabilities"]["chromeTRM"] and handler.checkTRM(2):
+                # If the compiler doesn't support the chrome $texrendermode, then give a warning in the console.
+                warnings.append("WARNING: Compiler doesn't support the chrome $texrendermode, please add the \"CHROME\" prefix to your texture name if you want this effect!")
+            
             # Update the console
             if len(warnings) != 0:
                 self.console.setOutput("\n".join(warnings))

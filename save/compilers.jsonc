@@ -24,6 +24,7 @@
             "capabilities": {
                 "fullbright": false,
                 "flatshade": false,
+                "chromeTRM": false,
                 "1024px": false,
                 "unlockedChrome": false,
                 "cliptotextures": true
@@ -49,6 +50,7 @@
             "capabilities": {
                 "fullbright": true,
                 "flatshade": true,
+                "chromeTRM": true,
                 "1024px": true,
                 "unlockedChrome": true,
                 "cliptotextures": false

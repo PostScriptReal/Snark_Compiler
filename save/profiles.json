@@ -5,7 +5,6 @@
             "type": "GoldSRC",
             "capabilities": {
                 "fullbright": false,
-                "flatshade": false,
                 "1024px": false,
                 "unlockedChrome": false
             }
@@ -15,7 +14,6 @@
             "type": "Svengine",
             "capabilities": {
                 "fullbright": true,
-                "flatshade": true,
                 "1024px": true,
                 "unlockedChrome": true
             }

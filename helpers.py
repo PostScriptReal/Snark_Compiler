@@ -293,6 +293,29 @@ class QCHandler:
                         if not width == 64 or not height == 64:
                             self.fndUnlChr = True
         return self.fndUnlChr
+    def checkTRM(self, renderM:int):
+        count = -1
+        rm = renderM
+        newCDtex = ""
+        texmodes = []
+        self.newQC = self.qcf
+        self.newQCPath = ""
+        self.fndTRM = False
+        while count < len(self.qcf)-1:
+            count += 1
+            qcL = self.qcf[count]
+            noNL = qcL.replace("\n", "")
+            if qcL.startswith("$texrendermode"):
+                if rm == 0 and noNL.endswith("fullbright"):
+                    self.fndTRM = True
+                    print("FULLBRIGHT FLAG")
+                elif rm == 1 and noNL.endswith("flatshade"):
+                    self.fndTRM = True
+                    print("FLATSHADE FLAG")
+                elif rm == 2 and noNL.endswith("chrome"):
+                    self.fndTRM = True
+                    print("CHROME FLAG")
+        return self.fndTRM
 
 class HyperlinkImg():
 
