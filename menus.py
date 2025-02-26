@@ -553,6 +553,7 @@ class CompMenu():
         js.close()
         self.selects = Frame(master, borderwidth=2, bg=thme["bg"])
         self.advOpt = Frame(master, borderwidth=2, bg=thme["bg"], relief="sunken")
+        self.advOpt2 = Frame(self.advOpt, borderwidth=2, bg=thme["bg"])
         self.thme = thme
         self.setupLabel = Label(master, text="QC Input: ")
         self.nameLabel = Label(master, text="Output: ")
@@ -608,18 +609,32 @@ class CompMenu():
         self.hitboxChk = Checkbutton(self.advOpt, text="-h", variable=self.hitboxB)
         self.keepBonesB = BooleanVar(self.advOpt, value=False)
         self.keepBonesChk = Checkbutton(self.advOpt, text="-k", variable=self.keepBonesB)
-        self.ignoreB = BooleanVar(self.advOpt, value=False)
-        self.ignoreChk = Checkbutton(self.advOpt, text="-i", variable=self.ignoreB)
-        self.bNormB = BooleanVar(self.advOpt, value=False)
-        self.bNormChk = Checkbutton(self.advOpt, text="-n", variable=self.bNormB)
-        self.flipB = BooleanVar(self.advOpt, value=False)
-        self.flipChk = Checkbutton(self.advOpt, text="-f", variable=self.flipB)
-        self.groupB = BooleanVar(self.advOpt, value=False)
-        self.groupChk = Checkbutton(self.advOpt, text="-g", variable=self.groupB, command=self.groupSBhandler)
-        self.groupSB = BoolSpinbox(self.advOpt, range=[0,4096], bg=thme["ent"], bBG=thme["btn"][0], fg=thme["txt"], increment=16)
-        self.groupSB.entry.config(width=4)
-        self.pf2B = BooleanVar(self.advOpt, value=False)
-        self.pf2Chk = Checkbutton(self.advOpt, text="-p", variable=self.pf2B)
+        if self.advOptFix:
+            self.ignoreB = BooleanVar(self.advOpt, value=False)
+            self.ignoreChk = Checkbutton(self.advOpt, text="-i", variable=self.ignoreB)
+            self.bNormB = BooleanVar(self.advOpt, value=False)
+            self.bNormChk = Checkbutton(self.advOpt, text="-n", variable=self.bNormB)
+            self.flipB = BooleanVar(self.advOpt, value=False)
+            self.flipChk = Checkbutton(self.advOpt, text="-f", variable=self.flipB)
+            self.groupB = BooleanVar(self.advOpt, value=False)
+            self.groupChk = Checkbutton(self.advOpt, text="-g", variable=self.groupB, command=self.groupSBhandler)
+            self.groupSB = BoolSpinbox(self.advOpt, range=[0,4096], bg=thme["ent"], bBG=thme["btn"][0], fg=thme["txt"], increment=16)
+            self.groupSB.entry.config(width=4)
+            self.pf2B = BooleanVar(self.advOpt, value=False)
+            self.pf2Chk = Checkbutton(self.advOpt, text="-p", variable=self.pf2B)
+        else:
+            self.ignoreB = BooleanVar(self.advOpt2, value=False)
+            self.ignoreChk = Checkbutton(self.advOpt2, text="-i", variable=self.ignoreB)
+            self.bNormB = BooleanVar(self.advOpt2, value=False)
+            self.bNormChk = Checkbutton(self.advOpt2, text="-n", variable=self.bNormB)
+            self.flipB = BooleanVar(self.advOpt2, value=False)
+            self.flipChk = Checkbutton(self.advOpt2, text="-f", variable=self.flipB)
+            self.groupB = BooleanVar(self.advOpt2, value=False)
+            self.groupChk = Checkbutton(self.advOpt2, text="-g", variable=self.groupB, command=self.groupSBhandler)
+            self.groupSB = BoolSpinbox(self.advOpt2, range=[0,4096], bg=thme["ent"], bBG=thme["btn"][0], fg=thme["txt"], increment=16)
+            self.groupSB.entry.config(width=4)
+            self.pf2B = BooleanVar(self.advOpt2, value=False)
+            self.pf2Chk = Checkbutton(self.advOpt2, text="-p", variable=self.pf2B)
         # Tooltips
         self.logChkTT = ToolTip(self.logChk, "Writes the log in the terminal below as a text file inside the logs folder.", background=thme["tt"], foreground=thme["txt"])
         self.dashTChkTT = ToolTip(self.dashTChk, "Specify a texture to replace while compiling, you can globally replace all textures by specifying one bitmap or replace a single texture by following this format: \'tex1.bmp,tex2.bmp\'.", background=thme["tt"], foreground=thme["txt"])
@@ -675,12 +690,18 @@ class CompMenu():
         self.compJS = self.fullCJS["compilers"][self.compSel.get()]
         if self.compJS["type"].lower() == "svengine":
             self.svengine = True
-            self.keepBonesChk.grid(column=1, row=2, sticky="w")
+            if self.advOptFix:
+                self.keepBonesChk.grid(column=1, row=2, sticky="w")
+            else:
+                self.keepBonesChk.grid(column=5, row=2, sticky="w")
             self.pf2Chk.grid_remove()
         else:
             self.svengine = False
             self.keepBonesChk.grid_remove()
-            self.pf2Chk.grid(column=1, row=2, sticky="w")
+            if self.advOptFix:
+                self.pf2Chk.grid(column=1, row=2, sticky="w")
+            else:
+                self.pf2Chk.grid(column=5, row=2, sticky="w")
         self.compatChk()
 
     def applyTheme(self, master):
@@ -777,31 +798,32 @@ class CompMenu():
         if self.advOptFix:
             self.ignoreChk.grid(column=7, row=1, sticky="w")
         else:
+            self.advOpt2.grid(column=0, row=2, sticky="nsew")
             self.ignoreChk.grid(column=0, row=2, sticky="w")
         if self.advOptFix:
             self.bNormChk.grid(column=8, row=1, sticky="w")
         else:
-            self.bNormChk.grid(column=0, row=2, sticky="w",padx=(40,0))
+            self.bNormChk.grid(column=1, row=2, sticky="w")
         if self.advOptFix:
             self.flipChk.grid(column=0, row=2, sticky="w")
         else:
-            self.flipChk.grid(column=0, row=2, sticky="w",padx=(81,0))
+            self.flipChk.grid(column=2, row=2, sticky="w")
         if self.advOptFix:
             self.groupChk.grid(column=0, row=2, sticky="w",padx=(40,0))
             self.groupSB.grid(column=0, row=2, sticky="w",padx=(81,0))
         else:
-            self.groupChk.grid(column=0, row=2, sticky="w",padx=(121,0))
-            self.groupSB.grid(column=0, row=2, sticky="w",padx=(161,0))
+            self.groupChk.grid(column=3, row=2, sticky="w")
+            self.groupSB.grid(column=4, row=2, sticky="w")
         if not self.svengine:
             if self.advOptFix:
                 self.pf2Chk.grid(column=1, row=2, sticky="w")
             else:
-                self.pf2Chk.grid(column=2, row=2, sticky="w")
+                self.pf2Chk.grid(column=5, row=2, sticky="w")
         if self.svengine:
             if self.advOptFix:
                 self.keepBonesChk.grid(column=1, row=2, sticky="w")
             else:
-                self.keepBonesChk.grid(column=2, row=2, sticky="w")
+                self.keepBonesChk.grid(column=5, row=2, sticky="w")
         self.decomp.grid(column=0, row=4, pady=(10,0))
         self.console.show()
     
