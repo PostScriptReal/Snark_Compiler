@@ -529,8 +529,8 @@ class CompMenu():
         self.conFix = 47
         self.advOptFix = True
         if self.curFont["family"].lower() == "nimbus sans l" or sys.platform == "win32":
-            self.widthFix = 48
-            self.conFix = 47
+            self.widthFix = 52
+            self.conFix = 44
             self.advOptFix = False
         else:
             pass
