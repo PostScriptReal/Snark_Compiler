@@ -776,16 +776,9 @@ class CompMenu():
         self.hitboxChk.grid(column=6, row=1, sticky="w")
         self.ignoreChk.grid(column=7, row=1, sticky="w")
         self.bNormChk.grid(column=8, row=1, sticky="w")
-        if not self.advOptFix:
-            self.flipChk.grid(column=9, row=1, sticky="w")
-        else:
-            self.flipChk.grid(column=0, row=2, sticky="w")
-        if not self.advOptFix:
-            self.groupChk.grid(column=0, row=2, sticky="w")
-            self.groupSB.grid(column=0, row=2, sticky="w",padx=(40,0))
-        else:
-            self.groupChk.grid(column=0, row=2, sticky="w",padx=(40,0))
-            self.groupSB.grid(column=0, row=2, sticky="w",padx=(81,0))
+        self.flipChk.grid(column=0, row=2, sticky="w")
+        self.groupChk.grid(column=0, row=2, sticky="w",padx=(40,0))
+        self.groupSB.grid(column=0, row=2, sticky="w",padx=(81,0))
         if not self.svengine:
             self.pf2Chk.grid(column=1, row=2, sticky="w")
         if self.svengine:
