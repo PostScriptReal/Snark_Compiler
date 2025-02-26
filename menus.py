@@ -793,7 +793,7 @@ class CompMenu():
             self.dashT.grid(column=2, row=1, sticky="w")
             self.dashTChk.grid(column=1, row=1, sticky="w")
         else:
-            self.dashT.grid(column=2, row=1, sticky="w", padx(0,50))
+            self.dashT.grid(column=2, row=1, sticky="w",padx=(0,50))
             self.dashTChk.grid(column=1, row=1, sticky="w")
         self.rNormalChk.grid(column=3, row=1, sticky="w")
         self.angleChk.grid(column=4, row=1, sticky="w")
