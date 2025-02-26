@@ -22,7 +22,27 @@ jobs:
           pip install jsoncparser
       - name: Run PyInstaller
         run: |
-          pyinstaller --noconfirm --onedir --console --icon "icon-win32.ico" --name "Snark" --add-data "version.txt:." --add-data "activities.txt:." --add-data "logo128.png:." --add-data "icon-win32.ico:." --add-data "icon-linux.png:." --add-data "LICENSE:." --add-data "README.md:." --add-data "save:save/" --add-data "themes:themes/" --add-data "third_party:third_party/" --add-data "images:images/" --add-data "logs:logs/"  "GUI.py"
+          pyinstaller --noconfirm --onedir --console --name "Snark" --add-data "version.txt:." --add-data "activities.txt:." --add-data "logo128.png:." --add-data "icon-win32.ico:." --add-data "icon-linux.png:." --add-data "LICENSE:." --add-data "README.md:." --add-data "save:save/" --add-data "themes:themes/" --add-data "third_party:third_party/" --add-data "images:images/" --add-data "logs:logs/"  "GUI.py"
+      - name: Move files outside _internal dir
+        shell: bash
+        run: |
+          mkdir third_party/
+          mv _internal/third_party/* third_party/
+          mkdir save/
+          mv _internal/save/* save/
+          mkdir images/
+          mv _internal/images/* images/
+          mkdir themes/
+          mv _internal/themes/* themes/
+          mkdir logs/
+          mv _internal/logs/* logs/
+          mv _internal/icon-win32.ico /
+          mv _internal/version.txt /
+          mv _internal/activities.txt /
+          mv _internal/logo128.png /
+          mv _internal/icon-linux.png /
+          mv _internal/LICENSE /
+          mv _internal/README.md /
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:

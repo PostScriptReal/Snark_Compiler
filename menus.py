@@ -359,8 +359,8 @@ class DecompMenu():
         self.conFix = 46
         self.logOutput = False
         if self.curFont["family"].lower() == "nimbus sans l" or sys.platform == "win32":
-            self.widthFix = 60
-            self.conFix = 55
+            self.widthFix = 58
+            self.conFix = 53
         else:
             pass
         self.hidden = startHidden
