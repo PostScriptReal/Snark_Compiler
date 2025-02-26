@@ -488,7 +488,7 @@ class DecompMenu():
             if sys.platform == 'linux':
                 tOutput = subprocess.getoutput(f'./third_party/mdldec \"{mdl}\"')
             elif sys.platform == 'win32':
-                tOutput = subprocess.getoutput(f'third_party/mdldec_win32.exe \"{mdl}\"')
+                tOutput = subprocess.getoutput(f'\"{os.getcwd()}/third_party/mdldec_win32.exe\" \"{mdl}\"')
             # I don't have a Mac so I can't compile mdldec to Mac targets :(
             # So instead I have to use wine for Mac systems
             """elif sys.platform == 'darwin':
