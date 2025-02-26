@@ -330,7 +330,7 @@ class HyperlinkImg():
         if id == 0:
             browser.open_new("https://github.com/PostScriptReal/Snark_Compiler")
         elif id == 1:
-            browser.open_new("https://gamebanana.com/tools/games/5250")
+            browser.open_new("https://gamebanana.com/tools/19255")
 
 class Game():
 
