@@ -529,7 +529,7 @@ class CompMenu():
         self.conFix = 47
         self.advOptFix = True
         if self.curFont["family"].lower() == "nimbus sans l" or sys.platform == "win32":
-            self.widthFix = 52
+            self.widthFix = 57
             self.conFix = 30
             self.advOptFix = False
         else:
@@ -774,31 +774,34 @@ class CompMenu():
         self.angleChk.grid(column=4, row=1, sticky="w")
         self.angleSB.grid(column=5, row=1, sticky="w")
         self.hitboxChk.grid(column=6, row=1, sticky="w")
-        self.ignoreChk.grid(column=7, row=1, sticky="w")
+        if self.advOptFix:
+            self.ignoreChk.grid(column=7, row=1, sticky="w")
+        else:
+            self.ignoreChk.grid(column=0, row=2, sticky="w")
         if self.advOptFix:
             self.bNormChk.grid(column=8, row=1, sticky="w")
         else:
-            self.bNormChk.grid(column=0, row=2, sticky="w")
+            self.bNormChk.grid(column=0, row=2, sticky="w",padx=(40,0))
         if self.advOptFix:
             self.flipChk.grid(column=0, row=2, sticky="w")
         else:
-            self.flipChk.grid(column=0, row=2, sticky="w",padx=(40,0))
+            self.flipChk.grid(column=0, row=2, sticky="w",padx=(81,0))
         if self.advOptFix:
             self.groupChk.grid(column=0, row=2, sticky="w",padx=(40,0))
             self.groupSB.grid(column=0, row=2, sticky="w",padx=(81,0))
         else:
-            self.groupChk.grid(column=0, row=2, sticky="w",padx=(81,0))
-            self.groupSB.grid(column=0, row=2, sticky="w",padx=(121,0))
+            self.groupChk.grid(column=0, row=2, sticky="w",padx=(121,0))
+            self.groupSB.grid(column=0, row=2, sticky="w",padx=(161,0))
         if not self.svengine:
             if self.advOptFix:
                 self.pf2Chk.grid(column=1, row=2, sticky="w")
             else:
-                self.pf2Chk.grid(column=1, row=3, sticky="w")
+                self.pf2Chk.grid(column=2, row=2, sticky="w")
         if self.svengine:
             if self.advOptFix:
                 self.keepBonesChk.grid(column=1, row=2, sticky="w")
             else:
-                self.keepBonesChk.grid(column=1, row=3, sticky="w")
+                self.keepBonesChk.grid(column=2, row=2, sticky="w")
         self.decomp.grid(column=0, row=4, pady=(10,0))
         self.console.show()
     
