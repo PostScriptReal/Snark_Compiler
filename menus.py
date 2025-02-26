@@ -623,8 +623,8 @@ class CompMenu():
             self.pf2B = BooleanVar(self.advOpt, value=False)
             self.pf2Chk = Checkbutton(self.advOpt, text="-p", variable=self.pf2B)
         else:
-            self.ignoreB = BooleanVar(self.advOpt2, value=False)
-            self.ignoreChk = Checkbutton(self.advOpt2, text="-i", variable=self.ignoreB)
+            self.ignoreB = BooleanVar(self.advOpt, value=False)
+            self.ignoreChk = Checkbutton(self.advOpt, text="-i", variable=self.ignoreB)
             self.bNormB = BooleanVar(self.advOpt2, value=False)
             self.bNormChk = Checkbutton(self.advOpt2, text="-n", variable=self.bNormB)
             self.flipB = BooleanVar(self.advOpt2, value=False)
