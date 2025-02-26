@@ -659,6 +659,8 @@ class CompMenu():
         self.applyTheme(master)
         self.applyTheme(self.advOpt)
         self.applyTheme(self.selects)
+        if not self.advOptFix:
+            self.applyTheme(self.advOptFix2)
         self.angleSB.changeTheme(thme["ent"], thme["btn"][0], thme["txt"])
         self.groupSB.changeTheme(thme["ent"], thme["btn"][0], thme["txt"])
     def setLog(self):
@@ -742,6 +744,8 @@ class CompMenu():
         self.applyTheme(self.master)
         self.applyTheme(self.advOpt)
         self.applyTheme(self.selects)
+        if not self.advOptFix:
+            self.applyTheme(self.advOptFix2)
         self.logChkTT.changeTheme(newTheme["tt"], newTheme["txt"])
         self.dashTChkTT.changeTheme(newTheme["tt"], newTheme["txt"])
         self.rNormalTT.changeTheme(newTheme["tt"], newTheme["txt"])
@@ -793,8 +797,8 @@ class CompMenu():
             self.dashT.grid(column=2, row=1, sticky="w")
             self.dashTChk.grid(column=1, row=1, sticky="w")
         else:
-            self.dashT.grid(column=2, row=1, sticky="w",padx=(0,50))
-            self.dashTChk.grid(column=1, row=1, sticky="w")
+            self.dashT.grid(column=0, row=1, sticky="w",padx=(101,0))
+            self.dashTChk.grid(column=0, row=1, sticky="w",padx=(60,0))
         self.rNormalChk.grid(column=3, row=1, sticky="w")
         self.angleChk.grid(column=4, row=1, sticky="w")
         self.angleSB.grid(column=5, row=1, sticky="w")
