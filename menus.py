@@ -789,8 +789,12 @@ class CompMenu():
         self.advOpt.grid(column=0, row=3, sticky="nsew", columnspan=10, pady=(20,0))
         self.advOptLabel.grid(column=0, row=0, sticky="w")
         self.logChk.grid(column=0, row=1, sticky="w")
-        self.dashT.grid(column=2, row=1, sticky="w")
-        self.dashTChk.grid(column=1, row=1, sticky="w")
+        if self.advOptFix:
+            self.dashT.grid(column=2, row=1, sticky="w")
+            self.dashTChk.grid(column=1, row=1, sticky="w")
+        else:
+            self.dashT.grid(column=2, row=1, sticky="w", padx(0,50))
+            self.dashTChk.grid(column=1, row=1, sticky="w")
         self.rNormalChk.grid(column=3, row=1, sticky="w")
         self.angleChk.grid(column=4, row=1, sticky="w")
         self.angleSB.grid(column=5, row=1, sticky="w")
