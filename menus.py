@@ -797,8 +797,8 @@ class CompMenu():
             self.dashT.grid(column=2, row=1, sticky="w")
             self.dashTChk.grid(column=1, row=1, sticky="w")
         else:
-            self.dashT.grid(column=0, row=1, sticky="w",padx=(155,0))
-            self.dashTChk.grid(column=0, row=1, sticky="w",padx=(120,0))
+            self.dashT.grid(column=0, row=1, sticky="w",padx=(145,0))
+            self.dashTChk.grid(column=0, row=1, sticky="w",padx=(110,0))
         self.rNormalChk.grid(column=3, row=1, sticky="w")
         self.angleChk.grid(column=4, row=1, sticky="w")
         self.angleSB.grid(column=5, row=1, sticky="w")
@@ -807,7 +807,7 @@ class CompMenu():
             self.ignoreChk.grid(column=7, row=1, sticky="w")
         else:
             self.advOpt2.grid(column=0, row=2, sticky="nsew")
-            self.ignoreChk.grid(column=0, row=2, sticky="w")
+            self.ignoreChk.grid(column=7, row=1, sticky="w")
         if self.advOptFix:
             self.bNormChk.grid(column=8, row=1, sticky="w")
         else:
