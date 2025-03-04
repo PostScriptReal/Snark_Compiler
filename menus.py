@@ -187,7 +187,10 @@ class SetupMenu():
             self.csPathEntry.grid(column=2, row=4, sticky="w")"""
     
     def updateOpt(self, key, value):
-        self.options[key] = value
+        if not key.startswith("gsMV"):
+            self.options[key] = value
+        else:
+            self.options["gsMV"][key.replace("gsMV", "")] = value
 
     def hide(self):
         self.hidden = True
@@ -308,7 +311,10 @@ class CompSetupMenu():
         self.applyTheme(self.master)
     
     def updateOpt(self, key, value):
-        self.options[key] = value
+        if not key.startswith("gsMV"):
+            self.options[key] = value
+        else:
+            self.options["gsMV"][key.replace("gsMV", "")] = value
     
     def chComp(self, e):
         self.selComp = self.gameSel.get()
@@ -385,6 +391,7 @@ class DecompMenu():
         self.logChk = Checkbutton(self.advOpt, text="Write log to file", variable=self.logVal, command=self.setLog)
         self.logChkTT = ToolTip(self.logChk, "Writes the log in the terminal below as a text file inside the logs folder.", background=thme["tt"], foreground=thme["txt"])
         self.decomp = Button(master, text='Decompile', command=self.startDecomp, cursor="hand2")
+        self.hlmv = Button(master, text='Open model in HLAM', command=self.openHLAM, cursor="hand2")
         self.console = Console(master, 'Start a decompile and the terminal output will appear here!', 0, 4, self.conFix, 14)
         if not startHidden:
             self.show()
@@ -398,8 +405,17 @@ class DecompMenu():
     def setLog(self):
         self.logOutput = self.logVal.get()
     
+    def openHLAM(self):
+        if self.options["gsMV"]["selectedMV"] == 1:
+            if sys.platform == "linux":
+                a = subprocess.getoutput(f"hlam \"{self.name.get()}\"")
+            else:
+                a = subprocess.getoutput(f"\"C:/Program Files (x86)/Half-Life Asset Manager/hlam.exe\" \"{self.name.get()}\"")
+    
     def inputHandler(self, e=False):
         self.name.set(self.nameEntry.get())
+        if not self.name.get() == "":
+            self.hlmv.grid(column=1, row=3, pady=(27,0), sticky="w")
 
     def applyTheme(self, master):
         style= ttk.Style()
@@ -443,7 +459,10 @@ class DecompMenu():
         self.logChkTT.changeTheme(newTheme["tt"], newTheme["txt"])
     
     def updateOpt(self, key, value):
-        self.options[key] = value
+        if not key.startswith("gsMV"):
+            self.options[key] = value
+        else:
+            self.options["gsMV"][key.replace("gsMV", "")] = value
 
     def hide(self):
         self.hidden = True
@@ -462,6 +481,8 @@ class DecompMenu():
         self.advOptLabel.grid(column=0, row=0, sticky="w")
         self.logChk.grid(column=0, row=1, sticky="w")
         self.decomp.grid(column=0, row=3, pady=(27,0))
+        if not self.name.get() == "":
+            self.hlmv.grid(column=1, row=3, pady=(27,0), sticky="w")
         self.console.show()
     
     def findMDL(self):
@@ -470,6 +491,8 @@ class DecompMenu():
             startDir = os.path.expanduser(startDir)
         fileTypes = [("GoldSRC Model", "*.mdl"), ("All Files", "*.*")]
         self.name.set(askopenfilename(title="Select MDL", initialdir=startDir, filetypes=fileTypes))
+        if not self.name.get() == "":
+            self.hlmv.grid(column=1, row=3, pady=(27,0), sticky="w")
     def output(self):
         startDir = self.options["startFolder"]
         if startDir.startswith("~"):
@@ -763,7 +786,10 @@ class CompMenu():
         self.groupSB.changeTheme(newTheme["ent"], newTheme["btn"][0], newTheme["txt"])
 
     def updateOpt(self, key, value):
-        self.options[key] = value
+        if not key.startswith("gsMV"):
+            self.options[key] = value
+        else:
+            self.options["gsMV"][key.replace("gsMV", "")] = value
     
     def updateComp(self, comp, value):
         self.csPaths[comp] = value
@@ -1137,7 +1163,10 @@ class AboutMenu():
         self.gameBtt.changeTheme(newTheme["tt"], newTheme["txt"])
 
     def updateOpt(self, key, value):
-        self.options[key] = value
+        if not key.startswith("gsMV"):
+            self.options[key] = value
+        else:
+            self.options["gsMV"][key.replace("gsMV", "")] = value
     
     def hide(self):
         self.hidden = True
@@ -1153,6 +1182,7 @@ class AboutMenu():
 
 class OptionsMenu():
     def __init__(self, master, thme:dict, thmecallback, updFunc, startHidden:bool=False):
+        self.curPage, self.optionsVersion = 0, 2
         self.hidden = startHidden
         self.master = master
         self.thme = thme
@@ -1162,7 +1192,14 @@ class OptionsMenu():
         js = jsf.read()
         jsf.close()
         self.options = json.loads(js)
-        # Options
+        # Checking if options JSON is from a previous version...
+        if not self.options["version"] == self.optionsVersion:
+            self.upgradeJSON()
+        # Pages
+        self.pageButtons = Frame(master, borderwidth=2, bg=thme["bg"])
+        self.generalButton = Button(self.pageButtons, text="General", cursor="hand2", command=self.genPg)
+        self.hlmvButton = Button(self.pageButtons, text="Model Viewers", cursor="hand2", command=self.hlmvPg)
+        # General options
         self.setupLabel = Label(master, text=f"Theme: ", background=thme["bg"], foreground=thme["txt"])
         self.nameLabel = Label(master, text="Starting directory: ", background=thme["bg"], fg=thme["txt"])
         themes = ["Freeman", "Shephard", "Calhoun", "Cross"]
@@ -1187,16 +1224,44 @@ class OptionsMenu():
         self.forceDefB = BooleanVar(master, value=self.options["forceDefPaths"])
         self.fdLabel = Label(master, text="Prioritise default paths:")
         self.forceDefault = Checkbutton(master, command=self.chFDP, variable=self.forceDefB)
+        # Model Viewer Options
+        self.hlmvLabel = Label(master, text="Model Viewer: ")
+        hlmvValues = ["None", "Half-Life Asset Manager", "Other"]
+        self.hlmvCBox = ttk.Combobox(master, cursor="hand2", values=hlmvValues)
+        self.hlmvCBox.current(self.options["gsMV"]["selectedMV"])
+        self.mvPathLabel = Label(master, text="Path to model viewer: ")
+        self.mvPathVar = StringVar(master, value="Path to model viewer (if \"Other\" is selected)")
+        self.mvPathEnt = BoolEntry(master, textvariable=self.mvPathVar, placeholder="Path to model viewer (if \"Other\" is selected)")
+        self.setMVP = Button(master, text="Set Model Viewer Executable", cursor="hand2", command=self.chMVP)
         # Tooltips
         self.themeTT = ToolTip(self.themeCBox, "Changes the program's theme, the built-in themes are: Freeman, Shephard, Calhoun and Cross.", background=thme["tt"], foreground=thme["txt"])
         self.startFolderTT = ToolTip(self.startFent, "Sets the directory that the built-in file explorer will start in, the default is the documents folder.", background=thme["tt"], foreground=thme["txt"])
         self.startFolderTT2 = ToolTip(self.setSF, "Sets the directory that the built-in file explorer will start in, the default is the documents folder.", background=thme["tt"], foreground=thme["txt"])
         self.forceDefTT = ToolTip(self.forceDefault, "By default, Snark prioritises the custom path you set over the default paths for compilers, enabling this will prioritise the default paths instead, meaning that Snark won't use the custom path if it finds the compiler in its default path.", background=thme["tt"], foreground=thme["txt"])
+        self.hlmvTT = ToolTip(self.hlmvCBox, "Sets the model viewer you want to use when clicking the \"Open model in HLMV\" button, if this is set to None, the button will not show up!", background=thme["tt"], foreground=thme["txt"])
+        self.mvPathTT = ToolTip(self.mvPathEnt.entry, "Sets the path to the model viewer you want to use if you select \"Other\"", background=thme["tt"], foreground=thme["txt"])
         if not startHidden:
             self.show()
         
         # Applying theme
         self.applyTheme(master)
+        self.applyTheme(self.pageButtons)
+    
+    def upgradeJSON(self):
+        if self.options["version"] == 1:
+            newOptions = {
+                "forceDefPaths": self.options["forceDefPaths"],
+                "save_paths": false,
+                "startFolder": self.options["startFolder"],
+                "theme": self.options["theme"],
+                "gsMV": {
+                    "selectedMV": 0,
+                    "csPath": ""
+                },
+                "version": 2
+            }
+            self.options = newOptions
+            self.save_options()
     
     def checkNewThemes(self):
         tList = os.listdir("themes/")
@@ -1204,6 +1269,33 @@ class OptionsMenu():
         if len(tList) >= 1:
             return tList
         return False
+    
+    def genPg(self):
+        self.curPage = 0
+        self.setupLabel.grid(column=1, row=1, sticky="w")
+        self.themeCBox.grid(column=2, row=1, sticky="w")
+        self.nameLabel.grid(column=1, row=2, sticky="w")
+        self.startFent.grid(column=2, row=2, sticky="w")
+        self.setSF.grid(column=3, row=2, sticky="w")
+        self.fdLabel.grid(column=1, row=3, sticky="w")
+        self.hlmvLabel.grid_remove()
+        self.hlmvCBox.grid_remove()
+        self.mvPathLabel.grid_remove()
+        self.mvPathEnt.grid_remove()
+    
+    def hlmvPg(self):
+        self.curPage = 1
+        self.setupLabel.grid_remove()
+        self.themeCBox.grid_remove()
+        self.nameLabel.grid_remove()
+        self.startFent.grid_remove()
+        self.setSF.grid_remove()
+        self.fdLabel.grid_remove()
+        self.forceDefault.grid_remove()
+        self.hlmvLabel.grid(column=1, row=1, sticky="w")
+        self.hlmvCBox.grid(column=2, row=1, sticky="w")
+        self.mvPathLabel.grid(column=1, row=2, sticky="w")
+        self.mvPathEnt.grid(column=2, row=2, sticky="w")
     
     def applyTheme(self, master):
         style=ttk.Style()
@@ -1261,6 +1353,29 @@ class OptionsMenu():
             self.save_options()
             self.updFunc("startFolder", path)
     
+    def chMVP(self):
+        startDir = self.options["startFolder"]
+        if startDir.startswith("~"):
+            startDir = os.path.expanduser(startDir)
+        if sys.platform == "win32":
+            fileTypes = [("Windows Executable", "*.exe"), ("All Files", "*.*")]
+        else:
+            fileTypes = [("Executable Program", "*"), ("Windows Executable", "*.exe"), ("All Files", "*.*")]
+        path = askopenfilename(title="Set executable for model viewer", initialdir=startDir, filetypes=fileTypes)
+        if not path == "":
+            if path.startswith("/home") and sys.platform == "linux":
+                path = path[1:]
+                pos = path.find("/", 5)
+                tarLen = len(path) - pos
+                while len(path) > tarLen:
+                    path = path[1:]
+                path = "~" + path
+            print(path)
+            self.mvPathVar.set(path)
+            self.options["gsMV"]["csPath"] = path
+            self.save_options()
+            self.updFunc("gsMVcsPath", path)
+    
     def chFDP(self):
         self.options["forceDefPaths"] = self.forceDefB.get()
         self.save_options()
@@ -1274,7 +1389,10 @@ class OptionsMenu():
         opts.close()
     
     def updateOpt(self, key, value):
-        self.options[key] = value
+        if not key.startswith("gsMV"):
+            self.options[key] = value
+        else:
+            self.options["gsMV"][key.replace("gsMV", "")] = value
 
     def hide(self):
         self.hidden = True
@@ -1282,10 +1400,18 @@ class OptionsMenu():
             w.grid_remove()
     def show(self):
         self.hidden = False
-        self.setupLabel.grid(column=1, row=1, sticky="w")
-        self.themeCBox.grid(column=2, row=1, sticky="w")
-        self.nameLabel.grid(column=1, row=2, sticky="w")
-        self.startFent.grid(column=2, row=2, sticky="w")
-        self.setSF.grid(column=3, row=2, sticky="w")
-        self.fdLabel.grid(column=1, row=3, sticky="w")
-        self.forceDefault.grid(column=2, row=3, sticky="w")
+        self.pageButtons.grid(row=0, column=1, sticky="nsew", columnspan=10)
+        self.generalButton.grid(row=0, column=1, sticky="w")
+        self.hlmvButton.grid(row=0, column=2, sticky="w")
+        if self.curPage == 0:
+            self.setupLabel.grid(column=1, row=1, sticky="w")
+            self.themeCBox.grid(column=2, row=1, sticky="w")
+            self.nameLabel.grid(column=1, row=2, sticky="w")
+            self.startFent.grid(column=2, row=2, sticky="w")
+            self.setSF.grid(column=3, row=2, sticky="w")
+            self.fdLabel.grid(column=1, row=3, sticky="w")
+        elif self.curPage == 1:
+            self.hlmvLabel.grid(column=1, row=1, sticky="w")
+            self.hlmvCBox.grid(column=2, row=1, sticky="w")
+            self.mvPathLabel.grid(column=1, row=2, sticky="w")
+            self.mvPathEnt.grid(column=2, row=2, sticky="w")

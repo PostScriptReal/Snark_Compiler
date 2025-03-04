@@ -72,6 +72,9 @@ class BoolEntry():
     def grid(self, column=0, row=0, padx=0, pady=0, sticky="nsew"):
         self.entry.grid(column=column, row=row, padx=padx, pady=pady, sticky=sticky)
     
+    def grid_remove(self):
+        self.entry.grid_remove()
+    
     def unlock(self):
         self.entry["state"] = 'normal'
         self.entry.delete('0', 'end')

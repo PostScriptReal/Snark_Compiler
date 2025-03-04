@@ -3,5 +3,9 @@
      "save_paths": false,
      "startFolder": "~/Documents",
      "theme": "Freeman",
-     "version": 1
+     "gsMV": {
+          "selectedMV": 0,
+          "csPath": ""
+     },
+     "version": 2
 }
