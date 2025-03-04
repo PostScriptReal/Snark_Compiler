@@ -10,13 +10,11 @@ jobs:
       run:
         shell: msys2 {0}
     steps:
+      -  uses: msys2/setup-msys2@v2.27.0
       - name: Checkout code
         uses: actions/checkout@v4
       - name: Set date environment variable
         run: echo "DATE=$(date +%d-%m-%Y)" >> $GITHUB_ENV
-      - name: Setup MSYS2
-        uses: msys2/setup-msys2@v2.27.0
-      
       - name: Set up Python
         uses: actions/setup-python@v5
         with:

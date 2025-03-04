@@ -1,4 +1,4 @@
-name: PyInstaller Action (Linux)
+name: PyInstaller Actions Linux
 on: [push]
 jobs:
   pyinstaller-build:
