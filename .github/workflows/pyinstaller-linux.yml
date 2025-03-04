@@ -5,7 +5,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [windows-latest]
+        os: [ubuntu-latest]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -15,15 +15,12 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.12.7'
-      - name: Setup MSYS2
-        uses: msys2/setup-msys2@v2.27.0
       - name: Install dependencies
         run: |
+          sudo apt install cmake build-essential tcl-dev tk-dev python3-tk
           python -m pip install --upgrade pip
           pip install pyinstaller
           pip install jsoncparser
-      - shell: msys2 {0}
-        run: |
           pip install scikit-build
           pip install tksvg
       - name: Run PyInstaller
