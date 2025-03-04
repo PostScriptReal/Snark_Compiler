@@ -1,4 +1,4 @@
-name: PyInstaller Action (Win)
+name: PyInstaller Action Windows
 on: [push]
 jobs:
   pyinstaller-build:
@@ -14,7 +14,6 @@ jobs:
       - name: Setup MSYS2
         uses: msys2/setup-msys2@v2.27.0
       - name: Set up Python
-        shell: msys2 {0}
         uses: actions/setup-python@v5
         with:
           python-version: '3.12.7'
