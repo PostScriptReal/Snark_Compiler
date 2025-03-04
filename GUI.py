@@ -448,6 +448,8 @@ class GUI(Tk):
 			browser.open_new('https://github.com/PostScriptReal/Snark_Compiler/wiki/How-to-use-Snark#compiling')
 		elif not self.decMenu.hidden:
 			browser.open_new('https://github.com/PostScriptReal/Snark_Compiler/wiki/How-to-use-Snark#decompiling')
+		elif not self.optMenu.hidden and self.optMenu.curPage == 1:
+			browser.open_new('https://github.com/PostScriptReal/Snark_Compiler/wiki/How-to-use-Snark#setting-up-hlamhlmv-for-snark')
 		else:
 			browser.open_new('https://github.com/PostScriptReal/Snark_Compiler/wiki')
 	
