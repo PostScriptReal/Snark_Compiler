@@ -18,12 +18,11 @@ jobs:
       - name: Setup MSYS2
         uses: msys2/setup-msys2@v2.27.0
       - name: Install dependencies
+        shell: msys2 {0}
         run: |
           python -m pip install --upgrade pip
           pip install pyinstaller
           pip install jsoncparser
-      - shell: msys2 {0}
-        run: |
           pip install scikit-build
           pip install tksvg
       - name: Run PyInstaller
