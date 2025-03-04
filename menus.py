@@ -391,7 +391,7 @@ class DecompMenu():
         self.logChk = Checkbutton(self.advOpt, text="Write log to file", variable=self.logVal, command=self.setLog)
         self.logChkTT = ToolTip(self.logChk, "Writes the log in the terminal below as a text file inside the logs folder.", background=thme["tt"], foreground=thme["txt"])
         self.decomp = Button(master, text='Decompile', command=self.startDecomp, cursor="hand2")
-        self.hlmv = Button(master, text='Open model in HLAM', command=self.openHLAM, cursor="hand2")
+        self.hlmv = Button(master, text='Open model in HLMV', command=self.openHLAM, cursor="hand2")
         self.console = Console(master, 'Start a decompile and the terminal output will appear here!', 0, 4, self.conFix, 14)
         if not startHidden:
             self.show()
@@ -406,15 +406,28 @@ class DecompMenu():
         self.logOutput = self.logVal.get()
     
     def openHLAM(self):
+        # If "Half-Life Asset Manager" is selected
         if self.options["gsMV"]["selectedMV"] == 1:
             if sys.platform == "linux":
                 a = subprocess.getoutput(f"hlam \"{self.name.get()}\"")
             else:
                 a = subprocess.getoutput(f"\"C:/Program Files (x86)/Half-Life Asset Manager/hlam.exe\" \"{self.name.get()}\"")
+        # If "Other" option is selected
+        elif self.options["gsMV"]["selectedMV"] > 1:
+            if sys.platform == "linux":
+                path = self.options["gsMV"]["csPath"]
+                path = os.path.expanduser(path)
+                if path.endswith(".exe"):
+                    a = subprocess.getoutput(f"wine \"{path}\" \"{self.name.get()}\"")
+                else:
+                    a = subprocess.getoutput(f"\"{path}\" \"{self.name.get()}\"")
+            else:
+                path = self.options["gsMV"]["csPath"]
+                a = subprocess.getoutput(f"\"{path}\" \"{self.name.get()}\"")
     
     def inputHandler(self, e=False):
         self.name.set(self.nameEntry.get())
-        if not self.name.get() == "":
+        if not self.name.get() == "" and self.options["gsMV"]["selectedMV"] > 0:
             self.hlmv.grid(column=1, row=3, pady=(27,0), sticky="w")
 
     def applyTheme(self, master):
@@ -481,7 +494,7 @@ class DecompMenu():
         self.advOptLabel.grid(column=0, row=0, sticky="w")
         self.logChk.grid(column=0, row=1, sticky="w")
         self.decomp.grid(column=0, row=3, pady=(27,0))
-        if not self.name.get() == "":
+        if not self.name.get() == "" and self.options["gsMV"]["selectedMV"] > 0:
             self.hlmv.grid(column=1, row=3, pady=(27,0), sticky="w")
         self.console.show()
     
@@ -491,7 +504,7 @@ class DecompMenu():
             startDir = os.path.expanduser(startDir)
         fileTypes = [("GoldSRC Model", "*.mdl"), ("All Files", "*.*")]
         self.name.set(askopenfilename(title="Select MDL", initialdir=startDir, filetypes=fileTypes))
-        if not self.name.get() == "":
+        if not self.name.get() == "" and self.options["gsMV"]["selectedMV"] > 0:
             self.hlmv.grid(column=1, row=3, pady=(27,0), sticky="w")
     def output(self):
         startDir = self.options["startFolder"]
@@ -559,8 +572,8 @@ class CompMenu():
             pass
         self.hidden = startHidden
         self.master = master
-        self.svengine = False
-        self.logOutput = False
+        self.svengine, logOutput = False, False
+        self.mdlPath = ""
         # Setting up JSON stuff
         js = open("save/compilers.jsonc", 'r')
         self.fullCJS = jsonc.load(js)
@@ -588,6 +601,7 @@ class CompMenu():
         self.mdlBrowse = Button(master, text='Browse', command=self.findMDL, cursor="hand2")
         self.outBrowse = Button(master, text='Browse', command=self.output, cursor="hand2")
         self.compLabel = Label(self.selects, text="Compiler: ")
+        self.hlmv = Button(master, text='Open model in HLMV', command=self.openHLAM, cursor="hand2")
         cList = open("save/compilers.txt", "r")
         cOptions = cList.read().split('\n')
         cOptions.pop(len(cOptions)-1)
@@ -692,6 +706,33 @@ class CompMenu():
     def inputHandler(self, e=False):
         self.name.set(self.nameEntry.get())
         self.compatChk()
+        mdlPath = os.path.dirname(self.name.get())
+        mdlPath = os.path.join(mdlPath, "models")
+        if os.path.exists(mdlPath):
+            count = -1
+            files = os.listdir(mdlPath)
+            while count < len(files)-1:
+                count += 1
+                f = files[count]
+                if f.endswith(".mdl"):
+                    # Checking if the mdl file that has been found is an external texture model or sequence model and skipping if so
+                    if f.endswith("T.mdl"):
+                        continue
+                    elif f.find("0") != -1:
+                        thresh = f.find(".mdl")
+                        print(thresh)
+                        count = -1
+                        for c in f:
+                            count += 1
+                            if count == thresh-2 and c.isnumeric():
+                                f = f.replace(c, "")
+                            if count == thresh-1 and c.isnumeric():
+                                f = f.replace(c, "")
+                        print(f)
+                    break
+            if os.path.exists(f"{mdlPath}/{f}"):
+                self.mdlPath = os.path.join(mdlPath, f)
+                self.hlmv.grid(column=1, row=4, pady=(10,0), sticky="w")
     
     def dashThandler(self):
         if self.dashTbool.get():
@@ -728,6 +769,26 @@ class CompMenu():
             else:
                 self.pf2Chk.grid(column=5, row=2, sticky="w")
         self.compatChk()
+    
+    def openHLAM(self):
+        # If "Half-Life Asset Manager" is selected
+        if self.options["gsMV"]["selectedMV"] == 1:
+            if sys.platform == "linux":
+                a = subprocess.getoutput(f"hlam \"{self.mdlPath}\"")
+            else:
+                a = subprocess.getoutput(f"\"C:/Program Files (x86)/Half-Life Asset Manager/hlam.exe\" \"{self.mdlPath}\"")
+        # If "Other" option is selected
+        elif self.options["gsMV"]["selectedMV"] > 1:
+            if sys.platform == "linux":
+                path = self.options["gsMV"]["csPath"]
+                path = os.path.expanduser(path)
+                if path.endswith(".exe"):
+                    a = subprocess.getoutput(f"wine \"{path}\" \"{self.mdlPath}\"")
+                else:
+                    a = subprocess.getoutput(f"\"{path}\" \"{self.mdlPath}\"")
+            else:
+                path = self.options["gsMV"]["csPath"]
+                a = subprocess.getoutput(f"\"{path}\" \"{self.mdlPath}\"")
 
     def applyTheme(self, master):
         style= ttk.Style()
@@ -859,6 +920,8 @@ class CompMenu():
             else:
                 self.keepBonesChk.grid(column=5, row=2, sticky="w")
         self.decomp.grid(column=0, row=4, pady=(10,0))
+        if not self.mdlPath == "" and self.options["gsMV"]["selectedMV"] > 0:
+            self.hlmv.grid(column=1, row=4, pady=(10,0), sticky="w")
         self.console.show()
     
     def findMDL(self):
@@ -868,6 +931,33 @@ class CompMenu():
         fileTypes = [("Quake Compile Files", "*.qc"), ("All Files", "*.*")]
         self.name.set(askopenfilename(title="Select QC", initialdir=startDir, filetypes=fileTypes))
         self.compatChk()
+        mdlPath = os.path.dirname(self.name.get())
+        mdlPath = os.path.join(mdlPath, "models")
+        if os.path.exists(mdlPath):
+            count = -1
+            files = os.listdir(mdlPath)
+            while count < len(files)-1:
+                count += 1
+                f = files[count]
+                if f.endswith(".mdl"):
+                    # Checking if the mdl file that has been found is an external texture model or sequence model and skipping if so
+                    if f.endswith("T.mdl"):
+                        continue
+                    elif f.find("0") != -1:
+                        thresh = f.find(".mdl")
+                        print(thresh)
+                        count = -1
+                        for c in f:
+                            count += 1
+                            if count == thresh-2 and c.isnumeric():
+                                f = f.replace(c, "")
+                            if count == thresh-1 and c.isnumeric():
+                                f = f.replace(c, "")
+                        print(f)
+                    break
+            if os.path.exists(f"{mdlPath}/{f}"):
+                self.mdlPath = os.path.join(mdlPath, f)
+                self.hlmv.grid(column=1, row=4, pady=(10,0), sticky="w")
     
     def compatChk(self, e=False):
         if not self.name.get() == "":
@@ -1078,6 +1168,9 @@ class CompMenu():
             else:
                 mdlFolder = output
             mdlF = qcRelChk.getMDLname()
+            self.mdlPath = os.path.join(mdlFolder, mdlF)
+            if not self.mdlPath == "" and self.options["gsMV"]["selectedMV"] > 0:
+                self.hlmv.grid(column=1, row=3, pady=(10,0), sticky="w")
             # I'm doing this instead of directly copying the mdl file because depending on the options used (e.g. $externaltextures),
             # the compiler will output more than one .mdl file which is needed in order for the compiled model to work.
             # If you are using $externaltextures, the compiler will output a (mdlname).mdl file and (mdlname)T.mdl file,
@@ -1229,10 +1322,14 @@ class OptionsMenu():
         hlmvValues = ["None", "Half-Life Asset Manager", "Other"]
         self.hlmvCBox = ttk.Combobox(master, cursor="hand2", values=hlmvValues)
         self.hlmvCBox.current(self.options["gsMV"]["selectedMV"])
+        self.hlmvCBox.bind("<<ComboboxSelected>>", self.setMV)
         self.mvPathLabel = Label(master, text="Path to model viewer: ")
         self.mvPathVar = StringVar(master, value="Path to model viewer (if \"Other\" is selected)")
         self.mvPathEnt = BoolEntry(master, textvariable=self.mvPathVar, placeholder="Path to model viewer (if \"Other\" is selected)")
         self.setMVP = Button(master, text="Set Model Viewer Executable", cursor="hand2", command=self.chMVP)
+        if self.options["gsMV"]["selectedMV"] > 1:
+            self.mvPathEnt.unlock()
+            self.mvPathVar.set(self.options["gsMV"]["csPath"])
         # Tooltips
         self.themeTT = ToolTip(self.themeCBox, "Changes the program's theme, the built-in themes are: Freeman, Shephard, Calhoun and Cross.", background=thme["tt"], foreground=thme["txt"])
         self.startFolderTT = ToolTip(self.startFent, "Sets the directory that the built-in file explorer will start in, the default is the documents folder.", background=thme["tt"], foreground=thme["txt"])
@@ -1296,6 +1393,7 @@ class OptionsMenu():
         self.hlmvCBox.grid(column=2, row=1, sticky="w")
         self.mvPathLabel.grid(column=1, row=2, sticky="w")
         self.mvPathEnt.grid(column=2, row=2, sticky="w")
+        self.setMVP.grid(column=3, row=2, sticky="w")
     
     def applyTheme(self, master):
         style=ttk.Style()
@@ -1376,6 +1474,17 @@ class OptionsMenu():
             self.save_options()
             self.updFunc("gsMVcsPath", path)
     
+    def setMV(self, e=False):
+        opt = self.hlmvCBox.current()
+        if opt > 1:
+            self.mvPathEnt.unlock()
+            self.mvPathVar.set(self.options["gsMV"]["csPath"])
+        else:
+            self.mvPathEnt.lock()
+        self.options["gsMV"]["selectedMV"] = opt
+        self.save_options()
+        self.updFunc("gsMVselectedMV", opt)
+    
     def chFDP(self):
         self.options["forceDefPaths"] = self.forceDefB.get()
         self.save_options()
@@ -1415,3 +1524,4 @@ class OptionsMenu():
             self.hlmvCBox.grid(column=2, row=1, sticky="w")
             self.mvPathLabel.grid(column=1, row=2, sticky="w")
             self.mvPathEnt.grid(column=2, row=2, sticky="w")
+            self.setMVP.grid(column=3, row=2, sticky="w")

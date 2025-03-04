@@ -1,11 +1,11 @@
 {
      "forceDefPaths": false,
+     "gsMV": {
+          "csPath": "",
+          "selectedMV": 0
+     },
      "save_paths": false,
      "startFolder": "~/Documents",
      "theme": "Freeman",
-     "gsMV": {
-          "selectedMV": 0,
-          "csPath": ""
-     },
      "version": 2
 }
