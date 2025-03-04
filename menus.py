@@ -1348,7 +1348,7 @@ class OptionsMenu():
         if self.options["version"] == 1:
             newOptions = {
                 "forceDefPaths": self.options["forceDefPaths"],
-                "save_paths": false,
+                "save_paths": False,
                 "startFolder": self.options["startFolder"],
                 "theme": self.options["theme"],
                 "gsMV": {
