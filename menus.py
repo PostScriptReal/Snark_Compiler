@@ -531,7 +531,7 @@ class DecompMenu():
                 tOutput = subprocess.getoutput(f'wine third_party/mdldec_win32.exe \"{mdl}\"')"""
             print(tOutput)
             self.console.setOutput(tOutput)
-            if self.logOutput:
+            if self.logVal.get():
                 date = datetime.datetime.now()
                 curDate = f"{date.strftime('%d')}-{date.strftime('%m')}-{date.strftime('%Y')}-{date.strftime('%H')}-{date.strftime('%M')}-{date.strftime('%S')}"
                 log = open(f"logs/decomp-{curDate}.txt", 'w')
@@ -606,7 +606,7 @@ class CompMenu():
         cOptions = cList.read().split('\n')
         cOptions.pop(len(cOptions)-1)
         self.compSel = ttk.Combobox(self.selects, values=cOptions, width=8)
-        self.compSel.current(0)
+        self.compSel.current(self.options["defComp"])
         self.compSel.bind("<<ComboboxSelected>>", self.compilerStuff)
         self.gameLabel = Label(self.selects, text="Game Profile: ")
         gList = open("save/games.txt", "r")
@@ -615,7 +615,7 @@ class CompMenu():
         gOptions = GamesHandler(gOptions)
         self.games = gOptions
         self.gameSel = ttk.Combobox(self.selects, values=gOptions.gNames, width=10)
-        self.gameSel.current(0)
+        self.gameSel.current(self.options["defGame"])
         self.gameSel.bind("<<ComboboxSelected>>", self.compatChk)
 
 
@@ -730,7 +730,7 @@ class CompMenu():
                                 f = f.replace(c, "")
                         print(f)
                     break
-            if os.path.exists(f"{mdlPath}/{f}"):
+            if os.path.exists(f"{mdlPath}/{f}") and self.options["gsMV"]["selectedMV"] > 0:
                 self.mdlPath = os.path.join(mdlPath, f)
                 self.hlmv.grid(column=1, row=4, pady=(10,0), sticky="w")
     
@@ -849,6 +849,13 @@ class CompMenu():
     def updateOpt(self, key, value):
         if not key.startswith("gsMV"):
             self.options[key] = value
+            # Doing specific things for specific options
+            if key == "defComp":
+                self.compSel.current(self.options[key])
+            elif key == "defGame":
+                self.gameSel.current(self.options[key])
+        # Doing this since the gsMV option needs two square bracket data things in order to update stuff properly,
+        # and the function can only use strings.
         else:
             self.options["gsMV"][key.replace("gsMV", "")] = value
     
@@ -936,6 +943,7 @@ class CompMenu():
         if os.path.exists(mdlPath):
             count = -1
             files = os.listdir(mdlPath)
+            file = ".mdl"
             while count < len(files)-1:
                 count += 1
                 f = files[count]
@@ -954,9 +962,10 @@ class CompMenu():
                             if count == thresh-1 and c.isnumeric():
                                 f = f.replace(c, "")
                         print(f)
+                    file = f
                     break
-            if os.path.exists(f"{mdlPath}/{f}"):
-                self.mdlPath = os.path.join(mdlPath, f)
+            if os.path.exists(f"{mdlPath}/{file}") and self.options["gsMV"]["selectedMV"] > 0:
+                self.mdlPath = os.path.join(mdlPath, file)
                 self.hlmv.grid(column=1, row=4, pady=(10,0), sticky="w")
     
     def compatChk(self, e=False):
@@ -1151,7 +1160,7 @@ class CompMenu():
             # Removing temporary QC file used to compile model when the QC file supplied had used relative pathing
             if qcRelChk.cbarFrmt:
                 os.remove(mdl)
-            if self.logOutput:
+            if self.logVal.get():
                 date = datetime.datetime.now()
                 curDate = f"{date.strftime('%d')}-{date.strftime('%m')}-{date.strftime('%Y')}-{date.strftime('%H')}-{date.strftime('%M')}-{date.strftime('%S')}"
                 log = open(f"logs/compile-{curDate}.txt", 'w')
@@ -1176,7 +1185,7 @@ class CompMenu():
             # If you are using $externaltextures, the compiler will output a (mdlname).mdl file and (mdlname)T.mdl file,
             # both of them are needed as one has the textures for the model and the other contains the model itself.
             for f in os.listdir(os.getcwd()):
-                if f.endswith(".mdl"):
+                if f.find(".mdl") != -1:
                     shutil.copy(f, os.path.join(mdlFolder, f))
                     os.remove(os.path.join(os.getcwd(), f))
             # shutil.copy(mdlF, os.path.join(mdlFolder, mdlF))
@@ -1275,7 +1284,7 @@ class AboutMenu():
 
 class OptionsMenu():
     def __init__(self, master, thme:dict, thmecallback, updFunc, startHidden:bool=False):
-        self.curPage, self.optionsVersion = 0, 2
+        self.curPage, self.optionsVersion = 0, 3
         self.hidden = startHidden
         self.master = master
         self.thme = thme
@@ -1330,6 +1339,23 @@ class OptionsMenu():
         if self.options["gsMV"]["selectedMV"] > 1:
             self.mvPathEnt.unlock()
             self.mvPathVar.set(self.options["gsMV"]["csPath"])
+        # Options for setting defaults for profiles
+        self.defCLabel = Label(master, text=f"Default Compiler: ", background=thme["bg"], foreground=thme["txt"])
+        self.defGLabel = Label(master, text="Default Game: ", background=thme["bg"], fg=thme["txt"])
+        cList = open("save/compilers.txt", "r")
+        cOptions = cList.read().split('\n')
+        cOptions.pop(len(cOptions)-1)
+        self.compSel = ttk.Combobox(master, values=cOptions)
+        self.compSel.bind("<<ComboboxSelected>>", self.setCmp)
+        self.compSel.current(self.options["defGame"])
+        gList = open("save/games.txt", "r")
+        self.gOptions = gList.read().split('\n')
+        self.gOptions.pop(len(self.gOptions)-1)
+        gList.close()
+        self.games = GamesHandler(self.gOptions)
+        self.gameSel = ttk.Combobox(master, values=self.games.gNames)
+        self.gameSel.bind("<<ComboboxSelected>>", self.setGame)
+        self.gameSel.current(self.options["defGame"])
         # Tooltips
         self.themeTT = ToolTip(self.themeCBox, "Changes the program's theme, the built-in themes are: Freeman, Shephard, Calhoun and Cross.", background=thme["tt"], foreground=thme["txt"])
         self.startFolderTT = ToolTip(self.startFent, "Sets the directory that the built-in file explorer will start in, the default is the documents folder.", background=thme["tt"], foreground=thme["txt"])
@@ -1345,8 +1371,11 @@ class OptionsMenu():
         self.applyTheme(self.pageButtons)
     
     def upgradeJSON(self):
+        # Upgrade from version 1 to 3
         if self.options["version"] == 1:
             newOptions = {
+                "defComp": 0,
+                "defGame": 0,
                 "forceDefPaths": self.options["forceDefPaths"],
                 "save_paths": False,
                 "startFolder": self.options["startFolder"],
@@ -1355,10 +1384,26 @@ class OptionsMenu():
                     "selectedMV": 0,
                     "csPath": ""
                 },
-                "version": 2
+                "version": 3
             }
-            self.options = newOptions
-            self.save_options()
+        # Upgrade from version 2 to 3
+        elif self.options["version"] == 2:
+            newOptions = {
+                "defComp": 0,
+                "defGame": 0,
+                "forceDefPaths": self.options["forceDefPaths"],
+                "save_paths": False,
+                "startFolder": self.options["startFolder"],
+                "theme": self.options["theme"],
+                "gsMV": {
+                    "selectedMV": self.options["gsMV"]["selectedMV"],
+                    "csPath": self.options["gsMV"]["csPath"]
+                },
+                "version": 3
+            }
+        # Save the new options JSON data
+        self.options = newOptions
+        self.save_options()
     
     def checkNewThemes(self):
         tList = os.listdir("themes/")
@@ -1375,10 +1420,15 @@ class OptionsMenu():
         self.startFent.grid(column=2, row=2, sticky="w")
         self.setSF.grid(column=3, row=2, sticky="w")
         self.fdLabel.grid(column=1, row=3, sticky="w")
+        self.defCLabel.grid(column=1, row=4, sticky="w")
+        self.compSel.grid(column=2, row=4, sticky="w")
+        self.defGLabel.grid(column=1, row=5, sticky="w")
+        self.gameSel.grid(column=2, row=5, sticky="w")
         self.hlmvLabel.grid_remove()
         self.hlmvCBox.grid_remove()
         self.mvPathLabel.grid_remove()
         self.mvPathEnt.grid_remove()
+        self.setMVP.grid_remove()
     
     def hlmvPg(self):
         self.curPage = 1
@@ -1389,6 +1439,10 @@ class OptionsMenu():
         self.setSF.grid_remove()
         self.fdLabel.grid_remove()
         self.forceDefault.grid_remove()
+        self.defCLabel.grid_remove()
+        self.compSel.grid_remove()
+        self.defGLabel.grid_remove()
+        self.gameSel.grid_remove()
         self.hlmvLabel.grid(column=1, row=1, sticky="w")
         self.hlmvCBox.grid(column=2, row=1, sticky="w")
         self.mvPathLabel.grid(column=1, row=2, sticky="w")
@@ -1485,6 +1539,18 @@ class OptionsMenu():
         self.save_options()
         self.updFunc("gsMVselectedMV", opt)
     
+    def setCmp(self, e=False):
+        opt = self.compSel.current()
+        self.options["defComp"] = opt
+        self.save_options()
+        self.updFunc("defComp", opt)
+    
+    def setGame(self, e=False):
+        opt = self.gameSel.current()
+        self.options["defGame"] = opt
+        self.save_options()
+        self.updFunc("defGame", opt)
+    
     def chFDP(self):
         self.options["forceDefPaths"] = self.forceDefB.get()
         self.save_options()
@@ -1519,6 +1585,10 @@ class OptionsMenu():
             self.startFent.grid(column=2, row=2, sticky="w")
             self.setSF.grid(column=3, row=2, sticky="w")
             self.fdLabel.grid(column=1, row=3, sticky="w")
+            self.defCLabel.grid(column=1, row=4, sticky="w")
+            self.compSel.grid(column=2, row=4, sticky="w")
+            self.defGLabel.grid(column=1, row=5, sticky="w")
+            self.gameSel.grid(column=2, row=5, sticky="w")
         elif self.curPage == 1:
             self.hlmvLabel.grid(column=1, row=1, sticky="w")
             self.hlmvCBox.grid(column=2, row=1, sticky="w")

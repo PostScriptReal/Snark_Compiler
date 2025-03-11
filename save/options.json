@@ -1,4 +1,6 @@
 {
+     "defComp": 0,
+     "defGame": 0,
      "forceDefPaths": false,
      "gsMV": {
           "csPath": "",
@@ -7,5 +9,5 @@
      "save_paths": false,
      "startFolder": "~/Documents",
      "theme": "Freeman",
-     "version": 2
+     "version": 3
 }

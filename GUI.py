@@ -416,6 +416,7 @@ class GUI(Tk):
 		self.aboutB = Button(self.header, text="About", command=self.about, cursor="hand2")
 		self.aboutB.grid(column=5, row=0, sticky=(N), ipadx=buttonPad)
 
+		self.optMenu = OptionsMenu(self.dumbFixMenu3, thCol, self.changeTheme, self.updateOpt, True)
 		self.setupMenu = SetupMenu(menu, thCol, self.updateGames, not self.flags.allowGames, self.flags.allowGames)
 		if not self.flags.allowGames:
 			self.dumbFixMenu4.grid(column=0, row=2, sticky="nsew", columnspan=10)
@@ -423,7 +424,6 @@ class GUI(Tk):
 		self.decMenu = DecompMenu(menu, thCol, True)
 		self.cmpMenu = CompMenu(self.dumbFixMenu, thCol, True)
 		self.abtMenu = AboutMenu(self.dumbFixMenu2, thCol, True)
-		self.optMenu = OptionsMenu(self.dumbFixMenu3, thCol, self.changeTheme, self.updateOpt, True)
 
 		# Applying theme
 		for w in self.header.winfo_children():
