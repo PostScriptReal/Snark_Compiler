@@ -1401,7 +1401,7 @@ class OptionsMenu():
                 },
                 "version": 3
             }
-        # Save the new options JSON data
+        # Save the JSON data of the new options
         self.options = newOptions
         self.save_options()
     
@@ -1595,3 +1595,97 @@ class OptionsMenu():
             self.mvPathLabel.grid(column=1, row=2, sticky="w")
             self.mvPathEnt.grid(column=2, row=2, sticky="w")
             self.setMVP.grid(column=3, row=2, sticky="w")
+
+class ScriptMenu():
+    def __init__(self, master, thme:dict, startHidden:bool=False):
+        self.curFont = font.nametofont('TkDefaultFont').actual()
+        self.widthFix = 75
+        self.conFix = 46
+        self.logOutput = False
+        if self.curFont["family"].lower() == "nimbus sans l" or sys.platform == "win32":
+            self.widthFix = 82
+            self.conFix = 59
+        else:
+            pass
+        self.hidden = startHidden
+        self.master = master
+        self.thme = thme
+        # Setting up options
+        js = open("save/options.json", 'r')
+        self.options = json.loads(js.read())
+        js.close()
+        self.scripts = []
+        if getattr(sys, 'frozen', False):
+            EXE_LOCATION = os.path.dirname( sys.executable )
+        else:
+            EXE_LOCATION = os.path.dirname( os.path.realpath( __file__ ) )
+        scr_dir = os.path.join(EXE_LOCATION, "scripts")
+        for s in os.listdir(scr_dir):
+            self.scripts.append(s)
+        
+        self.scr_list = Listbox(master, width=75)
+        count = -1
+        while count < len(self.scripts)-1:
+            count += 1
+            self.scr_list.insert(count, self.scripts[count])
+        self.runBtn = Button(master, text="Run script", cursor="hand2")
+        self.console = Console(master, 'Run a script and an output of the script\'s progress will appear here!', 0, 2, self.conFix, 12)
+        if not startHidden:
+            self.show()
+        
+        # Applying theme
+        self.applyTheme(master)
+
+    def applyTheme(self, master):
+        style= ttk.Style()
+        style.theme_use('clam')
+        style.configure("TCombobox", fieldbackground=self.thme["ent"])
+        for w in master.winfo_children():
+            if w.winfo_class() == "Button":
+                w.configure(bg=self.thme["btn"][0])
+                w.configure(highlightbackground=self.thme["btn"][1])
+                w.configure(activebackground=self.thme["btn"][2])
+                w.configure(fg=self.thme["txt"])
+            elif w.winfo_class() == "Entry":
+                w.configure(bg=self.thme["ent"])
+                w.configure(fg=self.thme["txt"])
+            elif isinstance(w, ttk.Combobox):
+                pass
+                w.configure(foreground='white')
+                # w["menu"].config(bg=self.thme["btn"][1])
+            elif isinstance(w, Text):
+                w.configure(bg=self.thme["ent"])
+                w.configure(fg=self.thme["txt"])
+            elif w.winfo_class() == "Checkbutton":
+                w.configure(bg=self.thme["bg"])
+                w.configure(highlightbackground=self.thme["bg"])
+                w.configure(activebackground=self.thme["bg"])
+                w.configure(fg=self.thme["txt"])
+                w.configure(selectcolor=self.thme["ent"])
+            else:
+                w.configure(bg=self.thme["bg"])
+                try:
+                    w.configure(fg=self.thme["txt"])
+                except:
+                    pass
+    
+    def changeTheme(self, newTheme):
+        self.thme = newTheme
+        self.applyTheme(self.master)
+    
+    def updateOpt(self, key, value):
+        if not key.startswith("gsMV"):
+            self.options[key] = value
+        else:
+            self.options["gsMV"][key.replace("gsMV", "")] = value
+
+    def hide(self):
+        self.hidden = True
+        for w in self.master.winfo_children():
+            w.grid_remove()
+    
+    def show(self):
+        self.hidden = False
+        self.scr_list.grid(column=0, row=0, sticky=(W))
+        self.runBtn.grid(column=0, row=1, sticky=(W))
+        self.console.show()

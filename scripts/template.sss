@@ -1,0 +1,34 @@
+-
+version 1
+format jsonc
+-
+{
+    "name": "Template Script",
+    // You can specify a global output folder for every task
+    "globalOutput": "path/to/output/folder",
+    "tasks": [
+        {
+            // This specifies the name of the task, this will show up in the console when the task has been started.
+            // Task names cannot have slashes in their name, otherwise it will confuse the interpreter.
+            "name": "Decompile MDL",
+            // Valid values for tasks are compile, decompile and view.
+            "task": "decompile",
+            "file": "absolute/path/to/mdl/file",
+            // You can use this key to specify an output folder for this specific task.
+            "output": "path/to/output/folder"
+        },
+        {
+            "name": "Compile MDL",
+            "task": "compile",
+            "file": "absolute/path/to/qc/file",
+            // Please note that with compile tasks, the output will not be put in a subfolder of the output folder.
+            "output": "path/to/output/folder"
+        },
+        {
+            "name": "View Compiled Model",
+            "task": "view",
+            // For the file key in view tasks, you can specify the file you want to open, or specify a compile task to open a MDL file of your choice!
+            "file": "Compile MDL"
+        }
+    ]
+}

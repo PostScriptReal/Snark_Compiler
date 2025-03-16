@@ -384,6 +384,7 @@ class GUI(Tk):
 		self.dumbFixMenu2 = Frame(self.frame, borderwidth=2, bg=thCol["bg"])
 		self.dumbFixMenu3 = Frame(self.frame, borderwidth=2, bg=thCol["bg"])
 		self.dumbFixMenu4 = Frame(self.frame, borderwidth=2, bg=thCol["bg"])
+		self.dumbFixMenu5 = Frame(self.frame, borderwidth=2, bg=thCol["bg"])
 		self.columnconfigure(6, weight=1)
 		self.rowconfigure(2, weight=1)
 
@@ -424,6 +425,7 @@ class GUI(Tk):
 		self.decMenu = DecompMenu(menu, thCol, True)
 		self.cmpMenu = CompMenu(self.dumbFixMenu, thCol, True)
 		self.abtMenu = AboutMenu(self.dumbFixMenu2, thCol, True)
+		self.scrMenu = ScriptMenu(self.dumbFixMenu5, thCol, True)
 
 		# Applying theme
 		for w in self.header.winfo_children():
@@ -547,10 +549,12 @@ class GUI(Tk):
 			self.dumbFixMenu.grid_remove()
 			self.dumbFixMenu3.grid_remove()
 			self.dumbFixMenu4.grid_remove()
+			self.dumbFixMenu5.grid_remove()
 			self.abtMenu.show()
 			self.cmpMenu.hide()
 			self.decMenu.hide()
 			self.optMenu.hide()
+			self.scrMenu.hide()
 	
 	def updateOpt(self, key, val):
 		self.setupMenu.updateOpt(key, val)
@@ -559,6 +563,7 @@ class GUI(Tk):
 		self.cmpMenu.updateOpt(key, val)
 		self.decMenu.updateOpt(key, val)
 		self.optMenu.updateOpt(key, val)
+		self.scrMenu.updateOpt(key, val)
 	
 	def updateGames(self, comp):
 		self.cmpMenu.updateGames(comp)
@@ -572,12 +577,14 @@ class GUI(Tk):
 			self.compSetMenu.hide()
 			self.dumbFixMenu3.grid(column=0, row=2, sticky="nsew", columnspan=10)
 			self.dumbFixMenu4.grid_remove()
+			self.dumbFixMenu5.grid_remove()
 			self.dumbFixMenu.grid_remove()
 			self.dumbFixMenu2.grid_remove()
 			self.abtMenu.hide()
 			self.cmpMenu.hide()
 			self.decMenu.hide()
 			self.optMenu.show()
+			self.scrMenu.hide()
 	
 	def openfile(self):
 		startDir = self.options["startFolder"]
@@ -606,12 +613,14 @@ class GUI(Tk):
 			self.dumbFixMenu2.grid_remove()
 			self.dumbFixMenu3.grid_remove()
 			self.dumbFixMenu4.grid_remove()
+			self.dumbFixMenu5.grid_remove()
 			self.decMenu.hide()
 			self.cmpMenu.hide()
 			self.setupMenu.show()
 			self.compSetMenu.hide()
 			self.abtMenu.hide()
 			self.optMenu.hide()
+			self.scrMenu.hide()
 	
 	def cmpSetupMenu(self):
 		if self.compSetMenu.hidden:
@@ -619,12 +628,14 @@ class GUI(Tk):
 			self.dumbFixMenu2.grid_remove()
 			self.dumbFixMenu3.grid_remove()
 			self.dumbFixMenu4.grid(column=0, row=2, sticky="nsew", columnspan=10)
+			self.dumbFixMenu5.grid_remove()
 			self.decMenu.hide()
 			self.cmpMenu.hide()
 			self.compSetMenu.show()
 			self.setupMenu.hide()
 			self.abtMenu.hide()
 			self.optMenu.hide()
+			self.scrMenu.hide()
 		
 	
 	""" Switches menu to Decompile Menu """
@@ -634,12 +645,14 @@ class GUI(Tk):
 			self.dumbFixMenu2.grid_remove()
 			self.dumbFixMenu3.grid_remove()
 			self.dumbFixMenu4.grid_remove()
+			self.dumbFixMenu5.grid_remove()
 			self.setupMenu.hide()
 			self.cmpMenu.hide()
 			self.decMenu.show()
 			self.abtMenu.hide()
 			self.optMenu.hide()
 			self.compSetMenu.hide()
+			self.scrMenu.hide()
 	
 	""" Switches menu to Compile Menu """
 	def cmp_menu(self):
@@ -650,42 +663,28 @@ class GUI(Tk):
 			self.dumbFixMenu2.grid_remove()
 			self.dumbFixMenu3.grid_remove()
 			self.dumbFixMenu4.grid_remove()
+			self.dumbFixMenu5.grid_remove()
 			self.cmpMenu.show()
 			self.decMenu.hide()
 			self.abtMenu.hide()
 			self.optMenu.hide()
+			self.scrMenu.hide()
 			# print(f"width: {self.winfo_width()} height: {self.winfo_height()}")
 	
-	def bmp(self):
-		# Initialising Pointer fix function
-		# We're using it for the .bmp extension function
-		inst = PointerFix()
-		qcSelect = QCWin(self.qcDATA, inst, 'b', [self.ref.get()])
-		"""loc = self.path.get()
-		ref = self.ref.get()
-		inst.add_bmp(loc, ref)"""
-	
-	def bmp_scr(self, ref, qc):
-		# Alternate function for scripts
-		qc.startScript(values=[ref])
-
-	def matrename(self):
-		# Material Pointer Fixing function
-		inst = PointerFix()
-		qcSelect = QCWin(self.qcDATA, inst, 'm', [self.ref.get(),self.rename.get(),self.replace.get()])
-		"""loc = self.path.get()
-		ref = self.ref.get()
-		torename = self.rename.get()
-		replace = self.replace.get()
-		inst.rename_part(loc, ref, torename, replace)"""
-	
-	def matrename_scr(self, ref, torename, replace, qc):
-		# Alternate function for scripts
-		qc.startScript(values=[ref, torename, replace])
-	
 	def scripts(self):
-		# Opens Script selection window
-		inst = ScriptWin()
+		if self.scrMenu.hidden:
+			self.setupMenu.hide()
+			self.compSetMenu.hide()
+			self.dumbFixMenu.grid_remove()
+			self.dumbFixMenu2.grid_remove()
+			self.dumbFixMenu3.grid_remove()
+			self.dumbFixMenu4.grid_remove()
+			self.dumbFixMenu5.grid(column=0, row=2, sticky="nsew", columnspan=10)
+			self.cmpMenu.hide()
+			self.decMenu.hide()
+			self.abtMenu.hide()
+			self.optMenu.hide()
+			self.scrMenu.show()
 	
 	def exec_script(self, script):
 		# Script parsing and execution function
