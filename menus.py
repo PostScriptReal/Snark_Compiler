@@ -1599,11 +1599,11 @@ class OptionsMenu():
 class ScriptMenu():
     def __init__(self, master, thme:dict, startHidden:bool=False):
         self.curFont = font.nametofont('TkDefaultFont').actual()
-        self.widthFix = 75
+        self.widthFix = 74
         self.conFix = 46
         self.logOutput = False
         if self.curFont["family"].lower() == "nimbus sans l" or sys.platform == "win32":
-            self.widthFix = 82
+            self.widthFix = 81
             self.conFix = 59
         else:
             pass
@@ -1623,7 +1623,7 @@ class ScriptMenu():
         for s in os.listdir(scr_dir):
             self.scripts.append(s)
         
-        self.scr_list = Listbox(master, width=75)
+        self.scr_list = Listbox(master, width=self.widthFix)
         count = -1
         while count < len(self.scripts)-1:
             count += 1
@@ -1687,5 +1687,5 @@ class ScriptMenu():
     def show(self):
         self.hidden = False
         self.scr_list.grid(column=0, row=0, sticky=(W))
-        self.runBtn.grid(column=0, row=1, sticky=(W))
+        self.runBtn.grid(column=0, row=1)
         self.console.show()
