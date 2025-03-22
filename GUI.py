@@ -29,7 +29,7 @@ class Flags:
 		self.devMode = False
 		# Flag specifically for Snark, scripts are currently not implemented yet and is a copy of the scripting system from SMD Tools v1.1
 		# This will allow me to disable the functionality for it until I come up with a proper implementation
-		self.allowScripts = False
+		self.allowScripts = True
 		# Another flag for Snark, it disables booting to the "games" menu and makes the menu show a "This menu will be completed soon" message
 		# instead of showing the (very much) incomplete menu
 		self.allowGames = True
@@ -280,13 +280,18 @@ class GUI(Tk):
 		self.title("Snark")
 		if sys.platform == 'linux':
 			self.fixGUI = True
-			self.geometry("609x491")
 		else:
 			self.fixGUI = False
-			self.geometry("501x443")
 		# Get Options
 		self.get_options()
 		self.selTheme = self.options["theme"]
+
+		winSizeFile = False
+		if sys.platform == "linux" and os.path.exists("save/WinSize.txt"):
+			wsFile = open("save/WinSize.txt", "r")
+			ws = wsFile.readlines()
+			wsFile.close()
+			winSizeFile = True
 
 		# Loading in window icon
 		try:
@@ -417,15 +422,37 @@ class GUI(Tk):
 		self.aboutB = Button(self.header, text="About", command=self.about, cursor="hand2")
 		self.aboutB.grid(column=5, row=0, sticky=(N), ipadx=buttonPad)
 
+		# Getting the width of the window before adding in the menus so I can fix the width of the window on different OSs/distros
+		if winSizeFile and not ws[0] == "":
+			self.goodWidth = int(ws[0].replace("\n", ""))
+		else:
+			self.goodWidth = self.winfo_width()
+		# self.dumbFixMenu5.grid(column=0, row=2, sticky="nsew", columnspan=10)
+
 		self.optMenu = OptionsMenu(self.dumbFixMenu3, thCol, self.changeTheme, self.updateOpt, True)
-		self.setupMenu = SetupMenu(menu, thCol, self.updateGames, not self.flags.allowGames, self.flags.allowGames)
-		if not self.flags.allowGames:
-			self.dumbFixMenu4.grid(column=0, row=2, sticky="nsew", columnspan=10)
+		self.setupMenu = SetupMenu(menu, thCol, self.updateGames)
 		self.compSetMenu = CompSetupMenu(self.dumbFixMenu4, thCol, self.updateComps, self.flags.allowGames)
 		self.decMenu = DecompMenu(menu, thCol, True)
 		self.cmpMenu = CompMenu(self.dumbFixMenu, thCol, True)
 		self.abtMenu = AboutMenu(self.dumbFixMenu2, thCol, True)
-		self.scrMenu = ScriptMenu(self.dumbFixMenu5, thCol, True)
+		self.scrMenu = ScriptMenu(self.dumbFixMenu5, thCol, False)
+		# Getting the maximum height
+		self.update_idletasks()
+		if not self.scrMenu.hidden:
+			self.goodHeight = self.winfo_height()
+		print(self.goodHeight)
+		# Switching back to the setup menu
+		self.scrMenu.hide()
+		self.update_idletasks()
+		self.dumbFixMenu5.grid_remove()
+		self.setupMenu.show()
+		self.update_idletasks()
+
+		if sys.platform == 'linux':
+			self.geometry(f"{self.goodWidth}x491")
+		else:
+			self.geometry("501x443")
+
 
 		# Applying theme
 		for w in self.header.winfo_children():
