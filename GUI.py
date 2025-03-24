@@ -29,7 +29,7 @@ class Flags:
 		self.devMode = False
 		# Flag specifically for Snark, scripts are currently not implemented yet and is a copy of the scripting system from SMD Tools v1.1
 		# This will allow me to disable the functionality for it until I come up with a proper implementation
-		self.allowScripts = True
+		self.allowScripts = False
 		# Another flag for Snark, it disables booting to the "games" menu and makes the menu show a "This menu will be completed soon" message
 		# instead of showing the (very much) incomplete menu
 		self.allowGames = True
@@ -426,32 +426,60 @@ class GUI(Tk):
 		if winSizeFile and not ws[0] == "":
 			self.goodWidth = int(ws[0].replace("\n", ""))
 		else:
+			self.update()
 			self.goodWidth = self.winfo_width()
-		# self.dumbFixMenu5.grid(column=0, row=2, sticky="nsew", columnspan=10)
+		print(self.goodWidth)
+		
+		self.mTemplate = MenuTemp(thCol, self.goodWidth)
 
-		self.optMenu = OptionsMenu(self.dumbFixMenu3, thCol, self.changeTheme, self.updateOpt, True)
-		self.setupMenu = SetupMenu(menu, thCol, self.updateGames)
-		self.compSetMenu = CompSetupMenu(self.dumbFixMenu4, thCol, self.updateComps, self.flags.allowGames)
-		self.decMenu = DecompMenu(menu, thCol, True)
-		self.cmpMenu = CompMenu(self.dumbFixMenu, thCol, True)
-		self.abtMenu = AboutMenu(self.dumbFixMenu2, thCol, True)
-		self.scrMenu = ScriptMenu(self.dumbFixMenu5, thCol, False)
+		self.dumbFixMenu3.grid(column=0, row=2, sticky="nsew", columnspan=10)
+		self.optMenu = OptionsMenu(self.mTemplate, self.dumbFixMenu3, self.changeTheme, self.updateOpt, True)
+		self.dumbFixMenu3.grid_remove()
+
+		self.setupMenu = SetupMenu(self.mTemplate, menu, self.updateGames)
+		
+		self.dumbFixMenu4.grid(column=0, row=2, sticky="nsew", columnspan=10)
+		self.compSetMenu = CompSetupMenu(self.mTemplate, self.dumbFixMenu4, self.updateComps, self.flags.allowGames)
+		self.dumbFixMenu4.grid_remove()
+		
+		self.decMenu = DecompMenu(self.mTemplate, menu, True)
+		
+		# self.dumbFixMenu.grid(column=0, row=2, sticky="nsew", columnspan=10)
+		self.cmpMenu = CompMenu(self.mTemplate, self.dumbFixMenu, False)
+		# if winSizeFile:
+		# 	self.dumbFixMenu.grid_remove()
+		
+		self.dumbFixMenu2.grid(column=0, row=2, sticky="nsew", columnspan=10)
+		self.abtMenu = AboutMenu(self.mTemplate, self.dumbFixMenu2, True)
+		self.dumbFixMenu2.grid_remove()
+		
+		if self.flags.allowScripts:
+			self.dumbFixMenu5.grid(column=0, row=2, sticky="nsew", columnspan=10)
+			self.scrMenu = ScriptMenu(self.mTemplate, self.dumbFixMenu5, True)
+			self.dumbFixMenu5.grid_remove()
 		# Getting the maximum height
-		self.update_idletasks()
-		if not self.scrMenu.hidden:
-			self.goodHeight = self.winfo_height()
+		if not self.cmpMenu.hidden:
+			if winSizeFile and not ws[1] == "":
+				self.goodHeight = int(ws[1].replace("\n", ""))
+			else:
+				self.update()
+				self.goodHeight = self.winfo_reqheight()
+				# Switching back to the setup menu
+				self.cmpMenu.hide()
+				self.dumbFixMenu.grid_remove()
+				self.setupMenu.show()
+				self.update()
 		print(self.goodHeight)
-		# Switching back to the setup menu
-		self.scrMenu.hide()
-		self.update_idletasks()
-		self.dumbFixMenu5.grid_remove()
-		self.setupMenu.show()
-		self.update_idletasks()
 
 		if sys.platform == 'linux':
-			self.geometry(f"{self.goodWidth}x491")
+			self.geometry(f"{self.goodWidth}x{self.goodHeight}")
 		else:
 			self.geometry("501x443")
+		
+		if not os.path.exists("save/WinSize.txt"):
+			wsf = open("save/WinSize.txt", "w")
+			wsf.write(f"{self.goodWidth}\n{self.goodHeight}")
+			wsf.close()
 
 
 		# Applying theme
@@ -581,7 +609,8 @@ class GUI(Tk):
 			self.cmpMenu.hide()
 			self.decMenu.hide()
 			self.optMenu.hide()
-			self.scrMenu.hide()
+			if self.flags.allowScripts:
+				self.scrMenu.hide()
 	
 	def updateOpt(self, key, val):
 		self.setupMenu.updateOpt(key, val)
@@ -590,7 +619,8 @@ class GUI(Tk):
 		self.cmpMenu.updateOpt(key, val)
 		self.decMenu.updateOpt(key, val)
 		self.optMenu.updateOpt(key, val)
-		self.scrMenu.updateOpt(key, val)
+		if self.flags.allowScripts:
+			self.scrMenu.updateOpt(key, val)
 	
 	def updateGames(self, comp):
 		self.cmpMenu.updateGames(comp)
@@ -611,7 +641,8 @@ class GUI(Tk):
 			self.cmpMenu.hide()
 			self.decMenu.hide()
 			self.optMenu.show()
-			self.scrMenu.hide()
+			if self.flags.allowScripts:
+				self.scrMenu.hide()
 	
 	def openfile(self):
 		startDir = self.options["startFolder"]
@@ -647,7 +678,8 @@ class GUI(Tk):
 			self.compSetMenu.hide()
 			self.abtMenu.hide()
 			self.optMenu.hide()
-			self.scrMenu.hide()
+			if self.flags.allowScripts:
+				self.scrMenu.hide()
 	
 	def cmpSetupMenu(self):
 		if self.compSetMenu.hidden:
@@ -662,7 +694,8 @@ class GUI(Tk):
 			self.setupMenu.hide()
 			self.abtMenu.hide()
 			self.optMenu.hide()
-			self.scrMenu.hide()
+			if self.flags.allowScripts:
+				self.scrMenu.hide()
 		
 	
 	""" Switches menu to Decompile Menu """
@@ -679,7 +712,8 @@ class GUI(Tk):
 			self.abtMenu.hide()
 			self.optMenu.hide()
 			self.compSetMenu.hide()
-			self.scrMenu.hide()
+			if self.flags.allowScripts:
+				self.scrMenu.hide()
 	
 	""" Switches menu to Compile Menu """
 	def cmp_menu(self):
@@ -695,23 +729,27 @@ class GUI(Tk):
 			self.decMenu.hide()
 			self.abtMenu.hide()
 			self.optMenu.hide()
-			self.scrMenu.hide()
+			if self.flags.allowScripts:
+				self.scrMenu.hide()
 			# print(f"width: {self.winfo_width()} height: {self.winfo_height()}")
 	
 	def scripts(self):
-		if self.scrMenu.hidden:
-			self.setupMenu.hide()
-			self.compSetMenu.hide()
-			self.dumbFixMenu.grid_remove()
-			self.dumbFixMenu2.grid_remove()
-			self.dumbFixMenu3.grid_remove()
-			self.dumbFixMenu4.grid_remove()
-			self.dumbFixMenu5.grid(column=0, row=2, sticky="nsew", columnspan=10)
-			self.cmpMenu.hide()
-			self.decMenu.hide()
-			self.abtMenu.hide()
-			self.optMenu.hide()
-			self.scrMenu.show()
+		if self.flags.allowScripts:
+			if self.scrMenu.hidden:
+				self.setupMenu.hide()
+				self.compSetMenu.hide()
+				self.dumbFixMenu.grid_remove()
+				self.dumbFixMenu2.grid_remove()
+				self.dumbFixMenu3.grid_remove()
+				self.dumbFixMenu4.grid_remove()
+				self.dumbFixMenu5.grid(column=0, row=2, sticky="nsew", columnspan=10)
+				self.cmpMenu.hide()
+				self.decMenu.hide()
+				self.abtMenu.hide()
+				self.optMenu.hide()
+				self.scrMenu.show()
+		else:
+			a = ScriptWin()
 	
 	def exec_script(self, script):
 		# Script parsing and execution function

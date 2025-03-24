@@ -13,16 +13,27 @@ import json
 import sys
 import jsonc
 
+# To make things easier for myself, I'm making a new class that contains common values that won't (or usually doesn't) change for each menu.
+class MenuTemp():
+
+    def __init__(self, thme:dict, safeWidth:int):
+        self.thme = thme
+        self.safeWidth = safeWidth
+
 class SetupMenu():
-    def __init__(self, master, thme:dict, updFunc, startHidden:bool=False, allowGUI:bool=True):
+    def __init__(self, template, master, updFunc, startHidden:bool=False, allowGUI:bool=True):
         self.hidden = startHidden
         self.master = master
-        self.thme = thme
+        thme = template.thme
+        self.thme, self.safeWidth = thme, template.safeWidth
         self.allowGUI = allowGUI
         self.updFunc = updFunc
         self.advOpt = Frame(master, borderwidth=2, bg=thme["bg"], relief="sunken")
         self.top = Frame(master, borderwidth=2, bg=thme["bg"])
         self.newGame = False
+        self.nameEntW = 62
+        if self.safeWidth > 609:
+            self.nameEntW = 59
 
         # Setting up options
         js = open("save/options.json", 'r')
@@ -48,7 +59,7 @@ class SetupMenu():
         self.typeSel.set(self.gamePFs[self.gameSel.get()]["type"])
         self.name = StringVar()
         self.name.set(self.gOptions[0])
-        self.nameEntry = Entry(master, textvariable=self.name, width=62)
+        self.nameEntry = Entry(master, textvariable=self.name, width=self.nameEntW)
         # Capability options
         self.hrBool = BooleanVar(self.advOpt, False)
         self.highRes = Checkbutton(self.advOpt, text="High Resolution BMPs", variable=self.hrBool)
@@ -160,7 +171,7 @@ class SetupMenu():
             self.typeSel.set(self.gamePFs[self.selComp]["type"])
             self.hrBool.set(self.gamePFs[self.selComp]["capabilities"]["1024px"])
             self.ucBool.set(self.gamePFs[self.selComp]["capabilities"]["unlockedChrome"])
-            self.fsBool.set(self.gamePFs[self.selComp]["capabilities"]["flatshade"])
+            # self.fsBool.set(self.gamePFs[self.selComp]["capabilities"]["flatshade"])
             self.fbBool.set(self.gamePFs[self.selComp]["capabilities"]["fullbright"])
         else:
             js = open(f"save/user/game{self.gameSel.get()}.json", 'r')
@@ -169,7 +180,7 @@ class SetupMenu():
             self.typeSel.set(gameDat["type"])
             self.hrBool.set(gameDat["capabilities"]["1024px"])
             self.ucBool.set(gameDat["capabilities"]["unlockedChrome"])
-            self.fsBool.set(gameDat["capabilities"]["flatshade"])
+            # self.fsBool.set(gameDat["capabilities"]["flatshade"])
             self.fbBool.set(gameDat["capabilities"]["fullbright"])
         """# If editing options were removed and the compiler doesn't have editing disabled
         if self.hiddenEdit and not self.compDat[self.selComp]["disableEdit"]:
@@ -214,10 +225,12 @@ class SetupMenu():
         self.saveGame.grid(column=2,row=0,sticky="w", padx=(10,0))
 
 class CompSetupMenu():
-    def __init__(self, master, thme:dict, updFunc, startHidden:bool=False):
+    def __init__(self, template, master, updFunc, startHidden:bool=False):
         self.hidden = startHidden
         self.master = master
-        self.thme = thme
+        thme = template.thme
+        self.thme, self.safeWidth = thme, template.safeWidth
+        self.top = Frame(master, borderwidth=2, bg=thme["bg"])
         self.hiddenEdit = True
         self.updFunc = updFunc
         # Setting up options
@@ -239,21 +252,22 @@ class CompSetupMenu():
         self.gameSel.current(0)
         self.gameSel.bind("<<ComboboxSelected>>", self.chComp)
         self.setupLabel = Label(master, text="Compiler Setup", background=thme["bg"], foreground=thme["txt"])
-        self.nameLabel = Label(master, text="Name: ", background=thme["bg"], foreground=thme["txt"])
-        self.pathLabel = Label(master, text="Custom path: ", background=thme["bg"], foreground=thme["txt"])
+        self.nameLabel = Label(self.top, text="Name: ", background=thme["bg"], foreground=thme["txt"])
+        self.pathLabel = Label(self.top, text="Custom path: ", background=thme["bg"], foreground=thme["txt"])
         self.name = StringVar()
         self.name.set(cOptions[0])
-        self.nameEntry = Entry(master, textvariable=self.name, width=50)
+        self.nameEntry = Entry(self.top, textvariable=self.name, width=50)
         self.csPath = StringVar()
         self.csPath.set(self.csPaths["GoldSRC"])
-        self.csPathEntry = Entry(master, textvariable=self.csPath, width=40)
+        self.csPathEntry = Entry(self.top, textvariable=self.csPath, width=40)
         self.csPathEntry.bind("<FocusOut>", self.inputHandler)
-        self.csPathButton = Button(master, text="Save Path", command=self.savePath)
+        self.csPathButton = Button(self.top, text="Save Path", command=self.savePath)
         if not startHidden:
             self.show()
         
         # Applying theme
         self.applyTheme(master)
+        self.applyTheme(self.top)
     
     def applyTheme(self, master):
         style=ttk.Style()
@@ -309,6 +323,7 @@ class CompSetupMenu():
     def changeTheme(self, newTheme):
         self.thme = newTheme
         self.applyTheme(self.master)
+        self.applyTheme(self.top)
     
     def updateOpt(self, key, value):
         if not key.startswith("gsMV"):
@@ -343,23 +358,25 @@ class CompSetupMenu():
             w.grid_remove()
     def show(self):
         self.hidden = False
-        self.gameSel.grid(column=1, row=2)
+        self.gameSel.grid(column=1, row=2, sticky="w")
         self.setupLabel.grid(column=1, row=3, sticky=(W), padx=(10, 0))
         if not self.compDat[self.selComp]["disableEdit"]:
             self.hiddenEdit = False
-            self.nameLabel.grid(column=1, row=4, sticky=(W))
-            self.nameEntry.grid(column=2, row=4, sticky=(W))
-            self.pathLabel.grid(column=1, row=5, sticky="w")
-            self.csPathEntry.grid(column=2, row=5, sticky="w")
-            self.csPathButton.grid(column=3,row=5,sticky="w", padx=(5,0))
+            self.top.grid(column=1, row=4, sticky="nsew")
+            self.nameLabel.grid(column=1, row=0, sticky=(W))
+            self.nameEntry.grid(column=2, row=0, sticky=(W))
+            self.pathLabel.grid(column=1, row=1, sticky="w")
+            self.csPathEntry.grid(column=2, row=1, sticky="w", padx=(15,0))
+            self.csPathButton.grid(column=3,row=1,sticky="w", padx=(5,0))
         else:
             self.hiddenEdit = True
-            self.pathLabel.grid(column=1, row=4, sticky="w")
-            self.csPathEntry.grid(column=2, row=4, sticky="w")
-            self.csPathButton.grid(column=3,row=4,sticky="w", padx=(5,0))
+            self.top.grid(column=1, row=4, sticky="nsew")
+            self.pathLabel.grid(column=1, row=0, sticky="w")
+            self.csPathEntry.grid(column=2, row=0, sticky="w", padx=(15,0))
+            self.csPathButton.grid(column=3,row=0,sticky="w", padx=(5,0))
 
 class DecompMenu():
-    def __init__(self, master, thme:dict, startHidden:bool=False):
+    def __init__(self, template, master, startHidden:bool=False):
         self.curFont = font.nametofont('TkDefaultFont').actual()
         self.widthFix = 51
         self.conFix = 46
@@ -371,8 +388,12 @@ class DecompMenu():
             pass
         self.hidden = startHidden
         self.master = master
+        thme = template.thme
+        self.thme, self.safeWidth = thme, template.safeWidth
+        if self.safeWidth > 609:
+            n = 2
+            self.widthFix, self.conFix = self.widthFix-n, self.conFix-n
         self.advOpt = Frame(master, borderwidth=2, bg=thme["bg"], relief="sunken")
-        self.thme = thme
         # Setting up options
         js = open("save/options.json", 'r')
         self.options = json.loads(js.read())
@@ -559,7 +580,7 @@ class DecompMenu():
                 pass
 
 class CompMenu():
-    def __init__(self, master, thme:dict, startHidden:bool=False):
+    def __init__(self, template, master, startHidden:bool=False):
         self.curFont = font.nametofont('TkDefaultFont').actual()
         self.widthFix = 52
         self.conFix = 47
@@ -587,10 +608,14 @@ class CompMenu():
         js = open("save/options.json", 'r')
         self.options = json.loads(js.read())
         js.close()
+        thme = template.thme
+        self.thme, self.safeWidth = thme, template.safeWidth
+        if self.safeWidth > 609:
+            n = 2
+            self.widthFix, self.conFix = self.widthFix-n, self.conFix-n
         self.selects = Frame(master, borderwidth=2, bg=thme["bg"])
         self.advOpt = Frame(master, borderwidth=2, bg=thme["bg"], relief="sunken")
         self.advOpt2 = Frame(self.advOpt, borderwidth=2, bg=thme["bg"])
-        self.thme = thme
         self.setupLabel = Label(master, text="QC Input: ")
         self.nameLabel = Label(master, text="Output: ")
         self.name = StringVar()
@@ -1192,10 +1217,11 @@ class CompMenu():
             # os.remove(mdlF)
 
 class AboutMenu():
-    def __init__(self, master, thme:dict, startHidden:bool=False):
+    def __init__(self, template, master, startHidden:bool=False):
         self.hidden = startHidden
         self.master = master
-        self.thme = thme
+        thme = template.thme
+        self.thme, self.safeWidth = thme, template.safeWidth
         # Setting up options
         js = open("save/options.json", 'r')
         self.options = json.loads(js.read())
@@ -1283,11 +1309,13 @@ class AboutMenu():
         self.nameLabel.grid(column=1, row=3)
 
 class OptionsMenu():
-    def __init__(self, master, thme:dict, thmecallback, updFunc, startHidden:bool=False):
+    def __init__(self, template, master, thmecallback, updFunc, startHidden:bool=False):
         self.curPage, self.optionsVersion = 0, 3
         self.hidden = startHidden
         self.master = master
-        self.thme = thme
+        thme = template.thme
+        self.thme, self.safeWidth = thme, template.safeWidth
+        print(self.thme["bg"])
         self.updFunc = updFunc
         # Grabbing options
         jsf = open('save/options.json', 'r')
@@ -1356,6 +1384,10 @@ class OptionsMenu():
         self.gameSel = ttk.Combobox(master, values=self.games.gNames)
         self.gameSel.bind("<<ComboboxSelected>>", self.setGame)
         self.gameSel.current(self.options["defGame"])
+        # Checking if anything is exceeding the width of the "safe zone"
+        self.show()
+        self.checkWidth()
+        self.hide()
         # Tooltips
         self.themeTT = ToolTip(self.themeCBox, "Changes the program's theme, the built-in themes are: Freeman, Shephard, Calhoun and Cross.", background=thme["tt"], foreground=thme["txt"])
         self.startFolderTT = ToolTip(self.startFent, "Sets the directory that the built-in file explorer will start in, the default is the documents folder.", background=thme["tt"], foreground=thme["txt"])
@@ -1369,6 +1401,10 @@ class OptionsMenu():
         # Applying theme
         self.applyTheme(master)
         self.applyTheme(self.pageButtons)
+    
+    def checkWidth(self):
+        curWidth = self.master.winfo_reqwidth()
+        print(curWidth)
     
     def upgradeJSON(self):
         # Upgrade from version 1 to 3
@@ -1484,6 +1520,7 @@ class OptionsMenu():
     def changeTheme(self, newTheme):
         self.thme = newTheme
         self.applyTheme(self.master)
+        self.applyTheme(self.pageButtons)
         self.themeTT.changeTheme(newTheme["tt"], newTheme["txt"])
         self.startFolderTT.changeTheme(newTheme["tt"], newTheme["txt"])
         self.startFolderTT2.changeTheme(newTheme["tt"], newTheme["txt"])
@@ -1597,7 +1634,7 @@ class OptionsMenu():
             self.setMVP.grid(column=3, row=2, sticky="w")
 
 class ScriptMenu():
-    def __init__(self, master, thme:dict, startHidden:bool=False):
+    def __init__(self, template, master, startHidden:bool=False):
         self.curFont = font.nametofont('TkDefaultFont').actual()
         self.widthFix = 74
         self.conFix = 46
@@ -1609,7 +1646,8 @@ class ScriptMenu():
             pass
         self.hidden = startHidden
         self.master = master
-        self.thme = thme
+        thme = template.thme
+        self.thme, self.safeWidth = thme, template.safeWidth
         # Setting up options
         js = open("save/options.json", 'r')
         self.options = json.loads(js.read())
