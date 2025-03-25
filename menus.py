@@ -584,10 +584,14 @@ class CompMenu():
         self.curFont = font.nametofont('TkDefaultFont').actual()
         self.widthFix = 52
         self.conFix = 47
+        thme = template.thme
+        self.thme, self.safeWidth = thme, template.safeWidth
         self.advOptFix = True
         if self.curFont["family"].lower() == "nimbus sans l" or sys.platform == "win32":
             self.widthFix = 58
             self.conFix = 40
+            self.advOptFix = False
+        elif self.safeWidth > 609:
             self.advOptFix = False
         else:
             pass
@@ -608,8 +612,6 @@ class CompMenu():
         js = open("save/options.json", 'r')
         self.options = json.loads(js.read())
         js.close()
-        thme = template.thme
-        self.thme, self.safeWidth = thme, template.safeWidth
         if self.safeWidth > 609:
             n = 2
             self.widthFix, self.conFix = self.widthFix-n, self.conFix-n
@@ -912,7 +914,7 @@ class CompMenu():
         self.advOpt.grid(column=0, row=3, sticky="nsew", columnspan=10, pady=(20,0))
         self.advOptLabel.grid(column=0, row=0, sticky="w")
         self.logChk.grid(column=0, row=1, sticky="w")
-        if self.advOptFix:
+        if self.advOptFix or self.safeWidth > 609:
             self.dashT.grid(column=2, row=1, sticky="w")
             self.dashTChk.grid(column=1, row=1, sticky="w")
         else:
@@ -925,7 +927,7 @@ class CompMenu():
         if self.advOptFix:
             self.ignoreChk.grid(column=7, row=1, sticky="w")
         else:
-            self.advOpt2.grid(column=0, row=2, sticky="nsew")
+            self.advOpt2.grid(column=0, row=2, sticky="nsew", columnspan=20)
             self.ignoreChk.grid(column=7, row=1, sticky="w")
         if self.advOptFix:
             self.bNormChk.grid(column=8, row=1, sticky="w")

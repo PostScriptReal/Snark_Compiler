@@ -448,6 +448,7 @@ class GUI(Tk):
 		self.cmpMenu = CompMenu(self.mTemplate, self.dumbFixMenu, False)
 		if winSizeFile:
 			self.dumbFixMenu.grid_remove()
+			self.cmpMenu.hidden = True
 		
 		self.dumbFixMenu2.grid(column=0, row=2, sticky="nsew", columnspan=10)
 		self.abtMenu = AboutMenu(self.mTemplate, self.dumbFixMenu2, True)
@@ -458,7 +459,7 @@ class GUI(Tk):
 			self.scrMenu = ScriptMenu(self.mTemplate, self.dumbFixMenu5, True)
 			self.dumbFixMenu5.grid_remove()
 		# Getting the maximum height
-		if not self.cmpMenu.hidden:
+		if not self.cmpMenu.hidden or winSizeFile:
 			if winSizeFile and not ws[1] == "":
 				self.goodHeight = int(ws[1].replace("\n", ""))
 			else:
