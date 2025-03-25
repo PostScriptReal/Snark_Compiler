@@ -162,3 +162,4 @@ cython_debug/
 back.bmp
 Snark.code-workspace
 *.mdl
+scripts/
