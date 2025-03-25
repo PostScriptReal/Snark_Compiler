@@ -444,10 +444,10 @@ class GUI(Tk):
 		
 		self.decMenu = DecompMenu(self.mTemplate, menu, True)
 		
-		# self.dumbFixMenu.grid(column=0, row=2, sticky="nsew", columnspan=10)
+		self.dumbFixMenu.grid(column=0, row=2, sticky="nsew", columnspan=10)
 		self.cmpMenu = CompMenu(self.mTemplate, self.dumbFixMenu, False)
-		# if winSizeFile:
-		# 	self.dumbFixMenu.grid_remove()
+		if winSizeFile:
+			self.dumbFixMenu.grid_remove()
 		
 		self.dumbFixMenu2.grid(column=0, row=2, sticky="nsew", columnspan=10)
 		self.abtMenu = AboutMenu(self.mTemplate, self.dumbFixMenu2, True)
