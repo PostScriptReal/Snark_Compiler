@@ -2,10 +2,6 @@ import json
 from tkinter import *
 from tkinter.filedialog import askopenfilename, askdirectory
 from tkinter import font
-try:
-	import tksvg
-except:
-	pass
 import os
 from os.path import *
 import importlib.machinery
@@ -294,10 +290,7 @@ class GUI(Tk):
 			winSizeFile = True
 
 		# Loading in window icon
-		try:
-			ico = tksvg.SvgImage(file="icon-linux.svg")
-		except:
-			ico = PhotoImage(file="icon-linux.png")
+		ico = PhotoImage(file="icon-linux.png")
 		self.iconphoto(True, ico)
 		
 		thCol = {}
