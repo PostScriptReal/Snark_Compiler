@@ -1650,6 +1650,9 @@ class ScriptMenu():
         self.master = master
         thme = template.thme
         self.thme, self.safeWidth = thme, template.safeWidth
+        if self.safeWidth > 609:
+            n = 3
+            self.widthFix, self.conFix = self.widthFix-n, self.conFix-n
         # Setting up options
         js = open("save/options.json", 'r')
         self.options = json.loads(js.read())
@@ -1669,7 +1672,7 @@ class ScriptMenu():
             count += 1
             self.scr_list.insert(count, self.scripts[count])
         self.runBtn = Button(master, text="Run script", cursor="hand2")
-        self.console = Console(master, 'Run a script and an output of the script\'s progress will appear here!', 0, 2, self.conFix, 12)
+        self.console = Console(master, 'Run a script and an output of the script\'s progress will appear here!', 0, 2, self.conFix, 11)
         if not startHidden:
             self.show()
         
