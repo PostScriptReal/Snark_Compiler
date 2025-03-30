@@ -20,7 +20,7 @@
 <div align="center">
   <img src="logo512.png" width="192" height="192" alt="Snark logo">
   <h1>Snark</h1>
-	<p>Snark is a cross-platform alternative to the Crowbar program for GoldSRC modders, aiming to provide a similar, yet simpler workflow than what Crowbar provides.</p>
+	<p>Snark is a cross-platform alternative to the Crowbar program for GoldSRC modders that not only aims to provide a similar workflow than what Crowbar provides, but also aims to create an experience that requires the least amount of configuration possible.</p>
 	<br>
 	<h2>Why should I use Snark over Crowbar?</h2>
 	<h3><i>It's easier to configure and use!</i></h3>
