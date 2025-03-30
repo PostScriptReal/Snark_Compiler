@@ -430,7 +430,7 @@ class DecompMenu():
         # If "Half-Life Asset Manager" is selected
         if self.options["gsMV"]["selectedMV"] == 1:
             if sys.platform == "linux":
-                a = subprocess.getoutput(f"hlam \"{self.name.get()}\"")
+                a = subprocess.getoutput(f"XDG_SESSION_TYPE=x11 hlam \"{self.name.get()}\"")
             else:
                 a = subprocess.getoutput(f"\"C:/Program Files (x86)/Half-Life Asset Manager/hlam.exe\" \"{self.name.get()}\"")
         # If "Other" option is selected
@@ -672,7 +672,6 @@ class CompMenu():
         self.hitboxB = BooleanVar(self.advOpt, value=False)
         self.hitboxChk = Checkbutton(self.advOpt, text="-h", variable=self.hitboxB)
         self.keepBonesB = BooleanVar(self.advOpt, value=False)
-        self.keepBonesChk = Checkbutton(self.advOpt, text="-k", variable=self.keepBonesB)
         if self.advOptFix:
             self.ignoreB = BooleanVar(self.advOpt, value=False)
             self.ignoreChk = Checkbutton(self.advOpt, text="-i", variable=self.ignoreB)
@@ -686,6 +685,7 @@ class CompMenu():
             self.groupSB.entry.config(width=4)
             self.pf2B = BooleanVar(self.advOpt, value=False)
             self.pf2Chk = Checkbutton(self.advOpt, text="-p", variable=self.pf2B)
+            self.keepBonesChk = Checkbutton(self.advOpt, text="-k", variable=self.keepBonesB)
         else:
             self.ignoreB = BooleanVar(self.advOpt, value=False)
             self.ignoreChk = Checkbutton(self.advOpt, text="-i", variable=self.ignoreB)
@@ -699,6 +699,7 @@ class CompMenu():
             self.groupSB.entry.config(width=4)
             self.pf2B = BooleanVar(self.advOpt2, value=False)
             self.pf2Chk = Checkbutton(self.advOpt2, text="-p", variable=self.pf2B)
+            self.keepBonesChk = Checkbutton(self.advOpt2, text="-k", variable=self.keepBonesB)
         # Tooltips
         self.logChkTT = ToolTip(self.logChk, "Writes the log in the terminal below as a text file inside the logs folder.", background=thme["tt"], foreground=thme["txt"])
         self.dashTChkTT = ToolTip(self.dashTChk, "Specify a texture to replace while compiling, you can globally replace all textures by specifying one bitmap or replace a single texture by following this format: \'tex1.bmp,tex2.bmp\'.", background=thme["tt"], foreground=thme["txt"])
@@ -713,6 +714,9 @@ class CompMenu():
         self.pf2ChkTT = ToolTip(self.pf2Chk, "Forces power of 2 textures when enabled", background=thme["tt"], foreground=thme["txt"])
         self.mdlTT = ToolTip(self.mdlBrowse, "REQUIRED, specifies the QC file used to compile your model, you cannot leave this blank.", background=thme["tt"], foreground=thme["txt"])
         self.outputTT = ToolTip(self.outBrowse, "OPTIONAL, if an output folder is not specified, then it will place the compiled model in a subfolder of where the QC file is located.", background=thme["tt"], foreground=thme["txt"])
+
+        # Checking if the default compiler has the engine type Svengine.
+        self.compilerStuff()
         
         self.decomp = Button(master, text='Compile', command=self.startCompile, cursor="hand2")
         self.console = Console(master, 'Currently no warnings or errors!', 0, 5, self.conFix, 12)
@@ -779,7 +783,7 @@ class CompMenu():
         else:
             self.groupSB.lock()
     
-    def compilerStuff(self, event):
+    def compilerStuff(self, event=None):
         self.compJS = self.fullCJS["compilers"][self.compSel.get()]
         if self.compJS["type"].lower() == "svengine":
             self.svengine = True
@@ -801,7 +805,7 @@ class CompMenu():
         # If "Half-Life Asset Manager" is selected
         if self.options["gsMV"]["selectedMV"] == 1:
             if sys.platform == "linux":
-                a = subprocess.getoutput(f"hlam \"{self.mdlPath}\"")
+                a = subprocess.getoutput(f"XDG_SESSION_TYPE=x11 hlam \"{self.mdlPath}\"")
             else:
                 a = subprocess.getoutput(f"\"C:/Program Files (x86)/Half-Life Asset Manager/hlam.exe\" \"{self.mdlPath}\"")
         # If "Other" option is selected
@@ -879,6 +883,7 @@ class CompMenu():
             # Doing specific things for specific options
             if key == "defComp":
                 self.compSel.current(self.options[key])
+                self.compilerStuff()
             elif key == "defGame":
                 self.gameSel.current(self.options[key])
         # Doing this since the gsMV option needs two square bracket data things in order to update stuff properly,
@@ -1377,7 +1382,7 @@ class OptionsMenu():
         cOptions.pop(len(cOptions)-1)
         self.compSel = ttk.Combobox(master, values=cOptions)
         self.compSel.bind("<<ComboboxSelected>>", self.setCmp)
-        self.compSel.current(self.options["defGame"])
+        self.compSel.current(self.options["defComp"])
         gList = open("save/games.txt", "r")
         self.gOptions = gList.read().split('\n')
         self.gOptions.pop(len(self.gOptions)-1)
@@ -1387,16 +1392,16 @@ class OptionsMenu():
         self.gameSel.bind("<<ComboboxSelected>>", self.setGame)
         self.gameSel.current(self.options["defGame"])
         # Checking if anything is exceeding the width of the "safe zone"
-        self.show()
+        """self.show()
         self.checkWidth()
-        self.hide()
+        self.hide()"""
         # Tooltips
         self.themeTT = ToolTip(self.themeCBox, "Changes the program's theme, the built-in themes are: Freeman, Shephard, Calhoun and Cross.", background=thme["tt"], foreground=thme["txt"])
         self.startFolderTT = ToolTip(self.startFent, "Sets the directory that the built-in file explorer will start in, the default is the documents folder.", background=thme["tt"], foreground=thme["txt"])
         self.startFolderTT2 = ToolTip(self.setSF, "Sets the directory that the built-in file explorer will start in, the default is the documents folder.", background=thme["tt"], foreground=thme["txt"])
         self.forceDefTT = ToolTip(self.forceDefault, "By default, Snark prioritises the custom path you set over the default paths for compilers, enabling this will prioritise the default paths instead, meaning that Snark won't use the custom path if it finds the compiler in its default path.", background=thme["tt"], foreground=thme["txt"])
         self.hlmvTT = ToolTip(self.hlmvCBox, "Sets the model viewer you want to use when clicking the \"Open model in HLMV\" button, if this is set to None, the button will not show up!", background=thme["tt"], foreground=thme["txt"])
-        self.mvPathTT = ToolTip(self.mvPathEnt.entry, "Sets the path to the model viewer you want to use if you select \"Other\"", background=thme["tt"], foreground=thme["txt"])
+        self.setMVPtt = ToolTip(self.setMVP, "Sets the path to the model viewer you want to use if you select \"Other\"", background=thme["tt"], foreground=thme["txt"])
         if not startHidden:
             self.show()
         
@@ -1458,6 +1463,7 @@ class OptionsMenu():
         self.startFent.grid(column=2, row=2, sticky="w")
         self.setSF.grid(column=3, row=2, sticky="w")
         self.fdLabel.grid(column=1, row=3, sticky="w")
+        self.forceDefault.grid(column=2, row=3, sticky="w")
         self.defCLabel.grid(column=1, row=4, sticky="w")
         self.compSel.grid(column=2, row=4, sticky="w")
         self.defGLabel.grid(column=1, row=5, sticky="w")
@@ -1624,6 +1630,7 @@ class OptionsMenu():
             self.startFent.grid(column=2, row=2, sticky="w")
             self.setSF.grid(column=3, row=2, sticky="w")
             self.fdLabel.grid(column=1, row=3, sticky="w")
+            self.forceDefault.grid(column=2, row=3, sticky="w")
             self.defCLabel.grid(column=1, row=4, sticky="w")
             self.compSel.grid(column=2, row=4, sticky="w")
             self.defGLabel.grid(column=1, row=5, sticky="w")
@@ -1640,10 +1647,12 @@ class ScriptMenu():
         self.curFont = font.nametofont('TkDefaultFont').actual()
         self.widthFix = 74
         self.conFix = 46
+        self.conHeight = 11
         self.logOutput = False
         if self.curFont["family"].lower() == "nimbus sans l" or sys.platform == "win32":
             self.widthFix = 81
             self.conFix = 59
+            self.conHeight = 13
         else:
             pass
         self.hidden = startHidden
@@ -1672,7 +1681,7 @@ class ScriptMenu():
             count += 1
             self.scr_list.insert(count, self.scripts[count])
         self.runBtn = Button(master, text="Run script", cursor="hand2")
-        self.console = Console(master, 'Run a script and an output of the script\'s progress will appear here!', 0, 2, self.conFix, 11)
+        self.console = Console(master, 'Run a script and an output of the script\'s progress will appear here!', 0, 2, self.conFix, self.conHeight)
         if not startHidden:
             self.show()
         
