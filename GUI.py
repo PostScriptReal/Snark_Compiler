@@ -287,8 +287,8 @@ class GUI(Tk):
 		self.selTheme = self.options["theme"]
 
 		winSizeFile = False
-		if sys.platform == "linux" and os.path.exists("save/WinSize.txt"):
-			wsFile = open("save/WinSize.txt", "r")
+		if sys.platform == "linux" and os.path.exists("WinSize.txt"):
+			wsFile = open("WinSize.txt", "r")
 			ws = wsFile.readlines()
 			wsFile.close()
 			winSizeFile = True
@@ -477,8 +477,8 @@ class GUI(Tk):
 		else:
 			self.geometry("501x443")
 		
-		if not os.path.exists("save/WinSize.txt"):
-			wsf = open("save/WinSize.txt", "w")
+		if not os.path.exists("WinSize.txt"):
+			wsf = open("WinSize.txt", "w")
 			wsf.write(f"{self.goodWidth}\n{self.goodHeight}")
 			wsf.close()
 
