@@ -26,6 +26,7 @@
                 "chromeTRM": false,
                 "1024px": false,
                 "unlockedChrome": false,
+                "noUVshift": false,
                 "cliptotextures": true
             },
             "disableEdit": true
@@ -51,6 +52,7 @@
                 "chromeTRM": true,
                 "1024px": true,
                 "unlockedChrome": true,
+                "noUVshift": true,
                 "cliptotextures": false
             },
             "disableEdit": true
