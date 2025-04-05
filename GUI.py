@@ -262,13 +262,8 @@ class GUI(Tk):
 		webVer = urlopen(url).read().decode('utf-8')
 		print(webVer)
 
-		if getattr(sys, 'frozen', False):
-			EXE_LOCATION = os.path.dirname( sys.executable )
-		else:
-			EXE_LOCATION = os.path.dirname( os.path.realpath( __file__ ) )
-
 		# Don't you dare make a Fortnite joke
-		vFile = open(os.path.join(EXE_LOCATION, "version.txt"), "r")
+		vFile = open("version.txt", "r")
 		curVer = vFile.read()
 
 		if curVer != webVer:
@@ -492,10 +487,10 @@ class GUI(Tk):
 				pass
 
 		if not self.flags.devMode:
-			try:
-				self.check_version()
-			except:
-				print("Unable to check latest version, are you connected to the internet?")
+			# try:
+			self.check_version()
+			"""except:
+				print("Unable to check latest version, are you connected to the internet?")"""
 
 	def help(self):
 		if not self.compSetMenu.hidden:
