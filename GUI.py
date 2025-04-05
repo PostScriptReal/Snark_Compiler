@@ -14,6 +14,8 @@ from urllib.request import urlopen
 from helpers import *
 from menus import *
 import jsonc
+import certifi
+import ssl
 
 selected_scr = ''
 scr_dat = ''
@@ -259,7 +261,7 @@ class GUI(Tk):
 	
 	def check_version(self):
 		url = "https://github.com/PostScriptReal/Snark_Compiler/raw/refs/heads/main/version.txt"
-		webVer = urlopen(url).read().decode('utf-8')
+		webVer = urlopen(url, context=ssl.create_default_context(cafile=certifi.where())).read().decode('utf-8')
 		print(webVer)
 
 		# Don't you dare make a Fortnite joke

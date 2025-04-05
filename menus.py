@@ -393,13 +393,48 @@ class DecompMenu():
         if self.safeWidth > 609:
             n = 2
             self.widthFix, self.conFix = self.widthFix-n, self.conFix-n
+        self.quick = Frame(master, borderwidth=2, bg=thme["bg"])
         self.advOpt = Frame(master, borderwidth=2, bg=thme["bg"], relief="sunken")
         # Setting up options
         js = open("save/options.json", 'r')
         self.options = json.loads(js.read())
         js.close()
+        self.presets = {
+            "presets": {
+                # For most compilers
+                "GoldSRC": {
+                    "-u": False,
+                    "-V": False,
+                    "-m": True
+                },
+                # For Sven Co-op's StudioMDL
+                "Svengine": {
+                    "-u": True,
+                    "-V": False,
+                    "-m": True
+                },
+                # For the DoomMusic StudioMDL compiler
+                "DoomMusic": {
+                    "-u": True,
+                    "-V": False,
+                    "-m": True
+                },
+                # For Xash3D engine mods
+                "Xash3D": {
+                    "-u": False,
+                    "-V": False,
+                    "-m": False
+                }
+            }
+        }
+        presetNames = list(self.presets["presets"].keys())
+        self.quickStpLbl = Label(self.quick, text="Quick Setup Presets: ")
         self.setupLabel = Label(master, text="MDL Input: ")
         self.nameLabel = Label(master, text="Output: ")
+        self.presetSel = ttk.Combobox(self.quick, values=presetNames)
+        self.presetSel.current(self.options["defDPreset"])
+        self.presetDat = self.presets["presets"][self.presetSel.get()]
+        self.presetSel.bind("<<ComboboxSelected>>", self.chPreset)
         self.name = StringVar()
         self.nameEntry = Entry(master, textvariable=self.name, width=self.widthFix)
         self.nameEntry.bind("<FocusOut>", self.inputHandler)
@@ -408,21 +443,33 @@ class DecompMenu():
         self.mdlBrowse = Button(master, text='Browse', command=self.findMDL, cursor="hand2")
         self.outBrowse = Button(master, text='Browse', command=self.output, cursor="hand2")
         self.advOptLabel = Label(self.advOpt, text="Advanced Options")
-        self.logVal = BooleanVar(self.advOpt, value=False)
-        self.logChk = Checkbutton(self.advOpt, text="Write log to file", variable=self.logVal, command=self.setLog)
-        self.logChkTT = ToolTip(self.logChk, "Writes the log in the terminal below as a text file inside the logs folder.", background=thme["tt"], foreground=thme["txt"])
         self.decomp = Button(master, text='Decompile', command=self.startDecomp, cursor="hand2")
         self.hlmv = Button(master, text='Open model in HLMV', command=self.openHLAM, cursor="hand2")
-        self.console = Console(master, 'Start a decompile and the terminal output will appear here!', 0, 4, self.conFix, 14)
+        self.console = Console(master, 'Start a decompile and the terminal output will appear here!', 0, 5, self.conFix, 13)
+        # Advanced options
+        self.logVal = BooleanVar(self.advOpt, value=False)
+        self.logChk = Checkbutton(self.advOpt, text="Write log to file", variable=self.logVal, command=self.setLog)
+        self.mVal = BooleanVar(self.advOpt, value=self.presetDat["-m"])
+        self.mChk = Checkbutton(self.advOpt, text="GoldSRC compatability", variable=self.mVal)
+        self.uVal = BooleanVar(self.advOpt, value=self.presetDat["-u"])
+        self.uChk = Checkbutton(self.advOpt, text="Shift model UVs", variable=self.uVal)
+        self.vVal = BooleanVar(self.advOpt, value=self.presetDat["-V"])
+        self.vChk = Checkbutton(self.advOpt, text="Ignore checks", variable=self.vVal)
         if not startHidden:
             self.show()
         
+        # Tooltips
+        self.logChkTT = ToolTip(self.logChk, "Writes the log in the terminal below as a text file inside the logs folder.", background=thme["tt"], foreground=thme["txt"])
+        self.mChkTT = ToolTip(self.mChk, "By default, the decompiler outputs .qc files with features for Xash3D that GoldSRC does not support, enabling this makes the output GoldSRC compatible.", background=thme["tt"], foreground=thme["txt"])
+        self.uChkTT = ToolTip(self.uChk, "Enabling this will make the decompiler shift the model UVs, this fixes UV errors with models compiled by some modern compilers like DoomMusic and Sven Co-op's StudioMDL.", background=thme["tt"], foreground=thme["txt"])
+        self.vChkTT = ToolTip(self.vChk, "Enabling this will make the decompiler ignore validity checks, which might allow you to decompile some broken models", background=thme["tt"], foreground=thme["txt"])
         self.mdlTT = ToolTip(self.mdlBrowse, "REQUIRED, specifies the MDL file used to decompile a model, you cannot leave this blank.", background=thme["tt"], foreground=thme["txt"])
         self.outputTT = ToolTip(self.outBrowse, "OPTIONAL, if an output folder is not specified, then it will place the decompiled model in a subfolder of where the MDL file is located.", background=thme["tt"], foreground=thme["txt"])
         
         # Applying theme
         self.applyTheme(master)
         self.applyTheme(self.advOpt)
+        self.applyTheme(self.quick)
     def setLog(self):
         self.logOutput = self.logVal.get()
     
@@ -450,6 +497,12 @@ class DecompMenu():
         self.name.set(self.nameEntry.get())
         if not self.name.get() == "" and self.options["gsMV"]["selectedMV"] > 0:
             self.hlmv.grid(column=1, row=3, pady=(27,0), sticky="w")
+    
+    def chPreset(self, e=False):
+        self.presetDat = self.presets["presets"][self.presetSel.get()]
+        self.mVal.set(self.presetDat["-m"])
+        self.uVal.set(self.presetDat["-u"])
+        self.vVal.set(self.presetDat["-V"])
 
     def applyTheme(self, master):
         style= ttk.Style()
@@ -495,6 +548,9 @@ class DecompMenu():
     def updateOpt(self, key, value):
         if not key.startswith("gsMV"):
             self.options[key] = value
+            if key == "defDPreset":
+                self.presetSel.current(value)
+                self.chPreset()
         else:
             self.options["gsMV"][key.replace("gsMV", "")] = value
 
@@ -511,12 +567,18 @@ class DecompMenu():
         self.outputEntry.grid(column=1, row=1, padx=(5,0))
         self.mdlBrowse.grid(column=2, row=0, padx=(12,0))
         self.outBrowse.grid(column=2, row=1, padx=(12,0))
-        self.advOpt.grid(column=0, row=2, sticky="nsew", columnspan=10, pady=(20,0))
+        self.quick.grid(column=0,row=2,sticky="nsew", columnspan=10)
+        self.quickStpLbl.grid(column=0, row=2, sticky="w")
+        self.presetSel.grid(column=1,row=2)
+        self.advOpt.grid(column=0, row=3, sticky="nsew", columnspan=10, pady=(20,0))
         self.advOptLabel.grid(column=0, row=0, sticky="w")
         self.logChk.grid(column=0, row=1, sticky="w")
-        self.decomp.grid(column=0, row=3, pady=(27,0))
+        self.mChk.grid(column=1, row=1, sticky="w")
+        self.uChk.grid(column=2, row=1, sticky="w")
+        self.vChk.grid(column=3, row=1, sticky="w")
+        self.decomp.grid(column=0, row=4, pady=(24,0))
         if not self.name.get() == "" and self.options["gsMV"]["selectedMV"] > 0:
-            self.hlmv.grid(column=1, row=3, pady=(27,0), sticky="w")
+            self.hlmv.grid(column=1, row=4, pady=(24,0), sticky="w")
         self.console.show()
     
     def findMDL(self):
@@ -533,51 +595,72 @@ class DecompMenu():
             startDir = os.path.expanduser(startDir)
         self.out.set(askdirectory(title="Select Output Folder", initialdir=startDir))
     
+    def getArgs(self):
+        args = []
+        if self.mVal.get():
+            args.append("-m")
+        if self.uVal.get():
+            args.append("-u")
+        if self.vVal.get():
+            args.append("-V")
+        cmdArgs = " ".join(args)
+        print(cmdArgs)
+        return(cmdArgs)
+    
     def startDecomp(self):
         mdl = self.name.get()
         output = self.out.get()
+        gotArgs = False
+        cmdArgs = self.getArgs()
+        if not cmdArgs == "" or not cmdArgs == " ":
+            gotArgs = True
         if output == "" or output == None:
             output = os.path.join(os.path.dirname(mdl), "Decompile/")
             if not os.path.exists(output):
                 os.mkdir(output)
-        else:
-            tOutput = ''
-            if sys.platform == 'linux':
-                tOutput = subprocess.getoutput(f'./third_party/mdldec \"{mdl}\"')
-            elif sys.platform == 'win32':
-                tOutput = subprocess.getoutput(f'\"{os.getcwd()}/third_party/mdldec_win32.exe\" \"{mdl}\"')
-            # I don't have a Mac so I can't compile mdldec to Mac targets :(
-            # So instead I have to use wine for Mac systems
-            """elif sys.platform == 'darwin':
-                tOutput = subprocess.getoutput(f'wine third_party/mdldec_win32.exe \"{mdl}\"')"""
-            print(tOutput)
-            self.console.setOutput(tOutput)
-            if self.logVal.get():
-                date = datetime.datetime.now()
-                curDate = f"{date.strftime('%d')}-{date.strftime('%m')}-{date.strftime('%Y')}-{date.strftime('%H')}-{date.strftime('%M')}-{date.strftime('%S')}"
-                log = open(f"logs/decomp-{curDate}.txt", 'w')
-                log.write(tOutput)
-                log.close()
-            # Moving files to output directory (this is a workaround to a bug with Xash3D's model decompiler)
-            filesToMove = []
-            mdlFolder = os.path.dirname(mdl)
-            anims = os.path.join(mdlFolder, 'anims/')
-            texFolder = os.path.join(mdlFolder, 'textures/')
-            for f in os.listdir(mdlFolder):
-                print(f)
-                if f.endswith("smd") or f.endswith("qc"):
-                    shutil.copy(f"{mdlFolder}/{f}", os.path.join(output, f))
-                    os.remove(f"{mdlFolder}/{f}")
-            shutil.copytree(anims, os.path.join(output, 'anims/'))
-            shutil.copytree(texFolder, os.path.join(output, 'textures/'))
-            try:
-                shutil.rmtree(anims)
-            except:
-                pass
-            try:
-                shutil.rmtree(texFolder)
-            except:
-                pass
+        tOutput = ''
+        if sys.platform == 'linux':
+            if gotArgs:
+                tOutput = subprocess.getoutput(f'./third_party/mdldec -d {cmdArgs} \"{mdl}\"')
+            else:
+                tOutput = subprocess.getoutput(f'./third_party/mdldec -d \"{mdl}\"')
+        elif sys.platform == 'win32':
+            if gotArgs:
+                tOutput = subprocess.getoutput(f'\"{os.getcwd()}/third_party/mdldec.exe -d {cmdArgs} \" \"{mdl}\"')
+            else:
+                tOutput = subprocess.getoutput(f'\"{os.getcwd()}/third_party/mdldec.exe -d \" \"{mdl}\"')
+        # I don't have a Mac so I can't compile mdldec to Mac targets :(
+        # So instead I have to use wine for Mac systems
+        """elif sys.platform == 'darwin':
+            tOutput = subprocess.getoutput(f'wine third_party/mdldec_win32.exe \"{mdl}\"')"""
+        print(tOutput)
+        self.console.setOutput(tOutput)
+        if self.logVal.get():
+            date = datetime.datetime.now()
+            curDate = f"{date.strftime('%d')}-{date.strftime('%m')}-{date.strftime('%Y')}-{date.strftime('%H')}-{date.strftime('%M')}-{date.strftime('%S')}"
+            log = open(f"logs/decomp-{curDate}.txt", 'w')
+            log.write(tOutput)
+            log.close()
+        # Moving files to output directory (this is a workaround to a bug with Xash3D's model decompiler)
+        filesToMove = []
+        mdlFolder = os.path.dirname(mdl)
+        anims = os.path.join(mdlFolder, 'anims/')
+        texFolder = os.path.join(mdlFolder, 'textures/')
+        for f in os.listdir(mdlFolder):
+            print(f)
+            if f.endswith("smd") or f.endswith("qc"):
+                shutil.copy(f"{mdlFolder}/{f}", os.path.join(output, f))
+                os.remove(f"{mdlFolder}/{f}")
+        shutil.copytree(anims, os.path.join(output, 'anims/'))
+        shutil.copytree(texFolder, os.path.join(output, 'textures/'))
+        try:
+            shutil.rmtree(anims)
+        except:
+            pass
+        try:
+            shutil.rmtree(texFolder)
+        except:
+            pass
 
 class CompMenu():
     def __init__(self, template, master, startHidden:bool=False):
@@ -1211,7 +1294,7 @@ class CompMenu():
             mdlF = qcRelChk.getMDLname()
             self.mdlPath = os.path.join(mdlFolder, mdlF)
             if not self.mdlPath == "" and self.options["gsMV"]["selectedMV"] > 0:
-                self.hlmv.grid(column=1, row=3, pady=(10,0), sticky="w")
+                self.hlmv.grid(column=1, row=4, pady=(10,0), sticky="w")
             # I'm doing this instead of directly copying the mdl file because depending on the options used (e.g. $externaltextures),
             # the compiler will output more than one .mdl file which is needed in order for the compiled model to work.
             # If you are using $externaltextures, the compiler will output a (mdlname).mdl file and (mdlname)T.mdl file,
@@ -1317,7 +1400,7 @@ class AboutMenu():
 
 class OptionsMenu():
     def __init__(self, template, master, thmecallback, updFunc, startHidden:bool=False):
-        self.curPage, self.optionsVersion = 0, 3
+        self.curPage = 0
         self.hidden = startHidden
         self.master = master
         thme = template.thme
@@ -1330,7 +1413,7 @@ class OptionsMenu():
         jsf.close()
         self.options = json.loads(js)
         # Checking if options JSON is from a previous version...
-        if not self.options["version"] == self.optionsVersion:
+        if not self.options["version"] == 4:
             self.upgradeJSON()
         # Pages
         self.pageButtons = Frame(master, borderwidth=2, bg=thme["bg"])
@@ -1377,6 +1460,7 @@ class OptionsMenu():
         # Options for setting defaults for profiles
         self.defCLabel = Label(master, text=f"Default Compiler: ", background=thme["bg"], foreground=thme["txt"])
         self.defGLabel = Label(master, text="Default Game: ", background=thme["bg"], fg=thme["txt"])
+        self.defPLabel = Label(master, text="Default Decompile Preset:")
         cList = open("save/compilers.txt", "r")
         cOptions = cList.read().split('\n')
         cOptions.pop(len(cOptions)-1)
@@ -1391,6 +1475,39 @@ class OptionsMenu():
         self.gameSel = ttk.Combobox(master, values=self.games.gNames)
         self.gameSel.bind("<<ComboboxSelected>>", self.setGame)
         self.gameSel.current(self.options["defGame"])
+        self.presets = {
+            "presets": {
+                # For most compilers
+                "GoldSRC": {
+                    "-u": False,
+                    "-V": False,
+                    "-m": True
+                },
+                # For Sven Co-op's StudioMDL
+                "Svengine": {
+                    "-u": True,
+                    "-V": False,
+                    "-m": True
+                },
+                # For the DoomMusic StudioMDL compiler
+                "DoomMusic": {
+                    "-u": True,
+                    "-V": False,
+                    "-m": True
+                },
+                # For Xash3D engine mods
+                "Xash3D": {
+                    "-u": False,
+                    "-V": False,
+                    "-m": False
+                }
+            }
+        }
+        presetNames = list(self.presets["presets"].keys())
+        self.presetSel = ttk.Combobox(master, values=presetNames)
+        self.presetSel.current(self.options["defDPreset"])
+        self.presetDat = self.presets["presets"][self.presetSel.get()]
+        self.presetSel.bind("<<ComboboxSelected>>", self.setDP)
         # Checking if anything is exceeding the width of the "safe zone"
         """self.show()
         self.checkWidth()
@@ -1414,11 +1531,12 @@ class OptionsMenu():
         print(curWidth)
     
     def upgradeJSON(self):
-        # Upgrade from version 1 to 3
+        # Upgrade from version 1 to 4
         if self.options["version"] == 1:
             newOptions = {
                 "defComp": 0,
                 "defGame": 0,
+                "defDPreset": 0,
                 "forceDefPaths": self.options["forceDefPaths"],
                 "save_paths": False,
                 "startFolder": self.options["startFolder"],
@@ -1427,13 +1545,14 @@ class OptionsMenu():
                     "selectedMV": 0,
                     "csPath": ""
                 },
-                "version": 3
+                "version": 4
             }
-        # Upgrade from version 2 to 3
+        # Upgrade from version 2 to 4
         elif self.options["version"] == 2:
             newOptions = {
                 "defComp": 0,
                 "defGame": 0,
+                "defDPreset": 0,
                 "forceDefPaths": self.options["forceDefPaths"],
                 "save_paths": False,
                 "startFolder": self.options["startFolder"],
@@ -1442,7 +1561,23 @@ class OptionsMenu():
                     "selectedMV": self.options["gsMV"]["selectedMV"],
                     "csPath": self.options["gsMV"]["csPath"]
                 },
-                "version": 3
+                "version": 4
+            }
+        # Upgrade from version 3 to 4
+        elif self.options["version"] == 3:
+            newOptions = {
+                "defComp": self.options["defComp"],
+                "defGame": self.options["defGame"],
+                "defDPreset": 0,
+                "forceDefPaths": self.options["forceDefPaths"],
+                "save_paths": False,
+                "startFolder": self.options["startFolder"],
+                "theme": self.options["theme"],
+                "gsMV": {
+                    "selectedMV": self.options["gsMV"]["selectedMV"],
+                    "csPath": self.options["gsMV"]["csPath"]
+                },
+                "version": 4
             }
         # Save the JSON data of the new options
         self.options = newOptions
@@ -1467,7 +1602,9 @@ class OptionsMenu():
         self.defCLabel.grid(column=1, row=4, sticky="w")
         self.compSel.grid(column=2, row=4, sticky="w")
         self.defGLabel.grid(column=1, row=5, sticky="w")
+        self.defPLabel.grid(column=1, row=6, sticky="w")
         self.gameSel.grid(column=2, row=5, sticky="w")
+        self.presetSel.grid(column=2, row=6, sticky="w")
         self.hlmvLabel.grid_remove()
         self.hlmvCBox.grid_remove()
         self.mvPathLabel.grid_remove()
@@ -1486,7 +1623,9 @@ class OptionsMenu():
         self.defCLabel.grid_remove()
         self.compSel.grid_remove()
         self.defGLabel.grid_remove()
+        self.defPLabel.grid_remove()
         self.gameSel.grid_remove()
+        self.presetSel.grid_remove()
         self.hlmvLabel.grid(column=1, row=1, sticky="w")
         self.hlmvCBox.grid(column=2, row=1, sticky="w")
         self.mvPathLabel.grid(column=1, row=2, sticky="w")
@@ -1596,6 +1735,12 @@ class OptionsMenu():
         self.save_options()
         self.updFunc("defGame", opt)
     
+    def setDP(self, e=False):
+        opt = self.presetSel.current()
+        self.options["defDPreset"] = opt
+        self.save_options()
+        self.updFunc("defDPreset", opt)
+    
     def chFDP(self):
         self.options["forceDefPaths"] = self.forceDefB.get()
         self.save_options()
@@ -1634,7 +1779,9 @@ class OptionsMenu():
             self.defCLabel.grid(column=1, row=4, sticky="w")
             self.compSel.grid(column=2, row=4, sticky="w")
             self.defGLabel.grid(column=1, row=5, sticky="w")
+            self.defPLabel.grid(column=1, row=6, sticky="w")
             self.gameSel.grid(column=2, row=5, sticky="w")
+            self.presetSel.grid(column=2, row=6, sticky="w")
         elif self.curPage == 1:
             self.hlmvLabel.grid(column=1, row=1, sticky="w")
             self.hlmvCBox.grid(column=2, row=1, sticky="w")
