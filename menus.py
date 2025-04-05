@@ -445,7 +445,7 @@ class DecompMenu():
         self.advOptLabel = Label(self.advOpt, text="Advanced Options")
         self.decomp = Button(master, text='Decompile', command=self.startDecomp, cursor="hand2")
         self.hlmv = Button(master, text='Open model in HLMV', command=self.openHLAM, cursor="hand2")
-        self.console = Console(master, 'Start a decompile and the terminal output will appear here!', 0, 5, self.conFix, 12)
+        self.console = Console(master, 'Start a decompile and the terminal output will appear here!', 0, 5, self.conFix, 13)
         # Advanced options
         self.logVal = BooleanVar(self.advOpt, value=False)
         self.logChk = Checkbutton(self.advOpt, text="Write log to file", variable=self.logVal, command=self.setLog)
@@ -454,14 +454,14 @@ class DecompMenu():
         self.uVal = BooleanVar(self.advOpt, value=self.presetDat["-u"])
         self.uChk = Checkbutton(self.advOpt, text="Shift model UVs", variable=self.uVal)
         self.vVal = BooleanVar(self.advOpt, value=self.presetDat["-V"])
-        self.vChk = Checkbutton(self.advOpt, text="Ignore validity checks", variable=self.vVal)
+        self.vChk = Checkbutton(self.advOpt, text="Ignore checks", variable=self.vVal)
         if not startHidden:
             self.show()
         
         # Tooltips
         self.logChkTT = ToolTip(self.logChk, "Writes the log in the terminal below as a text file inside the logs folder.", background=thme["tt"], foreground=thme["txt"])
         self.mChkTT = ToolTip(self.mChk, "By default, the decompiler outputs .qc files with features for Xash3D that GoldSRC does not support, enabling this makes the output GoldSRC compatible.", background=thme["tt"], foreground=thme["txt"])
-        self.uChkTT = ToolTip(self.uChk, "Enabling this will make the decompiler shift the model UVs, this fixes UV errors with models compiled by some modern compilers like DoomMusic and Sven Co-op's compiler.", background=thme["tt"], foreground=thme["txt"])
+        self.uChkTT = ToolTip(self.uChk, "Enabling this will make the decompiler shift the model UVs, this fixes UV errors with models compiled by some modern compilers like DoomMusic and Sven Co-op's StudioMDL.", background=thme["tt"], foreground=thme["txt"])
         self.vChkTT = ToolTip(self.vChk, "Enabling this will make the decompiler ignore validity checks, which might allow you to decompile some broken models", background=thme["tt"], foreground=thme["txt"])
         self.mdlTT = ToolTip(self.mdlBrowse, "REQUIRED, specifies the MDL file used to decompile a model, you cannot leave this blank.", background=thme["tt"], foreground=thme["txt"])
         self.outputTT = ToolTip(self.outBrowse, "OPTIONAL, if an output folder is not specified, then it will place the decompiled model in a subfolder of where the MDL file is located.", background=thme["tt"], foreground=thme["txt"])
@@ -548,6 +548,9 @@ class DecompMenu():
     def updateOpt(self, key, value):
         if not key.startswith("gsMV"):
             self.options[key] = value
+            if key == "defDPreset":
+                self.presetSel.current(value)
+                self.chPreset()
         else:
             self.options["gsMV"][key.replace("gsMV", "")] = value
 
@@ -572,10 +575,10 @@ class DecompMenu():
         self.logChk.grid(column=0, row=1, sticky="w")
         self.mChk.grid(column=1, row=1, sticky="w")
         self.uChk.grid(column=2, row=1, sticky="w")
-        self.vChk.grid(column=0, row=2, sticky="w")
-        self.decomp.grid(column=0, row=4, pady=(10,0))
+        self.vChk.grid(column=3, row=1, sticky="w")
+        self.decomp.grid(column=0, row=4, pady=(24,0))
         if not self.name.get() == "" and self.options["gsMV"]["selectedMV"] > 0:
-            self.hlmv.grid(column=1, row=4, pady=(10,0), sticky="w")
+            self.hlmv.grid(column=1, row=4, pady=(24,0), sticky="w")
         self.console.show()
     
     def findMDL(self):
@@ -1397,7 +1400,7 @@ class AboutMenu():
 
 class OptionsMenu():
     def __init__(self, template, master, thmecallback, updFunc, startHidden:bool=False):
-        self.curPage, self.optionsVersion = 0, 4
+        self.curPage = 0
         self.hidden = startHidden
         self.master = master
         thme = template.thme
@@ -1410,7 +1413,7 @@ class OptionsMenu():
         jsf.close()
         self.options = json.loads(js)
         # Checking if options JSON is from a previous version...
-        if not self.options["version"] == self.optionsVersion:
+        if not self.options["version"] == 4:
             self.upgradeJSON()
         # Pages
         self.pageButtons = Frame(master, borderwidth=2, bg=thme["bg"])
@@ -1457,6 +1460,7 @@ class OptionsMenu():
         # Options for setting defaults for profiles
         self.defCLabel = Label(master, text=f"Default Compiler: ", background=thme["bg"], foreground=thme["txt"])
         self.defGLabel = Label(master, text="Default Game: ", background=thme["bg"], fg=thme["txt"])
+        self.defPLabel = Label(master, text="Default Decompile Preset:")
         cList = open("save/compilers.txt", "r")
         cOptions = cList.read().split('\n')
         cOptions.pop(len(cOptions)-1)
@@ -1471,6 +1475,39 @@ class OptionsMenu():
         self.gameSel = ttk.Combobox(master, values=self.games.gNames)
         self.gameSel.bind("<<ComboboxSelected>>", self.setGame)
         self.gameSel.current(self.options["defGame"])
+        self.presets = {
+            "presets": {
+                # For most compilers
+                "GoldSRC": {
+                    "-u": False,
+                    "-V": False,
+                    "-m": True
+                },
+                # For Sven Co-op's StudioMDL
+                "Svengine": {
+                    "-u": True,
+                    "-V": False,
+                    "-m": True
+                },
+                # For the DoomMusic StudioMDL compiler
+                "DoomMusic": {
+                    "-u": True,
+                    "-V": False,
+                    "-m": True
+                },
+                # For Xash3D engine mods
+                "Xash3D": {
+                    "-u": False,
+                    "-V": False,
+                    "-m": False
+                }
+            }
+        }
+        presetNames = list(self.presets["presets"].keys())
+        self.presetSel = ttk.Combobox(master, values=presetNames)
+        self.presetSel.current(self.options["defDPreset"])
+        self.presetDat = self.presets["presets"][self.presetSel.get()]
+        self.presetSel.bind("<<ComboboxSelected>>", self.setDP)
         # Checking if anything is exceeding the width of the "safe zone"
         """self.show()
         self.checkWidth()
@@ -1565,7 +1602,9 @@ class OptionsMenu():
         self.defCLabel.grid(column=1, row=4, sticky="w")
         self.compSel.grid(column=2, row=4, sticky="w")
         self.defGLabel.grid(column=1, row=5, sticky="w")
+        self.defPLabel.grid(column=1, row=6, sticky="w")
         self.gameSel.grid(column=2, row=5, sticky="w")
+        self.presetSel.grid(column=2, row=6, sticky="w")
         self.hlmvLabel.grid_remove()
         self.hlmvCBox.grid_remove()
         self.mvPathLabel.grid_remove()
@@ -1584,7 +1623,9 @@ class OptionsMenu():
         self.defCLabel.grid_remove()
         self.compSel.grid_remove()
         self.defGLabel.grid_remove()
+        self.defPLabel.grid_remove()
         self.gameSel.grid_remove()
+        self.presetSel.grid_remove()
         self.hlmvLabel.grid(column=1, row=1, sticky="w")
         self.hlmvCBox.grid(column=2, row=1, sticky="w")
         self.mvPathLabel.grid(column=1, row=2, sticky="w")
@@ -1694,6 +1735,12 @@ class OptionsMenu():
         self.save_options()
         self.updFunc("defGame", opt)
     
+    def setDP(self, e=False):
+        opt = self.presetSel.current()
+        self.options["defDPreset"] = opt
+        self.save_options()
+        self.updFunc("defDPreset", opt)
+    
     def chFDP(self):
         self.options["forceDefPaths"] = self.forceDefB.get()
         self.save_options()
@@ -1732,7 +1779,9 @@ class OptionsMenu():
             self.defCLabel.grid(column=1, row=4, sticky="w")
             self.compSel.grid(column=2, row=4, sticky="w")
             self.defGLabel.grid(column=1, row=5, sticky="w")
+            self.defPLabel.grid(column=1, row=6, sticky="w")
             self.gameSel.grid(column=2, row=5, sticky="w")
+            self.presetSel.grid(column=2, row=6, sticky="w")
         elif self.curPage == 1:
             self.hlmvLabel.grid(column=1, row=1, sticky="w")
             self.hlmvCBox.grid(column=2, row=1, sticky="w")
