@@ -262,8 +262,13 @@ class GUI(Tk):
 		webVer = urlopen(url).read().decode('utf-8')
 		print(webVer)
 
+		if getattr(sys, 'frozen', False):
+			EXE_LOCATION = os.path.dirname( sys.executable )
+		else:
+			EXE_LOCATION = os.path.dirname( os.path.realpath( __file__ ) )
+
 		# Don't you dare make a Fortnite joke
-		vFile = open("version.txt", "r")
+		vFile = open(os.path.join(EXE_LOCATION, "version.txt"), "r")
 		curVer = vFile.read()
 
 		if curVer != webVer:
