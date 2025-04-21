@@ -12,6 +12,7 @@ from helpers import BoolEntry, Console, BoolSpinbox, QCHandler, HyperlinkImg, Ga
 import json
 import sys
 import jsonc
+from interp import SSTReader
 
 # To make things easier for myself, I'm making a new class that contains common values that won't (or usually doesn't) change for each menu.
 class MenuTemp():
@@ -1818,22 +1819,26 @@ class ScriptMenu():
             EXE_LOCATION = os.path.dirname( sys.executable )
         else:
             EXE_LOCATION = os.path.dirname( os.path.realpath( __file__ ) )
-        scr_dir = os.path.join(EXE_LOCATION, "scripts")
-        for s in os.listdir(scr_dir):
+        self.scr_dir = os.path.join(EXE_LOCATION, "scripts")
+        for s in os.listdir(self.scr_dir):
             self.scripts.append(s)
         
-        self.scr_list = Listbox(master, width=self.widthFix)
+        self.scr_list = Listbox(master, width=self.widthFix, selectmode=SINGLE)
         count = -1
         while count < len(self.scripts)-1:
             count += 1
             self.scr_list.insert(count, self.scripts[count])
-        self.runBtn = Button(master, text="Run script", cursor="hand2")
+        self.runBtn = Button(master, text="Run script", cursor="hand2", command=self.readScript)
         self.console = Console(master, 'Run a script and an output of the script\'s progress will appear here!', 0, 2, self.conFix, self.conHeight)
         if not startHidden:
             self.show()
         
         # Applying theme
         self.applyTheme(master)
+    
+    def readScript(self):
+        selected_scr = self.scripts[int(self.scr_list.curselection()[0])]
+        a = SSTReader(os.path.join(self.scr_dir, selected_scr), self.options)
 
     def applyTheme(self, master):
         style= ttk.Style()

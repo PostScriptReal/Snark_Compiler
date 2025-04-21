@@ -27,7 +27,7 @@ class Flags:
 		self.devMode = False
 		# Flag specifically for Snark, scripts are currently not implemented yet and is a copy of the scripting system from SMD Tools v1.1
 		# This will allow me to disable the functionality for it until I come up with a proper implementation
-		self.allowScripts = False
+		self.allowScripts = True
 		# Another flag for Snark, it disables booting to the "games" menu and makes the menu show a "This menu will be completed soon" message
 		# instead of showing the (very much) incomplete menu
 		self.allowGames = True
@@ -489,6 +489,7 @@ class GUI(Tk):
 				pass
 
 		if not self.flags.devMode:
+			print("Attempting to connect to update server...")
 			try:
 				self.check_version()
 			except:
