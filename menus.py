@@ -497,7 +497,7 @@ class DecompMenu():
     def inputHandler(self, e=False):
         self.name.set(self.nameEntry.get())
         if not self.name.get() == "" and self.options["gsMV"]["selectedMV"] > 0:
-            self.hlmv.grid(column=1, row=3, pady=(27,0), sticky="w")
+            self.hlmv.grid(column=1, row=4, pady=(27,0), sticky="w")
     
     def chPreset(self, e=False):
         self.presetDat = self.presets["presets"][self.presetSel.get()]
@@ -589,7 +589,7 @@ class DecompMenu():
         fileTypes = [("GoldSRC Model", "*.mdl"), ("All Files", "*.*")]
         self.name.set(askopenfilename(title="Select MDL", initialdir=startDir, filetypes=fileTypes))
         if not self.name.get() == "" and self.options["gsMV"]["selectedMV"] > 0:
-            self.hlmv.grid(column=1, row=3, pady=(27,0), sticky="w")
+            self.hlmv.grid(column=1, row=4, pady=(27,0), sticky="w")
     def output(self):
         startDir = self.options["startFolder"]
         if startDir.startswith("~"):

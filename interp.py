@@ -8,13 +8,13 @@ class SSTVer:
 
     def __init__(self, dat:list):
         self.version = 0
-        self.format = 'jsonc'
+        self.format = 'json'
         count = -1
         end = dat.index('-', 2)
         print(end)
         for l in dat:
             count += 1
-            if count != 0:
+            if count == 0:
                 continue
             elif l.startswith('version'):
                 # Getting the last letter in the line, which is the version number.
