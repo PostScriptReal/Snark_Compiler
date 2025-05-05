@@ -1715,6 +1715,8 @@ class OptionsMenu():
         self.startFolderTT.changeTheme(newTheme["tt"], newTheme["txt"])
         self.startFolderTT2.changeTheme(newTheme["tt"], newTheme["txt"])
         self.forceDefTT.changeTheme(newTheme["tt"], newTheme["txt"])
+        self.hlmvTT.changeTheme(newTheme["tt"], newTheme["txt"])
+        self.setMVPtt.changeTheme(newTheme["tt"], newTheme["txt"])
     
     def chSF(self):
         path = askdirectory(title="Set starting directory for this file explorer")
