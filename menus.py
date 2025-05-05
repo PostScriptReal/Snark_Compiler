@@ -396,6 +396,7 @@ class DecompMenu():
             self.widthFix, self.conFix = self.widthFix-n, self.conFix-n
         self.quick = Frame(master, borderwidth=2, bg=thme["bg"])
         self.advOpt = Frame(master, borderwidth=2, bg=thme["bg"], relief="sunken")
+        self.advOptR2 = Frame(self.advOpt, borderwidth=2, bg=thme["bg"])
         # Setting up options
         js = open("save/options.json", 'r')
         self.options = json.loads(js.read())
@@ -446,7 +447,7 @@ class DecompMenu():
         self.advOptLabel = Label(self.advOpt, text="Advanced Options")
         self.decomp = Button(master, text='Decompile', command=self.startDecomp, cursor="hand2")
         self.hlmv = Button(master, text='Open model in HLMV', command=self.openHLAM, cursor="hand2")
-        self.console = Console(master, 'Start a decompile and the terminal output will appear here!', 0, 5, self.conFix, 13)
+        self.console = Console(master, 'Start a decompile and the terminal output will appear here!', 0, 5, self.conFix, 12)
         # Advanced options
         self.logVal = BooleanVar(self.advOpt, value=False)
         self.logChk = Checkbutton(self.advOpt, text="Write log to file", variable=self.logVal, command=self.setLog)
@@ -456,6 +457,8 @@ class DecompMenu():
         self.uChk = Checkbutton(self.advOpt, text="Shift model UVs", variable=self.uVal)
         self.vVal = BooleanVar(self.advOpt, value=self.presetDat["-V"])
         self.vChk = Checkbutton(self.advOpt, text="Ignore checks", variable=self.vVal)
+        self.tVal = BooleanVar(self.advOpt, value=True)
+        self.tChk = Checkbutton(self.advOptR2, text="Place textures in subfolder", variable=self.tVal)
         if not startHidden:
             self.show()
         
@@ -464,12 +467,14 @@ class DecompMenu():
         self.mChkTT = ToolTip(self.mChk, "By default, the decompiler outputs .qc files with features for Xash3D that GoldSRC does not support, enabling this makes the output GoldSRC compatible.", background=thme["tt"], foreground=thme["txt"])
         self.uChkTT = ToolTip(self.uChk, "Enabling this will make the decompiler shift the model UVs, this fixes UV errors with models compiled by some modern compilers like DoomMusic and Sven Co-op's StudioMDL.", background=thme["tt"], foreground=thme["txt"])
         self.vChkTT = ToolTip(self.vChk, "Enabling this will make the decompiler ignore validity checks, which might allow you to decompile some broken models", background=thme["tt"], foreground=thme["txt"])
+        self.tChkTT = ToolTip(self.tChk, "Disabling this will make the decompiler place textures in the same location as your models, this can fix issues with importing the model in MilkShape3D or Fragmotion.", background=thme["tt"], foreground=thme["txt"])
         self.mdlTT = ToolTip(self.mdlBrowse, "REQUIRED, specifies the MDL file used to decompile a model, you cannot leave this blank.", background=thme["tt"], foreground=thme["txt"])
         self.outputTT = ToolTip(self.outBrowse, "OPTIONAL, if an output folder is not specified, then it will place the decompiled model in a subfolder of where the MDL file is located.", background=thme["tt"], foreground=thme["txt"])
         
         # Applying theme
         self.applyTheme(master)
         self.applyTheme(self.advOpt)
+        self.applyTheme(self.advOptR2)
         self.applyTheme(self.quick)
     def setLog(self):
         self.logOutput = self.logVal.get()
@@ -542,9 +547,15 @@ class DecompMenu():
         self.thme = newTheme
         self.applyTheme(self.master)
         self.applyTheme(self.advOpt)
+        self.applyTheme(self.advOptR2)
+        self.applyTheme(self.quick)
         self.mdlTT.changeTheme(newTheme["tt"], newTheme["txt"])
         self.outputTT.changeTheme(newTheme["tt"], newTheme["txt"])
         self.logChkTT.changeTheme(newTheme["tt"], newTheme["txt"])
+        self.mChkTT.changeTheme(newTheme["tt"], newTheme["txt"])
+        self.uChkTT.changeTheme(newTheme["tt"], newTheme["txt"])
+        self.vChkTT.changeTheme(newTheme["tt"], newTheme["txt"])
+        self.tChkTT.changeTheme(newTheme["tt"], newTheme["txt"])
     
     def updateOpt(self, key, value):
         if not key.startswith("gsMV"):
@@ -572,12 +583,14 @@ class DecompMenu():
         self.quickStpLbl.grid(column=0, row=2, sticky="w")
         self.presetSel.grid(column=1,row=2)
         self.advOpt.grid(column=0, row=3, sticky="nsew", columnspan=10, pady=(20,0))
+        self.advOptR2.grid(column=0, row=2, sticky="nsew", columnspan=10)
         self.advOptLabel.grid(column=0, row=0, sticky="w")
         self.logChk.grid(column=0, row=1, sticky="w")
         self.mChk.grid(column=1, row=1, sticky="w")
         self.uChk.grid(column=2, row=1, sticky="w")
         self.vChk.grid(column=3, row=1, sticky="w")
-        self.decomp.grid(column=0, row=4, pady=(24,0))
+        self.tChk.grid(column=0, row=1, sticky="w")
+        self.decomp.grid(column=0, row=4, pady=(10,0))
         if not self.name.get() == "" and self.options["gsMV"]["selectedMV"] > 0:
             self.hlmv.grid(column=1, row=4, pady=(24,0), sticky="w")
         self.console.show()
@@ -604,6 +617,8 @@ class DecompMenu():
             args.append("-u")
         if self.vVal.get():
             args.append("-V")
+        if self.tVal.get():
+            args.append("-t")
         cmdArgs = " ".join(args)
         print(cmdArgs)
         return(cmdArgs)
@@ -622,14 +637,14 @@ class DecompMenu():
         tOutput = ''
         if sys.platform == 'linux':
             if gotArgs:
-                tOutput = subprocess.getoutput(f'./third_party/mdldec -d {cmdArgs} \"{mdl}\"')
+                tOutput = subprocess.getoutput(f'./third_party/mdldec -a {cmdArgs} \"{mdl}\"')
             else:
-                tOutput = subprocess.getoutput(f'./third_party/mdldec -d \"{mdl}\"')
+                tOutput = subprocess.getoutput(f'./third_party/mdldec -a \"{mdl}\"')
         elif sys.platform == 'win32':
             if gotArgs:
-                tOutput = subprocess.getoutput(f'\"{os.getcwd()}/third_party/mdldec.exe -d {cmdArgs} \" \"{mdl}\"')
+                tOutput = subprocess.getoutput(f'\"{os.getcwd()}/third_party/mdldec.exe -a {cmdArgs} \" \"{mdl}\"')
             else:
-                tOutput = subprocess.getoutput(f'\"{os.getcwd()}/third_party/mdldec.exe -d \" \"{mdl}\"')
+                tOutput = subprocess.getoutput(f'\"{os.getcwd()}/third_party/mdldec.exe -a \" \"{mdl}\"')
         # I don't have a Mac so I can't compile mdldec to Mac targets :(
         # So instead I have to use wine for Mac systems
         """elif sys.platform == 'darwin':
@@ -649,17 +664,44 @@ class DecompMenu():
         texFolder = os.path.join(mdlFolder, 'textures/')
         for f in os.listdir(mdlFolder):
             print(f)
-            if f.endswith("smd") or f.endswith("qc"):
+            if f.endswith("smd"):
+                shutil.copy(f"{mdlFolder}/{f}", os.path.join(output, f))
+                os.remove(f"{mdlFolder}/{f}")
+            elif f.endswith("bmp") and not self.tVal.get():
+                shutil.copy(f"{mdlFolder}/{f}", os.path.join(output, f))
+                os.remove(f"{mdlFolder}/{f}")
+            elif f.endswith("qc") and self.mVal.get():
+                # Doing yet another workaround for a MDLDec bug where motion types are left blank when -m is used.
+                qc = open(f"{mdlFolder}/{f}", 'r')
+                nqc = qc.readlines()
+                qc.close()
+
+                # T&Cs apply (not really, this is a joke)
+                tnC = nqc.count("\t\n")
+                # Using the index function to more efficiently search for blank motion type lines
+                count = 0
+                while count < tnC:
+                    count += 1
+                    bl = nqc.index("\t\n")
+                    # Using X instead of Y or Z as X is the most commonly used value.
+                    nqc[bl] = "\tX\n"
+                # Writing the new qc to the directory and deleting the original qc output from MDLDec
+                nqcf = open(os.path.join(output, f), "w")
+                nqcf.write("".join(nqc))
+                nqcf.close()
+                os.remove(f"{mdlFolder}/{f}")
+            elif f.endswith("qc"):
                 shutil.copy(f"{mdlFolder}/{f}", os.path.join(output, f))
                 os.remove(f"{mdlFolder}/{f}")
         shutil.copytree(anims, os.path.join(output, 'anims/'))
-        shutil.copytree(texFolder, os.path.join(output, 'textures/'))
+        if self.tVal.get():
+            shutil.copytree(texFolder, os.path.join(output, 'textures/'))
+            try:
+                shutil.rmtree(texFolder)
+            except:
+                pass
         try:
             shutil.rmtree(anims)
-        except:
-            pass
-        try:
-            shutil.rmtree(texFolder)
         except:
             pass
 
