@@ -1,0 +1,15 @@
+-
+version 1
+format json
+-
+{
+    "name": "Batch Compile",
+    "globalOutput": "askFolder",
+    "tasks": [
+        {
+            "name": "Compile MDL",
+            "task": "compile",
+            "file": "askFolder,Select a folder full of compilable models"
+        }
+    ]
+}

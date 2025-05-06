@@ -1,0 +1,15 @@
+-
+version 1
+format json
+-
+{
+    "name": "Batch Decompile",
+    "globalOutput": "askFolder,Select a folder full of models",
+    "tasks": [
+        {
+            "name": "Decompile MDL",
+            "task": "decompile",
+            "file": "askFolder"
+        }
+    ]
+}

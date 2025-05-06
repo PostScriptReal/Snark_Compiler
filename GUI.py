@@ -29,7 +29,7 @@ class Flags:
 		# This will allow me to disable the functionality for it until I come up with a proper implementation
 		self.allowScripts = False
 		# Another flag for Snark, it disables booting to the "games" menu and makes the menu show a "This menu will be completed soon" message
-		# instead of showing the (very much) incomplete menu
+		# instead of showing the menu
 		self.allowGames = True
 
 class Interp:
@@ -489,6 +489,7 @@ class GUI(Tk):
 				pass
 
 		if not self.flags.devMode:
+			print("Attempting to connect to update server...")
 			try:
 				self.check_version()
 			except:
