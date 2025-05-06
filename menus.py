@@ -480,6 +480,7 @@ class DecompMenu():
         self.logOutput = self.logVal.get()
     
     def openHLAM(self):
+        print("Opening model in HLMV")
         # If "Half-Life Asset Manager" is selected
         if self.options["gsMV"]["selectedMV"] == 1:
             if sys.platform == "linux":
@@ -502,7 +503,7 @@ class DecompMenu():
     def inputHandler(self, e=False):
         self.name.set(self.nameEntry.get())
         if not self.name.get() == "" and self.options["gsMV"]["selectedMV"] > 0:
-            self.hlmv.grid(column=1, row=4, pady=(27,0), sticky="w")
+            self.hlmv.grid(column=1, row=4, pady=(10,0), sticky="w")
     
     def chPreset(self, e=False):
         self.presetDat = self.presets["presets"][self.presetSel.get()]
@@ -592,7 +593,7 @@ class DecompMenu():
         self.tChk.grid(column=0, row=1, sticky="w")
         self.decomp.grid(column=0, row=4, pady=(10,0))
         if not self.name.get() == "" and self.options["gsMV"]["selectedMV"] > 0:
-            self.hlmv.grid(column=1, row=4, pady=(24,0), sticky="w")
+            self.hlmv.grid(column=1, row=4, pady=(10,0), sticky="w")
         self.console.show()
     
     def findMDL(self):
@@ -602,7 +603,7 @@ class DecompMenu():
         fileTypes = [("GoldSRC Model", "*.mdl"), ("All Files", "*.*")]
         self.name.set(askopenfilename(title="Select MDL", initialdir=startDir, filetypes=fileTypes))
         if not self.name.get() == "" and self.options["gsMV"]["selectedMV"] > 0:
-            self.hlmv.grid(column=1, row=4, pady=(27,0), sticky="w")
+            self.hlmv.grid(column=1, row=4, pady=(10,0), sticky="w")
     def output(self):
         startDir = self.options["startFolder"]
         if startDir.startswith("~"):
