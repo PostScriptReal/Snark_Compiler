@@ -484,19 +484,23 @@ class DecompMenu():
         # If "Half-Life Asset Manager" is selected
         if self.options["gsMV"]["selectedMV"] == 1:
             if sys.platform == "linux":
+                print("Opening using \'hlam\' command")
                 a = subprocess.getoutput(f"XDG_SESSION_TYPE=x11 hlam \"{self.name.get()}\"")
             else:
+                print("Opening using the direct path of the HLAM executable")
                 a = subprocess.getoutput(f"\"C:/Program Files (x86)/Half-Life Asset Manager/hlam.exe\" \"{self.name.get()}\"")
         # If "Other" option is selected
         elif self.options["gsMV"]["selectedMV"] > 1:
             if sys.platform == "linux":
                 path = self.options["gsMV"]["csPath"]
                 path = os.path.expanduser(path)
+                print("Executing user-specified HLMV executable with Wine")
                 if path.endswith(".exe"):
                     a = subprocess.getoutput(f"wine \"{path}\" \"{self.name.get()}\"")
                 else:
                     a = subprocess.getoutput(f"\"{path}\" \"{self.name.get()}\"")
             else:
+                print("Executing user-specified HLMV executable (Native binary)")
                 path = self.options["gsMV"]["csPath"]
                 a = subprocess.getoutput(f"\"{path}\" \"{self.name.get()}\"")
     
@@ -665,33 +669,10 @@ class DecompMenu():
         texFolder = os.path.join(mdlFolder, 'textures/')
         for f in os.listdir(mdlFolder):
             print(f)
-            if f.endswith("smd"):
+            if f.endswith("smd") or f.endswith("qc"):
                 shutil.copy(f"{mdlFolder}/{f}", os.path.join(output, f))
                 os.remove(f"{mdlFolder}/{f}")
             elif f.endswith("bmp") and not self.tVal.get():
-                shutil.copy(f"{mdlFolder}/{f}", os.path.join(output, f))
-                os.remove(f"{mdlFolder}/{f}")
-            elif f.endswith("qc") and self.mVal.get():
-                # Doing yet another workaround for a MDLDec bug where motion types are left blank when -m is used.
-                qc = open(f"{mdlFolder}/{f}", 'r')
-                nqc = qc.readlines()
-                qc.close()
-
-                # T&Cs apply (not really, this is a joke)
-                tnC = nqc.count("\t\n")
-                # Using the index function to more efficiently search for blank motion type lines
-                count = 0
-                while count < tnC:
-                    count += 1
-                    bl = nqc.index("\t\n")
-                    # Using X instead of Y or Z as X is the most commonly used value.
-                    nqc[bl] = "\tX\n"
-                # Writing the new qc to the directory and deleting the original qc output from MDLDec
-                nqcf = open(os.path.join(output, f), "w")
-                nqcf.write("".join(nqc))
-                nqcf.close()
-                os.remove(f"{mdlFolder}/{f}")
-            elif f.endswith("qc"):
                 shutil.copy(f"{mdlFolder}/{f}", os.path.join(output, f))
                 os.remove(f"{mdlFolder}/{f}")
         shutil.copytree(anims, os.path.join(output, 'anims/'))
