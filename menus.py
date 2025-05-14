@@ -485,10 +485,10 @@ class DecompMenu():
         if self.options["gsMV"]["selectedMV"] == 1:
             if sys.platform == "linux":
                 print("Opening using \'hlam\' command")
-                a = os.system(f"XDG_SESSION_TYPE=x11 hlam \"{self.name.get()}\"")
+                a = subprocess.getoutput(f"XDG_SESSION_TYPE=x11 hlam \"{self.name.get()}\"")
             else:
                 print("Opening using the direct path of the HLAM executable")
-                a = os.system(f"\"C:/Program Files (x86)/Half-Life Asset Manager/hlam.exe\" \"{self.name.get()}\"")
+                a = subprocess.getoutput(f"\"C:/Program Files (x86)/Half-Life Asset Manager/hlam.exe\" \"{self.name.get()}\"")
         # If "Other" option is selected
         elif self.options["gsMV"]["selectedMV"] > 1:
             if sys.platform == "linux":
@@ -496,13 +496,13 @@ class DecompMenu():
                 path = os.path.expanduser(path)
                 print("Executing user-specified HLMV executable with Wine")
                 if path.endswith(".exe"):
-                    a = os.system(f"wine \"{path}\" \"{self.name.get()}\"")
+                    a = subprocess.getoutput(f"wine \"{path}\" \"{self.name.get()}\"")
                 else:
-                    a = os.system(f"\"{path}\" \"{self.name.get()}\"")
+                    a = subprocess.getoutput(f"\"{path}\" \"{self.name.get()}\"")
             else:
                 print("Executing user-specified HLMV executable (Native binary)")
                 path = self.options["gsMV"]["csPath"]
-                a = os.system(f"\"{path}\" \"{self.name.get()}\"")
+                a = subprocess.getoutput(f"\"{path}\" \"{self.name.get()}\"")
     
     def inputHandler(self, e=False):
         self.name.set(self.nameEntry.get())
