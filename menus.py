@@ -454,7 +454,7 @@ class DecompMenu():
         self.mVal = BooleanVar(self.advOpt, value=self.presetDat["-m"])
         self.mChk = Checkbutton(self.advOpt, text="GoldSRC compatability", variable=self.mVal)
         self.uVal = BooleanVar(self.advOpt, value=self.presetDat["-u"])
-        self.uChk = Checkbutton(self.advOpt, text="Shift model UVs", variable=self.uVal)
+        self.uChk = Checkbutton(self.advOpt, text="Fix UV shifts", variable=self.uVal)
         self.vVal = BooleanVar(self.advOpt, value=self.presetDat["-V"])
         self.vChk = Checkbutton(self.advOpt, text="Ignore checks", variable=self.vVal)
         self.tVal = BooleanVar(self.advOpt, value=True)
@@ -465,7 +465,7 @@ class DecompMenu():
         # Tooltips
         self.logChkTT = ToolTip(self.logChk, "Writes the log in the terminal below as a text file inside the logs folder.", background=thme["tt"], foreground=thme["txt"])
         self.mChkTT = ToolTip(self.mChk, "By default, the decompiler outputs .qc files with features for Xash3D that GoldSRC does not support, enabling this makes the output GoldSRC compatible.", background=thme["tt"], foreground=thme["txt"])
-        self.uChkTT = ToolTip(self.uChk, "Enabling this will make the decompiler shift the model UVs, this fixes UV errors with models compiled by some modern compilers like DoomMusic and Sven Co-op's StudioMDL.", background=thme["tt"], foreground=thme["txt"])
+        self.uChkTT = ToolTip(self.uChk, "Enabling this flag will make the decompiler output a model with UVs that are accurate to the OG model, RECOMMENDED FOR SC STUDIOMDL AND OTHERS THAT HAVE NO UV SHIFTING ISSUES!", background=thme["tt"], foreground=thme["txt"])
         self.vChkTT = ToolTip(self.vChk, "Enabling this will make the decompiler ignore validity checks, which might allow you to decompile some broken models", background=thme["tt"], foreground=thme["txt"])
         self.tChkTT = ToolTip(self.tChk, "Disabling this will make the decompiler place textures in the same location as your models, this can fix issues with importing the model in MilkShape3D or Fragmotion.", background=thme["tt"], foreground=thme["txt"])
         self.mdlTT = ToolTip(self.mdlBrowse, "REQUIRED, specifies the MDL file used to decompile a model, you cannot leave this blank.", background=thme["tt"], foreground=thme["txt"])
@@ -484,19 +484,23 @@ class DecompMenu():
         # If "Half-Life Asset Manager" is selected
         if self.options["gsMV"]["selectedMV"] == 1:
             if sys.platform == "linux":
+                print("Opening using \'hlam\' command")
                 a = subprocess.getoutput(f"XDG_SESSION_TYPE=x11 hlam \"{self.name.get()}\"")
             else:
+                print("Opening using the direct path of the HLAM executable")
                 a = subprocess.getoutput(f"\"C:/Program Files (x86)/Half-Life Asset Manager/hlam.exe\" \"{self.name.get()}\"")
         # If "Other" option is selected
         elif self.options["gsMV"]["selectedMV"] > 1:
             if sys.platform == "linux":
                 path = self.options["gsMV"]["csPath"]
                 path = os.path.expanduser(path)
+                print("Executing user-specified HLMV executable with Wine")
                 if path.endswith(".exe"):
                     a = subprocess.getoutput(f"wine \"{path}\" \"{self.name.get()}\"")
                 else:
                     a = subprocess.getoutput(f"\"{path}\" \"{self.name.get()}\"")
             else:
+                print("Executing user-specified HLMV executable (Native binary)")
                 path = self.options["gsMV"]["csPath"]
                 a = subprocess.getoutput(f"\"{path}\" \"{self.name.get()}\"")
     
@@ -665,33 +669,10 @@ class DecompMenu():
         texFolder = os.path.join(mdlFolder, 'textures/')
         for f in os.listdir(mdlFolder):
             print(f)
-            if f.endswith("smd"):
+            if f.endswith("smd") or f.endswith("qc"):
                 shutil.copy(f"{mdlFolder}/{f}", os.path.join(output, f))
                 os.remove(f"{mdlFolder}/{f}")
             elif f.endswith("bmp") and not self.tVal.get():
-                shutil.copy(f"{mdlFolder}/{f}", os.path.join(output, f))
-                os.remove(f"{mdlFolder}/{f}")
-            elif f.endswith("qc") and self.mVal.get():
-                # Doing yet another workaround for a MDLDec bug where motion types are left blank when -m is used.
-                qc = open(f"{mdlFolder}/{f}", 'r')
-                nqc = qc.readlines()
-                qc.close()
-
-                # T&Cs apply (not really, this is a joke)
-                tnC = nqc.count("\t\n")
-                # Using the index function to more efficiently search for blank motion type lines
-                count = 0
-                while count < tnC:
-                    count += 1
-                    bl = nqc.index("\t\n")
-                    # Using X instead of Y or Z as X is the most commonly used value.
-                    nqc[bl] = "\tX\n"
-                # Writing the new qc to the directory and deleting the original qc output from MDLDec
-                nqcf = open(os.path.join(output, f), "w")
-                nqcf.write("".join(nqc))
-                nqcf.close()
-                os.remove(f"{mdlFolder}/{f}")
-            elif f.endswith("qc"):
                 shutil.copy(f"{mdlFolder}/{f}", os.path.join(output, f))
                 os.remove(f"{mdlFolder}/{f}")
         shutil.copytree(anims, os.path.join(output, 'anims/'))
