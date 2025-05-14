@@ -454,7 +454,7 @@ class DecompMenu():
         self.mVal = BooleanVar(self.advOpt, value=self.presetDat["-m"])
         self.mChk = Checkbutton(self.advOpt, text="GoldSRC compatability", variable=self.mVal)
         self.uVal = BooleanVar(self.advOpt, value=self.presetDat["-u"])
-        self.uChk = Checkbutton(self.advOpt, text="Shift model UVs", variable=self.uVal)
+        self.uChk = Checkbutton(self.advOpt, text="Fix UV shifts", variable=self.uVal)
         self.vVal = BooleanVar(self.advOpt, value=self.presetDat["-V"])
         self.vChk = Checkbutton(self.advOpt, text="Ignore checks", variable=self.vVal)
         self.tVal = BooleanVar(self.advOpt, value=True)
@@ -465,7 +465,7 @@ class DecompMenu():
         # Tooltips
         self.logChkTT = ToolTip(self.logChk, "Writes the log in the terminal below as a text file inside the logs folder.", background=thme["tt"], foreground=thme["txt"])
         self.mChkTT = ToolTip(self.mChk, "By default, the decompiler outputs .qc files with features for Xash3D that GoldSRC does not support, enabling this makes the output GoldSRC compatible.", background=thme["tt"], foreground=thme["txt"])
-        self.uChkTT = ToolTip(self.uChk, "Enabling this will make the decompiler shift the model UVs, this fixes UV errors with models compiled by some modern compilers like DoomMusic and Sven Co-op's StudioMDL.", background=thme["tt"], foreground=thme["txt"])
+        self.uChkTT = ToolTip(self.uChk, "Enabling this flag will make the decompiler output a model with UVs that are accurate to the OG model, RECOMMENDED FOR SC STUDIOMDL AND OTHERS THAT HAVE NO UV SHIFTING ISSUES!", background=thme["tt"], foreground=thme["txt"])
         self.vChkTT = ToolTip(self.vChk, "Enabling this will make the decompiler ignore validity checks, which might allow you to decompile some broken models", background=thme["tt"], foreground=thme["txt"])
         self.tChkTT = ToolTip(self.tChk, "Disabling this will make the decompiler place textures in the same location as your models, this can fix issues with importing the model in MilkShape3D or Fragmotion.", background=thme["tt"], foreground=thme["txt"])
         self.mdlTT = ToolTip(self.mdlBrowse, "REQUIRED, specifies the MDL file used to decompile a model, you cannot leave this blank.", background=thme["tt"], foreground=thme["txt"])
