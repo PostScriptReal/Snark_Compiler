@@ -2,6 +2,7 @@ import json
 import jsonc
 from tkinter.filedialog import askopenfilename, askdirectory
 import os
+from menus import CompMenu, DecompMenu
 
 # Class that gets information from the script header (the lines of text sandwiched inbetween the dashes)
 class SSTVer:
@@ -48,7 +49,7 @@ class SSTGlobal:
 # Reader for SST (Snark ScripT) files
 class SSTReader:
 
-    def __init__(self, sst:str, opt:dict):
+    def __init__(self, sst:str, opt:dict, logger):
         sstf = open(sst, 'r')
         scr = sstf.readlines()
         count = -1
@@ -72,3 +73,41 @@ class SSTReader:
         if parsedSCR["globalOutput"].startswith("askFolder"):
             suffix = "(generated path from askFolder)"
         print(f"Global Output Folder: {scrG.globalOut} {suffix}")
+
+
+class SSTInterp:
+
+    def __init__(self, logger, dat, globalVs, header):
+        self.logger = logger
+        self.dat = dat
+        self.globalVs = globalVs
+        self.header = header
+        # This variable stores all available tasks and tells the Interpreter how to handle them
+        self.cmds = {
+            # This command is for compiling models
+            "compile": {
+                "func": self.cmpHnd,
+                "args": [["file", "file", ".mdl"], ["output", "folder"]]
+            },
+            # This command is for decompiling models
+            "decompile": {
+                "func": self.dCMPHnd,
+                "args": [["file", "file", ".mdl"], ["output", "folder"]]
+            },
+            "view": {
+                "func": self.hlmvHnd,
+                "args": [["file", "file+task", ".mdl"]]
+            }
+        }
+    
+    def cmpHnd(self):
+        # This is a stub for now.
+        pass
+    
+    def dCOMPHnd(self):
+        # This is a stub for now.
+        pass
+
+    def hlmvHnd(self):
+        # This is a stub for now.
+        pass

@@ -1864,7 +1864,7 @@ class ScriptMenu():
     
     def readScript(self):
         selected_scr = self.scripts[int(self.scr_list.curselection()[0])]
-        a = SSTReader(os.path.join(self.scr_dir, selected_scr), self.options)
+        a = SSTReader(os.path.join(self.scr_dir, selected_scr), self.options, self.console)
 
     def applyTheme(self, master):
         style= ttk.Style()
