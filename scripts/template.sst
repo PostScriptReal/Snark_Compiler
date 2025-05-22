@@ -15,14 +15,21 @@ format jsonc
             "task": "decompile",
             "file": "absolute/path/to/mdl/file",
             // You can use this key to specify an output folder for this specific task.
-            "output": "path/to/output/folder"
+            "output": "path/to/output/folder",
+            // Specify arguments for the decompiler, write them how you would if you were interfacing with it through a terminal
+            // Supported options: -l, -m, -t, -u, -V
+            "args": "-m -t"
         },
         {
             "name": "Compile MDL",
             "task": "compile",
             "file": "absolute/path/to/qc/file",
             // Please note that with compile tasks, the output will not be put in a subfolder of the output folder.
-            "output": "path/to/output/folder"
+            "output": "path/to/output/folder",
+            // Specify arguments for the compiler, write them how you would if you were interfacing with it through a terminal
+            // Supported options: -t, -r, -a, -h, -i, -n, -f, -g, -p, -k (only for Sven Co-op's StudioMDL)
+            "args": "-k",
+            "useProfile": "Svengine"
         },
         {
             "name": "View Compiled Model",

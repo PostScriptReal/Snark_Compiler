@@ -2,8 +2,6 @@ import json
 import jsonc
 from tkinter.filedialog import askopenfilename, askdirectory
 import os
-# Importing classes for decompiling and compiling tasks
-from menus import CompMenu, DecompMenu
 import sys
 import subprocess
 
@@ -148,18 +146,18 @@ class SSTInterp:
         # If "Half-Life Asset Manager" is selected
         if self.options["gsMV"]["selectedMV"] == 1:
             if sys.platform == "linux":
-                a = subprocess.getoutput(f"XDG_SESSION_TYPE=x11 hlam \"{self.name.get()}\"")
+                a = subprocess.getoutput(f"XDG_SESSION_TYPE=x11 hlam \"{f}\"")
             else:
-                a = subprocess.getoutput(f"\"C:/Program Files (x86)/Half-Life Asset Manager/hlam.exe\" \"{self.name.get()}\"")
+                a = subprocess.getoutput(f"\"C:/Program Files (x86)/Half-Life Asset Manager/hlam.exe\" \"{f}\"")
         # If "Other" option is selected
         elif self.options["gsMV"]["selectedMV"] > 1:
             if sys.platform == "linux":
                 path = self.options["gsMV"]["csPath"]
                 path = os.path.expanduser(path)
                 if path.endswith(".exe"):
-                    a = subprocess.getoutput(f"wine \"{path}\" \"{self.name.get()}\"")
+                    a = subprocess.getoutput(f"wine \"{path}\" \"{f}\"")
                 else:
-                    a = subprocess.getoutput(f"\"{path}\" \"{self.name.get()}\"")
+                    a = subprocess.getoutput(f"\"{path}\" \"{f}\"")
             else:
                 path = self.options["gsMV"]["csPath"]
-                a = subprocess.getoutput(f"\"{path}\" \"{self.name.get()}\"")
+                a = subprocess.getoutput(f"\"{path}\" \"{f}\"")
