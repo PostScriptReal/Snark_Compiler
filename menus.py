@@ -1847,7 +1847,8 @@ class ScriptMenu():
             EXE_LOCATION = os.path.dirname( os.path.realpath( __file__ ) )
         self.scr_dir = os.path.join(EXE_LOCATION, "scripts")
         for s in os.listdir(self.scr_dir):
-            self.scripts.append(s)
+            if not s.startswith("template"):
+                self.scripts.append(s)
         
         self.scr_list = Listbox(master, width=self.widthFix, selectmode=SINGLE)
         count = -1
