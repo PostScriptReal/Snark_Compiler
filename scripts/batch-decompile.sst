@@ -4,7 +4,8 @@ format json
 -
 {
     "name": "Batch Decompile",
-    "globalOutput": "askFolder,Select a folder full of models",
+    "globalOutput": "askFolder,Select a folder full of compiled models",
+    "defDecPreset": "ask",
     "tasks": [
         {
             "name": "Decompile MDL",

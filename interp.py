@@ -4,6 +4,7 @@ from tkinter.filedialog import askopenfilename, askdirectory
 import os
 import sys
 import subprocess
+import yaml
 
 # Class that gets information from the script header (the lines of text sandwiched inbetween the dashes)
 class SSTVer:
@@ -35,7 +36,9 @@ class SSTGlobal:
 
     def __init__(self, dat:dict, opt:dict):
         self.name = dat["name"]
-        self.globalOut = dat["globalOutput"]
+        self.defProf = dat.get("defComp", None)
+        self.defDec = dat.get("defDecPreset", None)
+        self.globalOut = dat.get("globalOutput", None)
         if self.globalOut.startswith('askFolder'):
             # Getting start directory
             startDir = opt["startFolder"]
@@ -54,6 +57,7 @@ class SSTReader:
         sstf = open(sst, 'r')
         scr = sstf.readlines()
         count = -1
+        error = False
         for l in scr:
             count += 1
             scr[count] = l.replace('\n', '')
@@ -65,16 +69,23 @@ class SSTReader:
         elif header.format == 'json':
             print(header.script)
             parsedSCR = json.loads(header.script)
-        scrG = SSTGlobal(parsedSCR, opt)
-        print("Data from SST file: ")
-        print(f"Version: {header.version}")
-        print(f"Format: {header.format}")
-        print(f"Name: {scrG.name}")
-        suffix = ""
-        if parsedSCR["globalOutput"].startswith("askFolder"):
-            suffix = "(generated path from askFolder)"
-        print(f"Global Output Folder: {scrG.globalOut} {suffix}")
-        intrp = SSTInterp(logger, parsedSCR["tasks"], scrG, header, options)
+        elif header.format == 'yaml' or header.format == 'yml':
+            print(header.script)
+            parsedSCR = yaml.safe_load(header.script)
+        else:
+            logger.append("Fatal error: Format specified in header is not json, jsonc, or yaml/yml.")
+            error = True
+        if not error:
+            scrG = SSTGlobal(parsedSCR, opt)
+            print("Data from SST file: ")
+            print(f"Version: {header.version}")
+            print(f"Format: {header.format}")
+            print(f"Name: {scrG.name}")
+            suffix = ""
+            if parsedSCR["globalOutput"].startswith("askFolder"):
+                suffix = "(generated path from askFolder)"
+            print(f"Global Output Folder: {scrG.globalOut} {suffix}")
+            intrp = SSTInterp(logger, parsedSCR["tasks"], scrG, header, options)
 
 
 class SSTInterp:
@@ -91,6 +102,8 @@ class SSTInterp:
             # This command is for compiling models
             "compile": {
                 "func": self.cmpHnd,
+                # First array: Type?, Accepted inputs, Options
+                # Second array: 
                 "args": [["file", "file", ".mdl"], ["output", "folder"]]
             },
             # This command is for decompiling models
@@ -112,6 +125,7 @@ class SSTInterp:
         # If a value could not be found, return nothing.
         return None
     
+    # Functions for each instruction defined in self.cmds
     def cmpHnd(self):
         # This is a stub for now.
         pass
