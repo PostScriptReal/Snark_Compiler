@@ -647,9 +647,9 @@ class DecompMenu():
                 tOutput = subprocess.getoutput(f'./third_party/mdldec -a \"{mdl}\"')
         elif sys.platform == 'win32':
             if gotArgs:
-                tOutput = subprocess.getoutput(f'\"{os.getcwd()}/third_party/mdldec.exe -a {cmdArgs} \" \"{mdl}\"')
+                tOutput = subprocess.getoutput(f'\"{os.getcwd()}/third_party/mdldec.exe\" -a {cmdArgs} \"{mdl}\"')
             else:
-                tOutput = subprocess.getoutput(f'\"{os.getcwd()}/third_party/mdldec.exe -a \" \"{mdl}\"')
+                tOutput = subprocess.getoutput(f'\"{os.getcwd()}/third_party/mdldec.exe\" -a \"{mdl}\"')
         # I don't have a Mac so I can't compile mdldec to Mac targets :(
         # So instead I have to use wine for Mac systems
         """elif sys.platform == 'darwin':
@@ -815,7 +815,7 @@ class CompMenu():
         self.angleSBtt = ToolTip(self.angleChk, "Overrides the blend angle of vertex normals, Valve recommends keeping this value at 2 (the default) according to the HLSDK docs.", background=thme["tt"], foreground=thme["txt"])
         self.angleChkTT = ToolTip(self.hitboxChk, "Dumps hitbox information to the console when enabled.", background=thme["tt"], foreground=thme["txt"])
         self.keepBonesChkTT = ToolTip(self.keepBonesChk, "Tells the compiler to keep all bones, including unweighted bones.", background=thme["tt"], foreground=thme["txt"])
-        self.ignoreChkTT = ToolTip(self.ignoreChk, "Tells the compiler to ignore all warnings, useful for if you want to quickly test a model that isn't complete yet.", background=thme["tt"], foreground=thme["txt"])
+        self.ignoreChkTT = ToolTip(self.ignoreChk, "Tells the compiler to ignore all warnings, useful for when you want to quickly test a model that isn't complete yet.", background=thme["tt"], foreground=thme["txt"])
         self.bNormChkTT = ToolTip(self.bNormChk, "Tags bad normals in the console.", background=thme["tt"], foreground=thme["txt"])
         self.flipChkTT = ToolTip(self.flipChk, "Tells the compiler to flip all triangles in the model.", background=thme["tt"], foreground=thme["txt"])
         self.groupChkTT = ToolTip(self.groupChk, "Sets the maximum group size for sequences in KB", background=thme["tt"], foreground=thme["txt"])
@@ -1847,7 +1847,8 @@ class ScriptMenu():
             EXE_LOCATION = os.path.dirname( os.path.realpath( __file__ ) )
         self.scr_dir = os.path.join(EXE_LOCATION, "scripts")
         for s in os.listdir(self.scr_dir):
-            self.scripts.append(s)
+            if not s.startswith("template"):
+                self.scripts.append(s)
         
         self.scr_list = Listbox(master, width=self.widthFix, selectmode=SINGLE)
         count = -1
@@ -1864,7 +1865,7 @@ class ScriptMenu():
     
     def readScript(self):
         selected_scr = self.scripts[int(self.scr_list.curselection()[0])]
-        a = SSTReader(os.path.join(self.scr_dir, selected_scr), self.options)
+        a = SSTReader(os.path.join(self.scr_dir, selected_scr), self.options, self.console)
 
     def applyTheme(self, master):
         style= ttk.Style()

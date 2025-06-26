@@ -577,11 +577,13 @@ class GUI(Tk):
 		self.decMenu.changeTheme(thCol)
 		self.optMenu.changeTheme(thCol)
 		self.compSetMenu.changeTheme(thCol)
+		self.scrMenu.changeTheme(thCol)
 		self.setupMenu.master.config(bg=thCol["bg"])
 		self.cmpMenu.master.config(bg=thCol["bg"])
 		self.abtMenu.master.config(bg=thCol["bg"])
 		self.optMenu.master.config(bg=thCol["bg"])
 		self.compSetMenu.master.config(bg=thCol["bg"])
+		self.scrMenu.master.config(bg=thCol["bg"])
 		self.frame.config(bg=thCol["bg"])
 		self.header.config(bg=thCol["bg"])
 		for w in self.header.winfo_children():

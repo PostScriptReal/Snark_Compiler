@@ -4,7 +4,8 @@ format json
 -
 {
     "name": "Batch Compile",
-    "globalOutput": "askFolder",
+    "globalOutput": "askFolder,Select a folder full of compilable models",
+    "defComp": "ask",
     "tasks": [
         {
             "name": "Compile MDL",

@@ -4,8 +4,12 @@ format jsonc
 -
 {
     "name": "Template Script",
-    // You can specify a global output folder for every task
+    // You can specify a global output folder for every task.
     "globalOutput": "path/to/output/folder",
+    // You can also specify a default compiler for the compile task to use,
+    "defComp": "Svengine",
+    // and a default preset for the decompiler to use.
+    "defDecPreset": "Svengine",
     "tasks": [
         {
             // This specifies the name of the task, this will show up in the console when the task has been started.
@@ -15,14 +19,27 @@ format jsonc
             "task": "decompile",
             "file": "absolute/path/to/mdl/file",
             // You can use this key to specify an output folder for this specific task.
-            "output": "path/to/output/folder"
+            "output": "path/to/output/folder",
+            // Specify arguments for the decompiler, write them how you would if you were interfacing with it through a terminal.
+            // Supported options: -l, -m, -t, -u, -V
+            // More info for them available on the wiki's Scripting 101 page.
+            "args": "-m -t",
+            // Specify a decompiler preset just for this task, you can do this instead of specifying arguments directly.
+            // Available options are: GoldSRC, Svengine, DoomMusic and Xash3D
+            "usePreset": "Svengine"
         },
         {
             "name": "Compile MDL",
             "task": "compile",
             "file": "absolute/path/to/qc/file",
             // Please note that with compile tasks, the output will not be put in a subfolder of the output folder.
-            "output": "path/to/output/folder"
+            "output": "path/to/output/folder",
+            // Specify arguments for the compiler, write them how you would if you were interfacing with it through a terminal.
+            // Supported options: -t, -r, -a, -h, -i, -n, -f, -g, -p, -k (only for Sven Co-op's StudioMDL).
+            // More info for them available on the wiki's Scripting 101 page.
+            "args": "-k",
+            // Specify a compiler to use just for this task.
+            "useComp": "Svengine"
         },
         {
             "name": "View Compiled Model",

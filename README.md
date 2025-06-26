@@ -24,7 +24,7 @@
 	<br>
 	<h2>Why should I use Snark over Crowbar?</h2>
 	<h3><i>It's easier to configure and use!</i></h3>
-	<p>In Crowbar, to decompile a model you would have to fiddle around with settings in order to get your model decompiled properly for GoldSRC. With Snark, you don't need to do any extra configuration, just select an MDL file, select the output folder, set the appropriate preset for the compiler used, hit the decompile button and you're set!</p>
+	<p>In Crowbar, to decompile a model you would have to fiddle around with settings in order to get your model decompiled properly for GoldSRC. With Snark, you don't need to do any extra configuration, just select an MDL file, select the output folder, set the appropriate preset for the compiler you'd like to use, hit the decompile button and you're set!</p>
 	<img src="git_images/decompWin.png" width="609" height="523" alt="Screenshot of decompile menu">
 	<p>On top of that, the compiling GUI includes all the command-line options as toggleable checks with tooltips to tell you what they do, so you don't need to check any sort of documentation, official or unofficial to use the advanced features StudioMDL offers its users.</p>
 	<img src="git_images/compWin.png" width="609" height="523" alt="Screenshot of compile menu">
