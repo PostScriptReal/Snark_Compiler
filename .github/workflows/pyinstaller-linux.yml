@@ -21,6 +21,7 @@ jobs:
           pip install pyinstaller
           pip install jsoncparser
           pip install certifi
+          pip install yaml
       - name: Run PyInstaller
         run: |
           pyinstaller --noconfirm --onedir --console --name "Snark" --add-data "version.txt:." --add-data "activities.txt:." --add-data "logo128.png:." --add-data "icon-win32.ico:." --add-data "icon-linux.png:." --add-data "LICENSE:." --add-data "README.md:." --add-data "save:save/" --add-data "themes:themes/" --add-data "third_party:third_party/" --add-data "images:images/" --add-data "logs:logs/"  "GUI.py"
