@@ -452,7 +452,7 @@ class DecompMenu():
         self.logVal = BooleanVar(self.advOpt, value=False)
         self.logChk = Checkbutton(self.advOpt, text="Write log to file", variable=self.logVal, command=self.setLog)
         self.mVal = BooleanVar(self.advOpt, value=self.presetDat["-m"])
-        self.mChk = Checkbutton(self.advOpt, text="GoldSRC compatability", variable=self.mVal)
+        self.mChk = Checkbutton(self.advOpt, text="GoldSRC compatibility", variable=self.mVal)
         self.uVal = BooleanVar(self.advOpt, value=self.presetDat["-u"])
         self.uChk = Checkbutton(self.advOpt, text="Fix UV shifts", variable=self.uVal)
         self.vVal = BooleanVar(self.advOpt, value=self.presetDat["-V"])
