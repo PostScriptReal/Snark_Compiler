@@ -248,8 +248,10 @@ class CompSetupMenu():
         cList = open("save/compilers.txt", "r")
         cOptions = cList.read().split('\n')
         cOptions.pop(len(cOptions)-1)
+        cList.close()
         self.selComp = "GoldSRC"
-        self.gameSel = ttk.Combobox(master, values=cOptions)
+        self.comps = GamesHandler(cOptions)
+        self.gameSel = ttk.Combobox(master, values=self.comps.gNames)
         self.gameSel.current(0)
         self.gameSel.bind("<<ComboboxSelected>>", self.chComp)
         self.setupLabel = Label(master, text="Compiler Setup", background=thme["bg"], foreground=thme["txt"])
@@ -265,6 +267,9 @@ class CompSetupMenu():
         self.csPathButton = Button(self.top, text="Save Path", command=self.savePath)
         if not startHidden:
             self.show()
+
+        self.addGame = Button(self.top, text="Add New Game", command=self.addNComp)
+        self.saveGame = Button(self.top, text="Save Game", command=self.saveComp)
         
         # Applying theme
         self.applyTheme(master)
@@ -302,6 +307,45 @@ class CompSetupMenu():
                     w.configure(fg=self.thme["txt"])
                 except:
                     pass
+    
+    def addNComp(self):
+        pass
+        """self.gameSel.set("")
+        self.name.set("")
+        self.typeSel.current(0)
+        self.hrBool.set(False)
+        self.ucBool.set(False)
+        self.fbBool.set(False)
+        self.newGame = True"""
+    
+    def saveComp(self):
+        pass
+        """if self.newGame:
+            # Newgrounds Reference!?!?!
+            self.nG = self.name.get()
+            if not self.nG.lower() == "goldsrc" or not self.nG.lower() == "svengine":
+                oList = open("save/games.txt", "w")
+                self.gOptions.append(f"{self.nG}~")
+                nList = '\n'.join(self.gOptions)
+                nList = nList + '\n'
+                oList.write(nList)
+                oList.close()
+                uJS = {
+                    self.nG: {
+                        "type": self.typeSel.get(), 
+                        "capabilities": {
+                            "fullbright": self.fbBool.get(),
+                            "1024px": self.hrBool.get(),
+                            "unlockedChrome": self.ucBool.get()
+                        }
+                    }
+                }
+                js = open(f"save/user/game{self.nG}.json", "w")
+                js.write(json.dumps(uJS, sort_keys=True, indent=5))
+                js.close()
+                self.games = GamesHandler(self.gOptions)
+                self.gameSel["values"] = self.games.gNames
+                self.updFunc(self.games)"""
     
     def inputHandler(self, e=False):
         self.csPath.set(self.csPathEntry.get())
@@ -633,6 +677,7 @@ class DecompMenu():
         output = self.out.get()
         gotArgs = False
         cmdArgs = self.getArgs()
+        error = False
         if not cmdArgs == "" or not cmdArgs == " ":
             gotArgs = True
         if output == "" or output == None:
@@ -654,6 +699,25 @@ class DecompMenu():
         # So instead I have to use wine for Mac systems
         """elif sys.platform == 'darwin':
             tOutput = subprocess.getoutput(f'wine third_party/mdldec_win32.exe \"{mdl}\"')"""
+        # Checking for errors (especially the 'unknown Studio MDL format')
+        if tOutput.find("unknown Studio MDL format version 6") != -1:
+            # Telling the file moving part of the function that we are decompiling a v6 MDL file.
+            error = True
+            if sys.platform == 'linux':
+                shutil.copy(mdl, './')
+                tOutput = subprocess.getoutput(f'wine \"{os.getcwd()}/third_party/mdl6dec.exe\" \"{os.path.basename(mdl)}\" -p \"MDL6job\"')
+                os.remove(f"{os.path.basename(mdl)}")
+                # Moving the decompiler output to the output folder!
+                if not os.path.exists(output):
+                    os.mkdir(output)
+                for f in os.listdir('MDL6job'):
+                    print(f)
+                    shutil.copy(f"MDL6job/{f}", os.path.join(output, f))
+                shutil.rmtree('MDL6job')
+            else:
+                tOutput = subprocess.getoutput(f'\"{os.getcwd()}/third_party/mdl6dec.exe\" \"{mdl}\" -p \"{output}\"')
+        elif tOutput.find("ERROR:") != -1:
+            error = True
         print(tOutput)
         self.console.setOutput(tOutput)
         if self.logVal.get():
@@ -663,29 +727,31 @@ class DecompMenu():
             log.write(tOutput)
             log.close()
         # Moving files to output directory (this is a workaround to a bug with Xash3D's model decompiler)
-        filesToMove = []
-        mdlFolder = os.path.dirname(mdl)
-        anims = os.path.join(mdlFolder, 'anims/')
-        texFolder = os.path.join(mdlFolder, 'textures/')
-        for f in os.listdir(mdlFolder):
-            print(f)
-            if f.endswith("smd") or f.endswith("qc"):
-                shutil.copy(f"{mdlFolder}/{f}", os.path.join(output, f))
-                os.remove(f"{mdlFolder}/{f}")
-            elif f.endswith("bmp") and not self.tVal.get():
-                shutil.copy(f"{mdlFolder}/{f}", os.path.join(output, f))
-                os.remove(f"{mdlFolder}/{f}")
-        shutil.copytree(anims, os.path.join(output, 'anims/'))
-        if self.tVal.get():
-            shutil.copytree(texFolder, os.path.join(output, 'textures/'))
+        if not error:
+            if not os.path.exists(output):
+                os.mkdir(output)
+            mdlFolder = os.path.dirname(mdl)
+            anims = os.path.join(mdlFolder, 'anims/')
+            texFolder = os.path.join(mdlFolder, 'textures/')
+            for f in os.listdir(mdlFolder):
+                print(f)
+                if f.endswith("smd") or f.endswith("qc"):
+                    shutil.copy(f"{mdlFolder}/{f}", os.path.join(output, f))
+                    os.remove(f"{mdlFolder}/{f}")
+                elif f.endswith("bmp") and not self.tVal.get():
+                    shutil.copy(f"{mdlFolder}/{f}", os.path.join(output, f))
+                    os.remove(f"{mdlFolder}/{f}")
+            shutil.copytree(anims, os.path.join(output, 'anims/'))
+            if self.tVal.get():
+                shutil.copytree(texFolder, os.path.join(output, 'textures/'))
+                try:
+                    shutil.rmtree(texFolder)
+                except:
+                    pass
             try:
-                shutil.rmtree(texFolder)
+                shutil.rmtree(anims)
             except:
                 pass
-        try:
-            shutil.rmtree(anims)
-        except:
-            pass
 
 class CompMenu():
     def __init__(self, template, master, startHidden:bool=False):
@@ -1354,7 +1420,7 @@ class AboutMenu():
         self.ver = vnum.read().replace("(OS)", sys.platform)
         self.setupLabel = Label(master, text=f"Snark {self.ver} by:", background=thme["bg"], foreground=thme["txt"])
         credits = ["PostScript", "\nusing:", "MDLDec by Flying With Gauss", "get_image_size by Paulo Scardine", "TkTooltip by DaedalicEntertainment",
-            "JSONC by John Carter"
+            "JSONC by John Carter", "MDL6Dec by GeckoN"
         ]
         self.nameLabel = Label(master, text="\n".join(credits), background=thme["bg"], fg=thme["txt"])
         # Tooltips

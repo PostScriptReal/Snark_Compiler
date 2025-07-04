@@ -65,5 +65,9 @@
 			<td><a href="https://github.com/jfcarter2358/jsonc">jsonc</a></td>
 			<td>MIT</td>
 		</tr>
+		<tr>
+			<td><a href="http://geckons.com/halflife/">GeckoN's v6 MDL Decompiler</a></td>
+			<td>Proprietary</td>
+		</tr>
 	</table>
 </div>
