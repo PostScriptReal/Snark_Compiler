@@ -340,7 +340,7 @@ class CompSetupMenu():
                         }
                     }
                 }
-                js = open(f"save/user/game{self.nG}.json", "w")
+                js = open(f"save/user/comp{self.nG}.json", "w")
                 js.write(json.dumps(uJS, sort_keys=True, indent=5))
                 js.close()
                 self.games = GamesHandler(self.gOptions)
@@ -1190,7 +1190,7 @@ class CompMenu():
                 if not gameDat["capabilities"]["1024px"] and handler.check1024px():
                     warnings.append("WARNING: The selected game does not support textures higher than 512x512, please downscale the offending textures!")
             else:
-                if handler.check1024px() and gameDat["capabilities"]["unlockedChrome"]:
+                if handler.check1024px() and gameDat["capabilities"]["1024px"]:
                     warnings.append("WARNING: The selected compiler does not support textures higher than 512x512, please downscale the offending textures!")
                 elif handler.check1024px():
                     warnings.append("WARNING: The selected compiler and game does not support textures higher than 512x512, please downscale the offending textures!")
