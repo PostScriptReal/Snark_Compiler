@@ -256,7 +256,9 @@ class CompSetupMenu():
         self.gameSel.bind("<<ComboboxSelected>>", self.chComp)
         self.setupLabel = Label(master, text="Compiler Setup", background=thme["bg"], foreground=thme["txt"])
         self.nameLabel = Label(self.top, text="Name: ", background=thme["bg"], foreground=thme["txt"])
-        self.pathLabel = Label(self.top, text="Custom path: ", background=thme["bg"], foreground=thme["txt"])
+        self.pathLabel = Label(self.top, text="Path: ", background=thme["bg"], foreground=thme["txt"])
+        self.typeLabel = Label(self.top, text="Engine Type: ")
+        self.cPathLabel = Label(self.top, text="Custom path: ", background=thme["bg"], foreground=thme["txt"])
         self.name = StringVar()
         self.name.set(cOptions[0])
         self.nameEntry = Entry(self.top, textvariable=self.name, width=50)
@@ -385,7 +387,7 @@ class CompSetupMenu():
             self.hiddenEdit = False
             self.nameLabel.grid(column=1, row=4, sticky=(W))
             self.nameEntry.grid(column=2, row=4, sticky=(W))
-            self.pathLabel.grid(column=1, row=5, sticky="w")
+            self.cPathLabel.grid(column=1, row=5, sticky="w")
             self.csPathEntry.grid(column=2, row=5, sticky="w")
             self.csPathButton.grid(column=3,row=5,sticky="w", padx=(5,0))
         # If editing options were available and the compiler has editing disabled
@@ -393,7 +395,7 @@ class CompSetupMenu():
             self.hiddenEdit = True
             self.nameLabel.grid_remove()
             self.nameEntry.grid_remove()
-            self.pathLabel.grid(column=1, row=4, sticky="w")
+            self.cPathLabel.grid(column=1, row=4, sticky="w")
             self.csPathEntry.grid(column=2, row=4, sticky="w")
             self.csPathButton.grid(column=3,row=4,sticky="w", padx=(5,0))
 
@@ -410,13 +412,13 @@ class CompSetupMenu():
             self.top.grid(column=1, row=4, sticky="nsew")
             self.nameLabel.grid(column=1, row=0, sticky=(W))
             self.nameEntry.grid(column=2, row=0, sticky=(W))
-            self.pathLabel.grid(column=1, row=1, sticky="w")
+            self.cPathLabel.grid(column=1, row=1, sticky="w")
             self.csPathEntry.grid(column=2, row=1, sticky="w", padx=(15,0))
             self.csPathButton.grid(column=3,row=1,sticky="w", padx=(5,0))
         else:
             self.hiddenEdit = True
             self.top.grid(column=1, row=4, sticky="nsew")
-            self.pathLabel.grid(column=1, row=0, sticky="w")
+            self.cPathLabel.grid(column=1, row=0, sticky="w")
             self.csPathEntry.grid(column=2, row=0, sticky="w", padx=(15,0))
             self.csPathButton.grid(column=3,row=0,sticky="w", padx=(5,0))
 
@@ -1330,7 +1332,7 @@ class CompMenu():
         cOpts = self.getCompilerOptions()
         # Checking if the QC file supplied uses relative pathing for $cd and $cdtexture as the compiler cannot find the files otherwise
         qcRelChk = QCHandler(mdl)
-        qcRelChk.crowbarFormatCheck()
+        qcRelChk.relPathCheck()
         if qcRelChk.cbarFrmt:
             mdl = qcRelChk.newQCPath
 

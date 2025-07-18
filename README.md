@@ -43,7 +43,7 @@
 	<p>If you want a bug to be fixed, open up an issue on the Github Repo and describe the issue, with steps to reproduce, operating system information, and/or terminal logs if applicable. If the program doesn't automatically open up with a terminal by default, then open up a terminal either by right-clicking and clicking 'Open in Terminal' in the context menu that pops up on Linux systems or on Windows systems, click the bar that shows the path to Snark and type 'cmd', then type in the name of the executable and hit enter (on Linux systems you need to type in './' before the executable name, otherwise the system will think it's a terminal command and not an executable). If it is a feature request, tag it as a feature request and describe what you want to have implemented into Snark. You can check the <a href="https://github.com/users/PostScriptReal/projects/1">Official Snark Development Tracker</a> to see your bug report or feature request while it's in progress.</p>
 	<br>
 	<h2>External Libraries/Programs Used</h2>
-	<p>Snark uses some open-source libraries for proper usage, these libraries along with their licenses are shown in the table below:</p>
+	<p>Snark uses some libraries for proper usage, these libraries along with their licenses are shown in the table below:</p>
 	<table>
 		<tr>
 			<th>Library/Program</th>

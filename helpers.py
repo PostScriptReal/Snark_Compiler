@@ -150,50 +150,85 @@ class QCHandler:
         self.qcLoc = os.path.dirname(qc)
         self.cbarFrmt = False
     
-    def crowbarFormatCheck(self):
+    def relPathCheck(self):
         checks = 0
         count = -1
-        cd = False
-        cdTex = 0
+        cd = ""
+        cdTex = ""
         newCD = ""
-        cdRef = 0
+        cdLoc = 0
         newCDtex = ""
-        cdTexR = 0
+        cdTexLoc = 0
         self.newQC = self.qcf
         self.newQCPath = ""
         while checks < 2:
             count += 1
-            qcL = self.qcf[count]
-            if qcL.startswith("$cdtex"):
-                if qcL.find('\"./textures/\"') != -1:
-                    cdTex = 1
-                    cdTexR = count
+            try:
+                qcL = self.qcf[count]
+                if qcL.startswith("$cdtex"):
+                    cdTexLoc = count
+                    # Getting the string inside the $cdtex command, y'know, the thing inside the quotes? Yeah, that thing.
+                    start = 0
+                    end = 0
+                    if qcL.find('\"') != -1:
+                        start = qcL.find('\"')
+                    else:
+                        start = qcL.find("\'")
+                    
+                    if qcL.find('\"', start+1) != -1:
+                        end = qcL.find('\"', start+1)
+                    else:
+                        end = qcL.find("\'", start+1)
+                    cdTex = qcL[start+1:end]
+                    print(f"cdtex directory: {cdTex}")
                     checks += 1
-                elif qcL.find('\".\"') != -1:
-                    cdTex = 2
-                    cdTexR = count
+                elif qcL.startswith("$cd"):
+                    cdLoc = count
+                    # Getting the string inside the $cdtex command, y'know, the thing inside the quotes? Yeah, that thing.
+                    start = 0
+                    end = 0
+                    if qcL.find('\"') != -1:
+                        start = qcL.find('\"')
+                    else:
+                        start = qcL.find("\'")
+                    
+                    if qcL.find('\"', start+1) != -1:
+                        end = qcL.find('\"', start+1)
+                    else:
+                        end = qcL.find("\'", start+1)
+                    cd = qcL[start+1:end]
+                    print(f"cdtex directory: {cdTex}")
                     checks += 1
-            elif qcL.startswith("$cd") and qcL.find('\".\"') != -1:
-                cd = True
-                cdRef = count
-                checks += 1
-        if cd or cdTex != 0:
+            except:
+                print("Something went wrong during cd checks! The model may not compile properly!")
+                break
+        if cd or cdTex != "":
             self.cbarFrmt = True
             print(cd)
             print(cdTex)
-            if cd:
-                newCD = self.qcf[cdRef]
-                newCD = newCD.replace('\".\"', f'\"{self.qcLoc}\"')
-                self.newQC[cdRef] = newCD
+            if cd != "":
+                newCD = self.qcf[cdLoc]
+                if cd == "." or cd == "./":
+                    newCD = newCD.replace(cd, f'{self.qcLoc}')
+                elif cd.startswith("./"):
+                    newCD = newCD.replace(cd, f'{self.qcLoc}/{cd[2:]}')
+                else:
+                    newCD = newCD.replace(cd, f'{self.qcLoc}/{cd}')
+                self.newQC[cdLoc] = newCD
                 print(newCD)
-            if cdTex == 1:
-                newCDtex = self.qcf[cdTexR]
-                newCDtex = newCDtex.replace('\"./textures/\"', f'\"{self.qcLoc}/textures/\"')
-                self.newQC[cdTexR] = newCDtex
+            if cdTex != "":
+                newCDtex = self.qcf[cdTexLoc]
+                if cdTex == "." or cdTex == "./":
+                    newCDtex = newCDtex.replace(cdTex, f'{self.qcLoc}')
+                elif cdTex.startswith("./"):
+                    newCDtex = newCDtex.replace(cdTex, f'{self.qcLoc}/{cdTex[2:]}')
+                else:
+                    newCDtex = newCDtex.replace(cdTex, f'{self.qcLoc}/{cdTex}')
+                self.newQC[cdTexLoc] = newCDtex
             elif cdTex == 2:
-                newCDtex = self.qcf[cdTexR]
+                newCDtex = self.qcf[cdTexLoc]
                 newCDtex = newCDtex.replace('\".\"', f'\"{self.qcLoc}\"')
-                self.newQC[cdTexR] = newCDtex
+                self.newQC[cdTexLoc] = newCDtex
             self.newQCPath = os.path.join(self.qcLoc, "temp.qc")
             f = open(self.newQCPath, "w")
             f.write("".join(self.newQC))
@@ -221,6 +256,7 @@ class QCHandler:
     def check1024px(self):
         checks = 0
         count = -1
+        cdTex = ""
         newCDtex = ""
         self.newQC = self.qcf
         self.newQCPath = ""
@@ -229,53 +265,48 @@ class QCHandler:
             count += 1
             qcL = self.qcf[count]
             if qcL.startswith("$cdtex"):
-                if qcL.find('\"./textures/\"') != -1:
-                    cdTex = 1
-                    checks += 1
-                elif qcL.find('\".\"') != -1:
-                    cdTex = 2
-                    checks += 1
-        if cdTex != 0:
-            if cdTex == 1:
-                count = -1
-                texPath = os.path.join(self.qcLoc, "textures/")
-                textures = os.listdir(texPath)
-                while count < len(textures)-1:
-                    count += 1
-                    tex = textures[count]
-                    fTex = os.path.join(self.qcLoc,tex)
-                    if os.path.isfile(fTex):
-                        try:
-                            width, height = get_image_size.get_image_size(os.path.join(self.qcLoc,tex))
-                        except get_image_size.UnknownImageFormat:
-                            width, height = -1, -1
-                        if width > 512 or height > 512:
-                            self.found1024 = True
-            elif cdTex == 2:
-                count = -1
-                files = os.listdir(self.qcLoc)
-                textures = []
-                while count < len(files)-1:
-                    count += 1
-                    if files[count].endswith('.bmp'):
-                        textures.append(files[count])
-                count = -1
-                while count < len(textures)-1:
-                    count += 1
-                    tex = textures[count]
-                    fTex = os.path.join(self.qcLoc,tex)
-                    if os.path.isfile(fTex):
-                        try:
-                            width, height = get_image_size.get_image_size(os.path.join(self.qcLoc,tex))
-                        except get_image_size.UnknownImageFormat:
-                            width, height = -1, -1
-                        if width > 512 or height > 512:
-                            self.found1024 = True
+                # Getting the string inside the $cdtex command, y'know, the thing inside the quotes? Yeah, that thing.
+                start = 0
+                end = 0
+                if qcL.find('\"') != -1:
+                    start = qcL.find('\"')
+                else:
+                    start = qcL.find("\'")
+                
+                if qcL.find('\"', start+1) != -1:
+                    end = qcL.find('\"', start+1)
+                else:
+                    end = qcL.find("\'", start+1)
+                cdTex = qcL[start+1:end]
+                print(f"cdtex directory: {cdTex}")
+                checks += 1
+        if cdTex != "":
+            # if cdTex == 1:
+            count = -1
+            if cdTex == "." or cdTex == "./":
+                texPath = self.qcLoc
+            elif cdTex.startswith("./"):
+                texPath = os.path.join(self.qcLoc, cdTex[2:])
+            else:
+                texPath = os.path.join(self.qcLoc, cdTex)
+            textures = os.listdir(texPath)
+            while count < len(textures)-1:
+                count += 1
+                tex = textures[count]
+                fTex = os.path.join(self.qcLoc,tex)
+                if os.path.isfile(fTex) and tex.endswith(".bmp"):
+                    try:
+                        width, height = get_image_size.get_image_size(fTex)
+                    except get_image_size.UnknownImageFormat:
+                        width, height = -1, -1
+                    if width > 512 or height > 512:
+                        self.found1024 = True
         return self.found1024
     
     def checkCHROME(self):
         checks = 0
         count = -1
+        cdTex = ""
         newCDtex = ""
         texmodes = []
         self.newQC = self.qcf
@@ -285,52 +316,44 @@ class QCHandler:
             count += 1
             qcL = self.qcf[count]
             if qcL.startswith("$cdtex"):
-                if qcL.find('\"./textures/\"') != -1:
-                    cdTex = 1
-                    checks += 1
-                elif qcL.find('\".\"') != -1:
-                    cdTex = 2
-                    checks += 1
-        if cdTex != 0:
-            if cdTex == 1:
-                count = -1
-                texPath = os.path.join(self.qcLoc, "textures/")
-                textures = os.listdir(texPath)
-                while count < len(textures)-1:
-                    count += 1
-                    tex = textures[count]
-                    fTex = os.path.join(self.qcLoc,tex)
-                    texL = tex.lower()
-                    print(tex)
-                    if texL.find("chrome") != -1 and os.path.isfile(fTex):
-                        try:
-                            width, height = get_image_size.get_image_size(os.path.join(texPath,tex))
-                        except get_image_size.UnknownImageFormat:
-                            width, height = -1, -1
-                        if not width == 64 or not height == 64:
-                            self.fndUnlChr = True
-            elif cdTex == 2:
-                count = -1
-                files = os.listdir(self.qcLoc)
-                textures = []
-                while count < len(files)-1:
-                    count += 1
-                    if files[count].endswith('.bmp'):
-                        textures.append(files[count])
-                count = -1
-                while count < len(textures)-1:
-                    count += 1
-                    tex = textures[count]
-                    fTex = os.path.join(self.qcLoc,tex)
-                    texL = tex.lower()
-                    print(tex)
-                    if texL.find("chrome") != -1 and os.path.isfile(fTex):
-                        try:
-                            width, height = get_image_size.get_image_size(fTex)
-                        except get_image_size.UnknownImageFormat:
-                            width, height = -1, -1
-                        if not width == 64 or not height == 64:
-                            self.fndUnlChr = True
+                # Getting the string inside the $cdtex command, y'know, the thing inside the quotes? Yeah, that thing.
+                start = 0
+                end = 0
+                if qcL.find('\"') != -1:
+                    start = qcL.find('\"')
+                else:
+                    start = qcL.find("\'")
+                
+                if qcL.find('\"', start+1) != -1:
+                    end = qcL.find('\"', start+1)
+                else:
+                    end = qcL.find("\'", start+1)
+                cdTex = qcL[start+1:end]
+                print(f"cdtex directory: {cdTex}")
+                checks += 1
+        if cdTex != "":
+            # if cdTex == 1:
+            count = -1
+            if cdTex == "." or cdTex == "./":
+                texPath = self.qcLoc
+            elif cdTex.startswith("./"):
+                texPath = os.path.join(self.qcLoc, cdTex[2:])
+            else:
+                texPath = os.path.join(self.qcLoc, cdTex)
+            textures = os.listdir(texPath)
+            while count < len(textures)-1:
+                count += 1
+                tex = textures[count]
+                fTex = os.path.join(self.qcLoc,tex)
+                texL = tex.lower()
+                print(tex)
+                if texL.find("chrome") != -1 and os.path.isfile(fTex) and tex.endswith('.bmp'):
+                    try:
+                        width, height = get_image_size.get_image_size(fTex)
+                    except get_image_size.UnknownImageFormat:
+                        width, height = -1, -1
+                    if not width == 64 or not height == 64:
+                        self.fndUnlChr = True
         return self.fndUnlChr
     def checkTRM(self, renderM:int):
         count = -1
