@@ -2,4 +2,3 @@ jsonc-parser
 scikit-build
 tksvg
 certifi
-pyyaml

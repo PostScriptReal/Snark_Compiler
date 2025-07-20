@@ -27,7 +27,7 @@ class Flags:
 		self.devMode = False
 		# Flag specifically for Snark, scripts are currently not implemented yet and is a copy of the scripting system from SMD Tools v1.1
 		# This will allow me to disable the functionality for it until I come up with a proper implementation
-		self.allowScripts = False
+		self.allowScripts = True
 		# Another flag for Snark, it disables booting to the "games" menu and makes the menu show a "This menu will be completed soon" message
 		# instead of showing the menu
 		self.allowGames = True
@@ -285,8 +285,9 @@ class GUI(Tk):
 		self.selTheme = self.options["theme"]
 
 		winSizeFile = False
-		if sys.platform == "linux" and os.path.exists("WinSize.txt"):
-			wsFile = open("WinSize.txt", "r")
+		winSizeVer = 2
+		if sys.platform == "linux" and os.path.exists(f"WinSize{winSizeVer}.txt"):
+			wsFile = open(f"WinSize{winSizeVer}.txt", "r")
 			ws = wsFile.readlines()
 			wsFile.close()
 			winSizeFile = True
@@ -405,7 +406,7 @@ class GUI(Tk):
 		self.comp_button = Button(self.header, text="Compile", command=self.cmp_menu, bg=thCol["btn"][0], cursor="hand2")
 		self.comp_button.grid(column=3, row=0, sticky=(N), ipadx=buttonPad)
 
-		self.scripts = Button(self.header, text="Scripts", command=self.scripts, bg=thCol["btn"][0], cursor="hand2")
+		self.scripts = Button(self.header, text="Batch Manager", command=self.scripts, bg=thCol["btn"][0], cursor="hand2")
 		self.scripts.grid(column=4, row=0, sticky=(N), ipadx=buttonPad)
 		
 		self.options = Button(self.header, text="Options", command=self.optionsMenu, bg=thCol["btn"][0], cursor="hand2")
@@ -451,7 +452,7 @@ class GUI(Tk):
 		
 		if self.flags.allowScripts:
 			self.dumbFixMenu5.grid(column=0, row=2, sticky="nsew", columnspan=10)
-			self.scrMenu = ScriptMenu(self.mTemplate, self.dumbFixMenu5, True)
+			self.scrMenu = BatchManagerM(self.mTemplate, self.dumbFixMenu5, True)
 			self.dumbFixMenu5.grid_remove()
 		# Getting the maximum height
 		if not self.cmpMenu.hidden or winSizeFile:
@@ -472,8 +473,8 @@ class GUI(Tk):
 		else:
 			self.geometry("501x443")
 		
-		if not os.path.exists("WinSize.txt"):
-			wsf = open("WinSize.txt", "w")
+		if not os.path.exists(f"WinSize{winSizeVer}.txt"):
+			wsf = open(f"WinSize{winSizeVer}.txt", "w")
 			wsf.write(f"{self.goodWidth}\n{self.goodHeight}")
 			wsf.close()
 

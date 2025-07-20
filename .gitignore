@@ -163,4 +163,4 @@ back.bmp
 Snark.code-workspace
 *.mdl
 # scripts/
-WinSize.txt
+WinSize*.txt

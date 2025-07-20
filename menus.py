@@ -703,7 +703,6 @@ class DecompMenu():
             tOutput = subprocess.getoutput(f'wine third_party/mdldec_win32.exe \"{mdl}\"')"""
         # Checking for errors (especially the 'unknown Studio MDL format')
         if tOutput.find("unknown Studio MDL format version 6") != -1:
-            # Telling the file moving part of the function that we are decompiling a v6 MDL file.
             error = True
             if sys.platform == 'linux':
                 shutil.copy(mdl, './')
@@ -798,6 +797,9 @@ class CompMenu():
         self.nameLabel = Label(master, text="Output: ")
         self.name = StringVar()
         self.nameEntry = Entry(master, textvariable=self.name, width=self.widthFix)
+        tOpts = ["File", "Folder"]
+        self.typeSel = ttk.Combobox(master, values=tOpts, width=7)
+        self.typeSel.set(tOpts[0])
         self.nameEntry.bind("<FocusOut>", self.inputHandler)
         self.out = StringVar()
         self.outputEntry = Entry(master, textvariable=self.out, width=self.widthFix)
@@ -1084,6 +1086,7 @@ class CompMenu():
         self.setupLabel.grid(column=0, row=0, sticky=(W))
         self.nameLabel.grid(column=0, row=1, sticky=(W))
         self.nameEntry.grid(column=1, row=0, padx=(18, 0))
+        self.typeSel.grid(column=3, row=0, padx=(5,0))
         self.outputEntry.grid(column=1, row=1, padx=(18,0))
         self.mdlBrowse.grid(column=2, row=0, padx=(7,0))
         self.outBrowse.grid(column=2, row=1, padx=(7,0))
@@ -1140,102 +1143,118 @@ class CompMenu():
         self.console.show()
     
     def findMDL(self):
+        folder = False
+        if self.typeSel.get() == "Folder":
+            folder = True
         startDir = self.options["startFolder"]
         if startDir.startswith("~"):
             startDir = os.path.expanduser(startDir)
-        fileTypes = [("Quake Compile Files", "*.qc"), ("All Files", "*.*")]
-        self.name.set(askopenfilename(title="Select QC", initialdir=startDir, filetypes=fileTypes))
-        self.compatChk()
-        mdlPath = os.path.dirname(self.name.get())
-        mdlPath = os.path.join(mdlPath, "models")
-        if os.path.exists(mdlPath):
-            count = -1
-            files = os.listdir(mdlPath)
-            file = ".mdl"
-            while count < len(files)-1:
-                count += 1
-                f = files[count]
-                if f.endswith(".mdl"):
-                    # Checking if the mdl file that has been found is an external texture model or sequence model and skipping if so
-                    if f.endswith("T.mdl"):
-                        continue
-                    elif f.find("0") != -1:
-                        thresh = f.find(".mdl")
-                        print(thresh)
-                        count = -1
-                        for c in f:
-                            count += 1
-                            if count == thresh-2 and c.isnumeric():
-                                f = f.replace(c, "")
-                            if count == thresh-1 and c.isnumeric():
-                                f = f.replace(c, "")
-                        print(f)
-                    file = f
-                    break
-            if os.path.exists(f"{mdlPath}/{file}") and self.options["gsMV"]["selectedMV"] > 0:
-                self.mdlPath = os.path.join(mdlPath, file)
-                self.hlmv.grid(column=1, row=4, pady=(10,0), sticky="w")
+        if not folder:
+            fileTypes = [("Quake Compile Files", "*.qc"), ("All Files", "*.*")]
+            userSel = askopenfilename(title="Select QC", initialdir=startDir, filetypes=fileTypes)
+            if userSel != "":
+                self.name.set()
+                self.compatChk()
+                mdlPath = os.path.dirname(self.name.get())
+                mdlPath = os.path.join(mdlPath, "models")
+                if os.path.exists(mdlPath) and self.options["gsMV"]["selectedMV"] > 0:
+                    count = -1
+                    files = os.listdir(mdlPath)
+                    file = ".mdl"
+                    while count < len(files)-1:
+                        count += 1
+                        f = files[count]
+                        if f.endswith(".mdl"):
+                            # Checking if the mdl file that has been found is an external texture model or sequence model and skipping if so
+                            if f.endswith("T.mdl"):
+                                continue
+                            elif f.find("0") != -1:
+                                thresh = f.find(".mdl")
+                                print(thresh)
+                                count = -1
+                                for c in f:
+                                    count += 1
+                                    if count == thresh-2 and c.isnumeric():
+                                        f = f.replace(c, "")
+                                    if count == thresh-1 and c.isnumeric():
+                                        f = f.replace(c, "")
+                                print(f)
+                            file = f
+                            break
+                    if os.path.exists(f"{mdlPath}/{file}"):
+                        self.mdlPath = os.path.join(mdlPath, file)
+                        self.hlmv.grid(column=1, row=4, pady=(10,0), sticky="w")
+        else:
+            userSel = askdirectory(title="Select Folder containing your models", initialdir=startDir)
+            if userSel != "":
+                self.name.set(userSel)
+            self.compatChk(enabled=False)
     
-    def compatChk(self, e=False):
-        if not self.name.get() == "":
-            handler = QCHandler(self.name.get())
-            if not self.games.checkCustom(self.gameSel.get()):
-                gameDat = self.profiles["profiles"][self.gameSel.get()]
-            else:
-                js = open(f"save/user/game{self.gameSel.get()}.json", 'r')
-                gJS = json.loads(js.read())
-                gameDat = gJS[self.gameSel.get()]
-            compDat = self.fullCJS["compilers"][self.compSel.get()]
-            warnings = []
-            if compDat["capabilities"]["1024px"]:
-                # If the game doesn't support higher resolution textures, then give a warning in the console.
-                if not gameDat["capabilities"]["1024px"] and handler.check1024px():
-                    warnings.append("WARNING: The selected game does not support textures higher than 512x512, please downscale the offending textures!")
-            else:
-                if handler.check1024px() and gameDat["capabilities"]["1024px"]:
-                    warnings.append("WARNING: The selected compiler does not support textures higher than 512x512, please downscale the offending textures!")
-                elif handler.check1024px():
-                    warnings.append("WARNING: The selected compiler and game does not support textures higher than 512x512, please downscale the offending textures!")
-            
-            if compDat["capabilities"]["unlockedChrome"]:
-                # If the game doesn't support chrome textures that aren't 64x64, then give a warning in the console.
-                if not gameDat["capabilities"]["unlockedChrome"] and handler.checkCHROME():
-                    warnings.append("WARNING: There are one or more chrome textures that aren't at a fixed resolution of 64x64, please fix that as the selected game does not support this!")
-            else:
-                if handler.checkCHROME() and gameDat["capabilities"]["unlockedChrome"]:
-                    warnings.append("WARNING: There are one or more chrome textures that aren't at a fixed resolution of 64x64, please fix that as the selected compiler does not support this!")
-                elif handler.checkCHROME():
-                    warnings.append("WARNING: There are one or more chrome textures that aren't at a fixed resolution of 64x64, please fix that as the selected compiler and game does not support this!")
-            
-            if compDat["capabilities"]["fullbright"]:
-                # If the game doesn't support fullbright, then give a warning in the console.
-                if not gameDat["capabilities"]["fullbright"] and handler.checkTRM(0):
-                    warnings.append("WARNING: Model uses a $texrendermode that isn't supported by the game: fullbright")
-            else:
-                if handler.checkTRM(0) and gameDat["capabilities"]["fullbright"]:
-                    warnings.append("WARNING: Model uses a $texrendermode that isn't supported by the compiler: fullbright")
-                elif handler.checkTRM(0):
-                    warnings.append("WARNING: Model uses a $texrendermode that isn't supported by the game and the compiler: fullbright")
-            
-            if not compDat["capabilities"]["flatshade"] and handler.checkTRM(1):
-                # If the compiler doesn't support the flatshade $texrendermode, then give a warning in the console.
-                warnings.append("WARNING: Model uses a $texrendermode that isn't supported by the compiler: flatshade")
-            
-            if not compDat["capabilities"]["chromeTRM"] and handler.checkTRM(2):
-                # If the compiler doesn't support the chrome $texrendermode, then give a warning in the console.
-                warnings.append("WARNING: Compiler doesn't support the chrome $texrendermode, please add the \"CHROME\" prefix to your texture name if you want this effect!")
-            
-            # Update the console
-            if len(warnings) != 0:
-                self.console.setOutput("\n".join(warnings))
-            else:
-                self.console.setOutput('Currently no warnings or errors!')
+    def compatChk(self, e=False, enabled=True):
+        if enabled:
+            if not self.name.get() == "":
+                handler = QCHandler(self.name.get())
+                if not self.games.checkCustom(self.gameSel.get()):
+                    gameDat = self.profiles["profiles"][self.gameSel.get()]
+                else:
+                    js = open(f"save/user/game{self.gameSel.get()}.json", 'r')
+                    gJS = json.loads(js.read())
+                    gameDat = gJS[self.gameSel.get()]
+                compDat = self.fullCJS["compilers"][self.compSel.get()]
+                warnings = []
+                if compDat["capabilities"]["1024px"]:
+                    # If the game doesn't support higher resolution textures, then give a warning in the console.
+                    if not gameDat["capabilities"]["1024px"] and handler.check1024px():
+                        warnings.append("WARNING: The selected game does not support textures higher than 512x512, please downscale the offending textures!")
+                else:
+                    if handler.check1024px() and gameDat["capabilities"]["1024px"]:
+                        warnings.append("WARNING: The selected compiler does not support textures higher than 512x512, please downscale the offending textures!")
+                    elif handler.check1024px():
+                        warnings.append("WARNING: The selected compiler and game does not support textures higher than 512x512, please downscale the offending textures!")
+                
+                if compDat["capabilities"]["unlockedChrome"]:
+                    # If the game doesn't support chrome textures that aren't 64x64, then give a warning in the console.
+                    if not gameDat["capabilities"]["unlockedChrome"] and handler.checkCHROME():
+                        warnings.append("WARNING: There are one or more chrome textures that aren't at a fixed resolution of 64x64, please fix that as the selected game does not support this!")
+                else:
+                    if handler.checkCHROME() and gameDat["capabilities"]["unlockedChrome"]:
+                        warnings.append("WARNING: There are one or more chrome textures that aren't at a fixed resolution of 64x64, please fix that as the selected compiler does not support this!")
+                    elif handler.checkCHROME():
+                        warnings.append("WARNING: There are one or more chrome textures that aren't at a fixed resolution of 64x64, please fix that as the selected compiler and game does not support this!")
+                
+                if compDat["capabilities"]["fullbright"]:
+                    # If the game doesn't support fullbright, then give a warning in the console.
+                    if not gameDat["capabilities"]["fullbright"] and handler.checkTRM(0):
+                        warnings.append("WARNING: Model uses a $texrendermode that isn't supported by the game: fullbright")
+                else:
+                    if handler.checkTRM(0) and gameDat["capabilities"]["fullbright"]:
+                        warnings.append("WARNING: Model uses a $texrendermode that isn't supported by the compiler: fullbright")
+                    elif handler.checkTRM(0):
+                        warnings.append("WARNING: Model uses a $texrendermode that isn't supported by the game and the compiler: fullbright")
+                
+                if not compDat["capabilities"]["flatshade"] and handler.checkTRM(1):
+                    # If the compiler doesn't support the flatshade $texrendermode, then give a warning in the console.
+                    warnings.append("WARNING: Model uses a $texrendermode that isn't supported by the compiler: flatshade")
+                
+                if not compDat["capabilities"]["chromeTRM"] and handler.checkTRM(2):
+                    # If the compiler doesn't support the chrome $texrendermode, then give a warning in the console.
+                    warnings.append("WARNING: Compiler doesn't support the chrome $texrendermode, please add the \"CHROME\" prefix to your texture name if you want this effect!")
+                
+                # Update the console
+                if len(warnings) != 0:
+                    self.console.setOutput("\n".join(warnings))
+                else:
+                    self.console.setOutput('Currently no warnings or errors!')
+        else:
+            self.console.setOutput('Cannot check for compatibility issues as you have selected batch mode!')
 
     def output(self):
         startDir = self.options["startFolder"]
         if startDir.startswith("~"):
             startDir = os.path.expanduser(startDir)
-        self.out.set(askdirectory(title="Select Output Folder", initialdir=startDir))
+        userDir = askdirectory(title="Select Output Folder", initialdir=startDir)
+        if userDir != "":
+            self.out.set(userDir)
     
     def getCompilerOptions(self):
         self.boolVars = []
@@ -1884,17 +1903,18 @@ class OptionsMenu():
             self.mvPathEnt.grid(column=2, row=2, sticky="w")
             self.setMVP.grid(column=3, row=2, sticky="w")
 
-class ScriptMenu():
+class BatchManagerM():
     def __init__(self, template, master, startHidden:bool=False):
         self.curFont = font.nametofont('TkDefaultFont').actual()
-        self.widthFix = 74
+        self.widthFix = 86
         self.conFix = 46
         self.conHeight = 11
         self.logOutput = False
+        self.blankListStr = "Select a folder of compilable models and they will show up here!"
         if self.curFont["family"].lower() == "nimbus sans l" or sys.platform == "win32":
-            self.widthFix = 81
-            self.conFix = 59
-            self.conHeight = 13
+            self.widthFix = self.widthFix+7
+            self.conFix = self.conFix+13
+            self.conHeight = self.conHeight+2
         else:
             pass
         self.hidden = startHidden
@@ -1908,22 +1928,19 @@ class ScriptMenu():
         js = open("save/options.json", 'r')
         self.options = json.loads(js.read())
         js.close()
-        self.scripts = []
+        self.mdls = []
         if getattr(sys, 'frozen', False):
             EXE_LOCATION = os.path.dirname( sys.executable )
         else:
             EXE_LOCATION = os.path.dirname( os.path.realpath( __file__ ) )
-        self.scr_dir = os.path.join(EXE_LOCATION, "scripts")
+        """self.scr_dir = os.path.join(EXE_LOCATION, "mdls")
         for s in os.listdir(self.scr_dir):
             if not s.startswith("template"):
-                self.scripts.append(s)
+                self.mdls.append(s)"""
         
         self.scr_list = Listbox(master, width=self.widthFix, selectmode=SINGLE)
-        count = -1
-        while count < len(self.scripts)-1:
-            count += 1
-            self.scr_list.insert(count, self.scripts[count])
-        self.runBtn = Button(master, text="Run script", cursor="hand2", command=self.readScript)
+        self.scr_list.insert(0, self.blankListStr)
+        # self.runBtn = Button(master, text="Run script", cursor="hand2", command=self.readScript)
         self.console = Console(master, 'Run a script and an output of the script\'s progress will appear here!', 0, 2, self.conFix, self.conHeight)
         if not startHidden:
             self.show()
@@ -1931,9 +1948,9 @@ class ScriptMenu():
         # Applying theme
         self.applyTheme(master)
     
-    def readScript(self):
-        selected_scr = self.scripts[int(self.scr_list.curselection()[0])]
-        a = SSTReader(os.path.join(self.scr_dir, selected_scr), self.options, self.console)
+    """def readScript(self):
+        selected_scr = self.mdls[int(self.scr_list.curselection()[0])]
+        a = SSTReader(os.path.join(self.scr_dir, selected_scr), self.options, self.console)"""
 
     def applyTheme(self, master):
         style= ttk.Style()
@@ -1986,5 +2003,5 @@ class ScriptMenu():
     def show(self):
         self.hidden = False
         self.scr_list.grid(column=0, row=0, sticky=(W))
-        self.runBtn.grid(column=0, row=1)
+        # self.runBtn.grid(column=0, row=1)
         self.console.show()
