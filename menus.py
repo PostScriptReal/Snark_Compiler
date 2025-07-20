@@ -20,6 +20,9 @@ class MenuTemp():
     def __init__(self, thme:dict, safeWidth:int):
         self.thme = thme
         self.safeWidth = safeWidth
+        js = open("save/options.json", 'r')
+        self.options = json.loads(js.read())
+        js.close()
 
 class SetupMenu():
     def __init__(self, template, master, updFunc, startHidden:bool=False, allowGUI:bool=True):
@@ -37,9 +40,7 @@ class SetupMenu():
             self.nameEntW = 59
 
         # Setting up options
-        js = open("save/options.json", 'r')
-        self.options = json.loads(js.read())
-        js.close()
+        self.options = template.options
         js = open("save/profiles.json", 'r')
         self.fullGamePFs = json.loads(js.read())
         self.gamePFs = self.fullGamePFs["profiles"]
@@ -235,9 +236,7 @@ class CompSetupMenu():
         self.hiddenEdit = True
         self.updFunc = updFunc
         # Setting up options
-        js = open("save/options.json", 'r')
-        self.options = json.loads(js.read())
-        js.close()
+        self.options = template.options
         js = open("save/compilers.jsonc", 'r')
         self.fullCJS = jsonc.load(js)
         self.compDat = self.fullCJS["compilers"]
@@ -444,9 +443,7 @@ class DecompMenu():
         self.advOpt = Frame(master, borderwidth=2, bg=thme["bg"], relief="sunken")
         self.advOptR2 = Frame(self.advOpt, borderwidth=2, bg=thme["bg"])
         # Setting up options
-        js = open("save/options.json", 'r')
-        self.options = json.loads(js.read())
-        js.close()
+        self.options = template.options
         self.presets = {
             "presets": {
                 # For most compilers
@@ -651,14 +648,18 @@ class DecompMenu():
         if startDir.startswith("~"):
             startDir = os.path.expanduser(startDir)
         fileTypes = [("GoldSRC Model", "*.mdl"), ("All Files", "*.*")]
-        self.name.set(askopenfilename(title="Select MDL", initialdir=startDir, filetypes=fileTypes))
+        userSel = askopenfilename(title="Select MDL", initialdir=startDir, filetypes=fileTypes)
+        if userSel != "":
+            self.name.set(userSel)
         if not self.name.get() == "" and self.options["gsMV"]["selectedMV"] > 0:
             self.hlmv.grid(column=1, row=4, pady=(10,0), sticky="w")
     def output(self):
         startDir = self.options["startFolder"]
         if startDir.startswith("~"):
             startDir = os.path.expanduser(startDir)
-        self.out.set(askdirectory(title="Select Output Folder", initialdir=startDir))
+        userSel = askdirectory(title="Select Output Folder", initialdir=startDir)
+        if userSel != "":
+            self.out.set(userSel)
     
     def getArgs(self):
         args = []
@@ -763,8 +764,8 @@ class CompMenu():
         self.thme, self.safeWidth = thme, template.safeWidth
         self.advOptFix = True
         if self.curFont["family"].lower() == "nimbus sans l" or sys.platform == "win32":
-            self.widthFix = 58
-            self.conFix = 40
+            self.widthFix = self.widthFix+6
+            self.conFix = self.conFix-7
             self.advOptFix = False
         elif self.safeWidth > 609:
             self.advOptFix = False
@@ -784,9 +785,7 @@ class CompMenu():
         js = open("save/profiles.json", 'r')
         self.profiles = json.loads(js.read())
         js.close()
-        js = open("save/options.json", 'r')
-        self.options = json.loads(js.read())
-        js.close()
+        self.options = template.options
         if self.safeWidth > 609:
             n = 2
             self.widthFix, self.conFix = self.widthFix-n, self.conFix-n
@@ -846,7 +845,7 @@ class CompMenu():
         self.rNormalChk = Checkbutton(self.advOpt, text="-r", variable=self.rNormalB)
         self.angleB = BooleanVar(self.advOpt, value=False)
         self.angleChk = Checkbutton(self.advOpt, text="-a", variable=self.angleB, command=self.angleSBhandler)
-        self.angleSB = BoolSpinbox(self.advOpt, range=[0,360], bg=thme["ent"], bBG=thme["btn"][0], fg=thme["txt"])
+        self.angleSB = BoolSpinbox(self.advOpt, range=[0,359], bg=thme["ent"], bBG=thme["btn"][0], fg=thme["txt"])
         self.hitboxB = BooleanVar(self.advOpt, value=False)
         self.hitboxChk = Checkbutton(self.advOpt, text="-h", variable=self.hitboxB)
         self.keepBonesB = BooleanVar(self.advOpt, value=False)
@@ -1425,9 +1424,7 @@ class AboutMenu():
         thme = template.thme
         self.thme, self.safeWidth = thme, template.safeWidth
         # Setting up options
-        js = open("save/options.json", 'r')
-        self.options = json.loads(js.read())
-        js.close()
+        self.options = template.options
         # Images
         self.snarkLogoPNG = PhotoImage(file="logo128.png")
         self.gitLogoPNG = PhotoImage(file="images/github.png")
@@ -1520,10 +1517,7 @@ class OptionsMenu():
         print(self.thme["bg"])
         self.updFunc = updFunc
         # Grabbing options
-        jsf = open('save/options.json', 'r')
-        js = jsf.read()
-        jsf.close()
-        self.options = json.loads(js)
+        self.options = template.options
         # Checking if options JSON is from a previous version...
         if not self.options["version"] == 4:
             self.upgradeJSON()
@@ -1924,6 +1918,7 @@ class BatchManagerM():
         if self.safeWidth > 609:
             n = 3
             self.widthFix, self.conFix = self.widthFix-n, self.conFix-n
+        self.opts = Frame(master, borderwidth=2, bg=thme["bg"], relief="sunken")
         # Setting up options
         js = open("save/options.json", 'r')
         self.options = json.loads(js.read())
@@ -1941,12 +1936,23 @@ class BatchManagerM():
         self.scr_list = Listbox(master, width=self.widthFix, selectmode=SINGLE)
         self.scr_list.insert(0, self.blankListStr)
         # self.runBtn = Button(master, text="Run script", cursor="hand2", command=self.readScript)
-        self.console = Console(master, 'Run a script and an output of the script\'s progress will appear here!', 0, 2, self.conFix, self.conHeight)
+        # self.console = Console(master, 'Run a script and an output of the script\'s progress will appear here!', 0, 2, self.conFix, self.conHeight)
+        self.enableMDLvar = BooleanVar(self.opts, value=False)
+        self.enableMDL = Checkbutton(self.opts, text="Include source in task", variable=self.enableMDLvar)
+        self.cPathLabel = Label(self.opts, text="Output path: ")
+        pOpts = ["Output Path", "Other"]
+        self.pathSel = ttk.Combobox(self.opts, values=pOpts, width=10)
+        self.pathSel.set(pOpts[0])
+        self.pathSel.bind("<<ComboboxSelected>>", self.cPathChk)
+        self.cPathVar = StringVar(self.opts, value="\'path/to/your/other/output/folder\'")
+        self.cPath = BoolEntry(self.opts, textvariable=self.cPathVar, placeholder="\'path/to/your/other/output/folder\'")
+        self.pathBrowse = Button(self.opts, text='Browse', command=self.getCPath, cursor="hand2")
         if not startHidden:
             self.show()
         
         # Applying theme
         self.applyTheme(master)
+        self.applyTheme(self.opts)
     
     """def readScript(self):
         selected_scr = self.mdls[int(self.scr_list.curselection()[0])]
@@ -1985,6 +1991,21 @@ class BatchManagerM():
                 except:
                     pass
     
+    def cPathChk(self, e=False):
+        if self.pathSel.get() == "Other":
+            self.cPath.unlock()
+        else:
+            self.cPath.lock()
+    
+    def getCPath(self):
+        if self.pathSel.get() == "Other":
+            startDir = self.options["startFolder"]
+            if startDir.startswith("~"):
+                startDir = os.path.expanduser(startDir)
+            userDir = askdirectory(title="Select Output Folder", initialdir=startDir)
+            if userDir != "":
+                self.cPath.set(userDir)
+    
     def changeTheme(self, newTheme):
         self.thme = newTheme
         self.applyTheme(self.master)
@@ -2004,4 +2025,9 @@ class BatchManagerM():
         self.hidden = False
         self.scr_list.grid(column=0, row=0, sticky=(W))
         # self.runBtn.grid(column=0, row=1)
-        self.console.show()
+        self.opts.grid(column=0, row=1, sticky="nsew", pady=(10,0))
+        self.enableMDL.grid(column=0, row=0, pady=15)
+        self.cPathLabel.grid(column=1, row=0, padx=5)
+        self.pathSel.grid(column=2, row=0)
+        self.cPath.grid(column=3, row=0, padx=5, pady=15)
+        self.pathBrowse.grid(column=4, row=0)
