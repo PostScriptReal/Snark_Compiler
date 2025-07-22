@@ -437,16 +437,16 @@ class GUI(Tk):
 		self.dumbFixMenu4.grid(column=0, row=2, sticky="nsew", columnspan=10)
 		self.compSetMenu = CompSetupMenu(self.mTemplate, self.dumbFixMenu4, self.updateComps, self.flags.allowGames)
 		self.dumbFixMenu4.grid_remove()
-		
-		self.decMenu = DecompMenu(self.mTemplate, menu, True)
 
 		if self.flags.allowScripts:
 			self.dumbFixMenu5.grid(column=0, row=2, sticky="nsew", columnspan=10)
-			self.scrMenu = BatchManagerM(self.mTemplate, self.dumbFixMenu5, True)
+			self.batchMenu = BatchManagerM(self.mTemplate, self.dumbFixMenu5, True)
 			self.dumbFixMenu5.grid_remove()
 		
+		self.decMenu = DecompMenu(self.mTemplate, menu, self.batchMenu, True)
+		
 		self.dumbFixMenu.grid(column=0, row=2, sticky="nsew", columnspan=10)
-		self.cmpMenu = CompMenu(self.mTemplate, self.dumbFixMenu, False)
+		self.cmpMenu = CompMenu(self.mTemplate, self.dumbFixMenu, self.batchMenu, False)
 		if winSizeFile:
 			self.dumbFixMenu.grid_remove()
 			self.cmpMenu.hidden = True
@@ -579,13 +579,13 @@ class GUI(Tk):
 		self.decMenu.changeTheme(thCol)
 		self.optMenu.changeTheme(thCol)
 		self.compSetMenu.changeTheme(thCol)
-		self.scrMenu.changeTheme(thCol)
+		self.batchMenu.changeTheme(thCol)
 		self.setupMenu.master.config(bg=thCol["bg"])
 		self.cmpMenu.master.config(bg=thCol["bg"])
 		self.abtMenu.master.config(bg=thCol["bg"])
 		self.optMenu.master.config(bg=thCol["bg"])
 		self.compSetMenu.master.config(bg=thCol["bg"])
-		self.scrMenu.master.config(bg=thCol["bg"])
+		self.batchMenu.master.config(bg=thCol["bg"])
 		self.frame.config(bg=thCol["bg"])
 		self.header.config(bg=thCol["bg"])
 		for w in self.header.winfo_children():
@@ -611,7 +611,7 @@ class GUI(Tk):
 			self.decMenu.hide()
 			self.optMenu.hide()
 			if self.flags.allowScripts:
-				self.scrMenu.hide()
+				self.batchMenu.hide()
 	
 	def updateOpt(self, key, val):
 		self.setupMenu.updateOpt(key, val)
@@ -621,7 +621,7 @@ class GUI(Tk):
 		self.decMenu.updateOpt(key, val)
 		self.optMenu.updateOpt(key, val)
 		if self.flags.allowScripts:
-			self.scrMenu.updateOpt(key, val)
+			self.batchMenu.updateOpt(key, val)
 	
 	def updateGames(self, comp):
 		self.cmpMenu.updateGames(comp)
@@ -643,7 +643,7 @@ class GUI(Tk):
 			self.decMenu.hide()
 			self.optMenu.show()
 			if self.flags.allowScripts:
-				self.scrMenu.hide()
+				self.batchMenu.hide()
 	
 	def openfile(self):
 		startDir = self.options["startFolder"]
@@ -680,7 +680,7 @@ class GUI(Tk):
 			self.abtMenu.hide()
 			self.optMenu.hide()
 			if self.flags.allowScripts:
-				self.scrMenu.hide()
+				self.batchMenu.hide()
 	
 	def cmpSetupMenu(self):
 		if self.compSetMenu.hidden:
@@ -696,7 +696,7 @@ class GUI(Tk):
 			self.abtMenu.hide()
 			self.optMenu.hide()
 			if self.flags.allowScripts:
-				self.scrMenu.hide()
+				self.batchMenu.hide()
 		
 	
 	""" Switches menu to Decompile Menu """
@@ -714,7 +714,7 @@ class GUI(Tk):
 			self.optMenu.hide()
 			self.compSetMenu.hide()
 			if self.flags.allowScripts:
-				self.scrMenu.hide()
+				self.batchMenu.hide()
 	
 	""" Switches menu to Compile Menu """
 	def cmp_menu(self):
@@ -731,12 +731,12 @@ class GUI(Tk):
 			self.abtMenu.hide()
 			self.optMenu.hide()
 			if self.flags.allowScripts:
-				self.scrMenu.hide()
+				self.batchMenu.hide()
 			# print(f"width: {self.winfo_width()} height: {self.winfo_height()}")
 	
 	def scripts(self):
 		if self.flags.allowScripts:
-			if self.scrMenu.hidden:
+			if self.batchMenu.hidden:
 				self.setupMenu.hide()
 				self.compSetMenu.hide()
 				self.dumbFixMenu.grid_remove()
@@ -748,7 +748,7 @@ class GUI(Tk):
 				self.decMenu.hide()
 				self.abtMenu.hide()
 				self.optMenu.hide()
-				self.scrMenu.show()
+				self.batchMenu.show()
 		else:
 			a = ScriptWin()
 	

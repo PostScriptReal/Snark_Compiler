@@ -8,11 +8,14 @@ from tkinter.filedialog import askopenfilename, askdirectory
 import subprocess
 import shutil
 import datetime
-from helpers import BoolEntry, Console, BoolSpinbox, QCHandler, HyperlinkImg, Game, GamesHandler
+from helpers import BoolEntry, Console, BoolSpinbox, QCHandler, HyperlinkImg, Game, GamesHandler, BatchMDL
 import json
 import sys
 import jsonc
 from interp import SSTReader
+
+DECOMP_TAB = 0
+COMP_TAB = 1
 
 # To make things easier for myself, I'm making a new class that contains common values that won't (or usually doesn't) change for each menu.
 class MenuTemp():
@@ -421,8 +424,293 @@ class CompSetupMenu():
             self.csPathEntry.grid(column=2, row=0, sticky="w", padx=(15,0))
             self.csPathButton.grid(column=3,row=0,sticky="w", padx=(5,0))
 
-class DecompMenu():
+class BatchManagerM():
     def __init__(self, template, master, startHidden:bool=False):
+        self.curFont = font.nametofont('TkDefaultFont').actual()
+        self.widthFix = 86
+        self.conFix = 46
+        self.conHeight = 11
+        self.logOutput = False
+        self.blankClistStr = "Select a folder of compilable models and they will show up here!"
+        self.blankDlistStr = "Select a folder of decompilable models and they will show up here!"
+        self.curCBatch, self.curDBatch = [], []
+        self.curTab = 0
+        if self.curFont["family"].lower() == "nimbus sans l" or sys.platform == "win32":
+            self.widthFix = self.widthFix+7
+            self.conFix = self.conFix+13
+            self.conHeight = self.conHeight+2
+        else:
+            pass
+        self.hidden = startHidden
+        self.master = master
+        thme = template.thme
+        self.thme, self.safeWidth = thme, template.safeWidth
+        if self.safeWidth > 609:
+            n = 3
+            self.widthFix, self.conFix = self.widthFix-n, self.conFix-n
+        self.opts = Frame(master, borderwidth=2, bg=thme["bg"], relief="sunken")
+        self.tabs = Frame(master, borderwidth=2, bg=thme["bg"])
+        # Setting up options
+        js = open("save/options.json", 'r')
+        self.options = json.loads(js.read())
+        js.close()
+        self.mdls = []
+        
+        self.decompTab = Button(self.tabs, text="Decompiling", cursor="hand2", command=self.switchTabDecomp)
+        self.compTab = Button(self.tabs, text="Compiling", cursor="hand2", command=self.switchTabComp)
+        
+        self.qc_list = Listbox(master, width=self.widthFix, selectmode=EXTENDED, height=15)
+        self.qc_list.insert(0, self.blankClistStr)
+        self.mdl_list = Listbox(master, width=self.widthFix, selectmode=EXTENDED, height=15)
+        self.mdl_list.insert(0, self.blankDlistStr)
+        self.qc_list.bind("<<ListboxSelect>>", self.lbSelHandler)
+        self.mdl_list.bind("<<ListboxSelect>>", self.lbSelHandler)
+
+        # self.runBtn = Button(master, text="Run script", cursor="hand2", command=self.readScript)
+        # self.console = Console(master, 'Run a script and an output of the script\'s progress will appear here!', 0, 2, self.conFix, self.conHeight)
+        self.skipMDLvar = BooleanVar(self.opts, value=False)
+        self.skipMDL = Checkbutton(self.opts, text="Skip model", variable=self.skipMDLvar, command=self.skipModel)
+        self.cPathLabel = Label(self.opts, text="Output path: ")
+        self.pathSelVar = BooleanVar(self.opts, value=True)
+        self.pathSel = Checkbutton(self.opts, text="Use Output Path", variable=self.pathSelVar, command=self.cPathChk)
+        self.cPathVar = StringVar(self.opts, value="")
+        self.cPath = BoolEntry(self.opts, textvariable=self.cPathVar, placeholder="", width=27)
+        self.pathBrowse = Button(self.opts, text='Save Path', command=self.getCPath, cursor="hand2")
+        if not startHidden:
+            self.show()
+        
+        # Applying theme
+        self.applyTheme(master)
+        self.applyTheme(self.opts)
+        self.applyTheme(self.tabs)
+
+    def applyTheme(self, master):
+        style= ttk.Style()
+        style.theme_use('clam')
+        style.configure("TCombobox", fieldbackground=self.thme["ent"])
+        for w in master.winfo_children():
+            if w.winfo_class() == "Button":
+                w.configure(bg=self.thme["btn"][0])
+                w.configure(highlightbackground=self.thme["btn"][1])
+                w.configure(activebackground=self.thme["btn"][2])
+                w.configure(fg=self.thme["txt"])
+            elif w.winfo_class() == "Entry":
+                w.configure(bg=self.thme["ent"])
+                w.configure(fg=self.thme["txt"])
+            elif isinstance(w, ttk.Combobox):
+                pass
+                w.configure(foreground='white')
+                # w["menu"].config(bg=self.thme["btn"][1])
+            elif isinstance(w, Text):
+                w.configure(bg=self.thme["ent"])
+                w.configure(fg=self.thme["txt"])
+            elif w.winfo_class() == "Checkbutton":
+                w.configure(bg=self.thme["bg"])
+                w.configure(highlightbackground=self.thme["bg"])
+                w.configure(activebackground=self.thme["bg"])
+                w.configure(fg=self.thme["txt"])
+                w.configure(selectcolor=self.thme["ent"])
+            else:
+                w.configure(bg=self.thme["bg"])
+                try:
+                    w.configure(fg=self.thme["txt"])
+                except:
+                    pass
+    
+    def cPathChk(self, e=False):
+        if self.curTab == DECOMP_TAB:
+            focus = self.mdl_list
+            batch = self.curDBatch
+        else:
+            focus = self.qc_list
+            batch = self.curCBatch
+        
+        selection = focus.curselection()
+        if not self.pathSelVar.get():
+            self.cPath.unlock()
+            if len(selection) == 1 and not focus.get(0).startswith("Select a folder of "):
+                curMDL = batch[selection[0]]
+                curMDL.output = self.cPathVar.get()
+            elif not focus.get(0).startswith("Select a folder of "):
+                mdls = batch[int(selection[0]):selection[len(selection)-1]+1]
+                for i in mdls:
+                    i.output = self.cPathVar.get()
+        else:
+            self.cPath.lock()
+            if len(selection) == 1 and not focus.get(0).startswith("Select a folder of "):
+                curMDL = batch[selection[0]]
+                curMDL.output = "out"
+            elif not focus.get(0).startswith("Select a folder of "):
+                mdls = batch[int(selection[0]):selection[len(selection)-1]+1]
+                for i in mdls:
+                    i.output = "out"
+    
+    def getCPath(self):
+        if not self.pathSelVar.get():
+            self.cPathVar.set(self.cPathVar.get())
+            if self.cPathVar != "":
+                if self.curTab == DECOMP_TAB:
+                    focus = self.mdl_list
+                    batch = self.curDBatch
+                else:
+                    focus = self.qc_list
+                    batch = self.curCBatch
+                
+                selection = focus.curselection()
+                if len(selection) == 1 and not focus.get(0).startswith("Select a folder of "):
+                    curMDL = batch[selection[0]]
+                    curMDL.output = self.cPathVar.get()
+                elif not focus.get(0).startswith("Select a folder of "):
+                    mdls = batch[int(selection[0]):selection[len(selection)-1]+1]
+                    for i in mdls:
+                        i.output = self.cPathVar.get()
+    
+    def setBatch(self, batch, tab:str):
+        if tab == 'comp':
+            self.qc_list.delete(0, 'end')
+            self.curCBatch = batch
+            count = -1
+            for i in batch:
+                count += 1
+                self.qc_list.insert(count, i.name)
+            self.switchTabComp()
+        else:
+            self.mdl_list.delete(0, 'end')
+            self.curDBatch = batch
+            count = -1
+            for i in batch:
+                count += 1
+                self.mdl_list.insert(count, i.name)
+            self.switchTabDecomp()
+    
+    def getBatch(self, tab:str):
+        if tab == 'comp':
+            return self.curCBatch
+        else:
+            return self.curDBatch
+    
+    def clearBatch(self, tab:str):
+        if tab == "decomp":
+            self.mdl_list.delete(0, 'end')
+            self.mdl_list.insert(0, self.blankDlistStr)
+        else:
+            self.qc_list.delete(0, 'end')
+            self.qc_list.insert(0, self.blankClistStr)
+    
+    def switchTabDecomp(self):
+        self.curTab = DECOMP_TAB
+        self.qc_list.grid_remove()
+        self.mdl_list.grid(column=0, row=1)
+    
+    def switchTabComp(self):
+        self.curTab = COMP_TAB
+        self.mdl_list.grid_remove()
+        self.qc_list.grid(column=0, row=1)
+    
+    def lbSelHandler(self, e=None):
+        try:
+            if self.curTab == DECOMP_TAB:
+                focus = self.mdl_list
+                batch = self.curDBatch
+            else:
+                focus = self.qc_list
+                batch = self.curCBatch
+            
+            selection = focus.curselection()
+            if len(selection) == 1 and not focus.get(0).startswith("Select a folder of "):
+                curMDL = batch[selection[0]]
+                self.skipMDLvar.set(curMDL.skip)
+                if curMDL.output == "out":
+                    self.pathSelVar.set(True)
+                    self.cPath.lock()
+                    self.cPathVar.set("")
+                else:
+                    self.pathSelVar.set(False)
+                    self.cPath.unlock()
+                    self.cPathVar.set(curMDL.output)
+            elif not focus.get(0).startswith("Select a folder of "):
+                mdls = batch[int(selection[0]):selection[len(selection)-1]+1]
+                skipVal = mdls[0].skip
+                outputVal = mdls[0].output
+                defaultOpts = False
+                for i in mdls:
+                    if i.skip != skipVal:
+                        defaultOpts = True
+                        break
+                    elif i.output != outputVal:
+                        defaultOpts = True
+                        break
+                if defaultOpts:
+                    self.skipMDLvar.set(False)
+                    self.pathSelVar.set(True)
+                    self.cPath.lock()
+                    self.cPathVar.set("")
+                else:
+                    self.skipMDLvar.set(skipVal)
+                    if outputVal == "out":
+                        self.pathSelVar.set(True)
+                        self.cPath.lock()
+                        self.cPathVar.set("")
+                    else:
+                        self.pathSelVar.set(False)
+                        self.cPath.unlock()
+                        self.cPathVar.set(outputVal)
+        except:
+            print("Batch Manager item has been deselected!")
+    
+    def skipModel(self):
+        if self.curTab == DECOMP_TAB:
+            focus = self.mdl_list
+            batch = self.curDBatch
+        else:
+            focus = self.qc_list
+            batch = self.curCBatch
+        
+        selection = focus.curselection()
+        if len(selection) == 1 and not focus.get(0).startswith("Select a folder of "):
+            curMDL = batch[selection[0]]
+            curMDL.skip = self.skipMDLvar.get()
+        elif not focus.get(0).startswith("Select a folder of "):
+            mdls = batch[int(selection[0]):selection[len(selection)-1]+1]
+            for i in mdls:
+                i.skip = self.skipMDLvar.get()
+    
+    def changeTheme(self, newTheme):
+        self.thme = newTheme
+        self.applyTheme(self.master)
+        self.applyTheme(self.tabs)
+        self.applyTheme(self.opts)
+    
+    def updateOpt(self, key, value):
+        if not key.startswith("gsMV"):
+            self.options[key] = value
+        else:
+            self.options["gsMV"][key.replace("gsMV", "")] = value
+
+    def hide(self):
+        self.hidden = True
+        for w in self.master.winfo_children():
+            w.grid_remove()
+    
+    def show(self):
+        self.hidden = False
+        self.tabs.grid(column=0, row=0)
+        self.decompTab.grid(column=0, row=0)
+        self.compTab.grid(column=1, row=0)
+        if self.curTab == DECOMP_TAB:
+            self.mdl_list.grid(column=0, row=1, sticky=(W))
+        else:
+            self.qc_list.grid(column=0, row=1, sticky=(W))
+        # self.runBtn.grid(column=0, row=1)
+        self.opts.grid(column=0, row=2, sticky="nsew", pady=(10,0))
+        self.skipMDL.grid(column=0, row=0, pady=15)
+        self.cPathLabel.grid(column=1, row=0, padx=10)
+        self.pathSel.grid(column=2, row=0)
+        self.cPath.grid(column=3, row=0, padx=5, pady=15)
+        self.pathBrowse.grid(column=4, row=0)
+
+class DecompMenu():
+    def __init__(self, template, master, batchManager:BatchManagerM, startHidden:bool=False):
         self.curFont = font.nametofont('TkDefaultFont').actual()
         self.widthFix = 51
         self.conFix = 46
@@ -436,6 +724,7 @@ class DecompMenu():
         self.master = master
         thme = template.thme
         self.thme, self.safeWidth = thme, template.safeWidth
+        self.batchManager = batchManager
         if self.safeWidth > 609:
             n = 2
             self.widthFix, self.conFix = self.widthFix-n, self.conFix-n
@@ -483,6 +772,9 @@ class DecompMenu():
         self.name = StringVar()
         self.nameEntry = Entry(master, textvariable=self.name, width=self.widthFix)
         self.nameEntry.bind("<FocusOut>", self.inputHandler)
+        tOpts = ["File", "Folder"]
+        self.typeSel = ttk.Combobox(master, values=tOpts, width=7)
+        self.typeSel.set(tOpts[0])
         self.out = StringVar()
         self.outputEntry = Entry(master, textvariable=self.out, width=self.widthFix)
         self.mdlBrowse = Button(master, text='Browse', command=self.findMDL, cursor="hand2")
@@ -626,6 +918,7 @@ class DecompMenu():
         self.nameEntry.grid(column=1, row=0, padx=(5,0))
         self.outputEntry.grid(column=1, row=1, padx=(5,0))
         self.mdlBrowse.grid(column=2, row=0, padx=(12,0))
+        self.typeSel.grid(column=3, row=0, padx=(5,0))
         self.outBrowse.grid(column=2, row=1, padx=(12,0))
         self.quick.grid(column=0,row=2,sticky="nsew", columnspan=10)
         self.quickStpLbl.grid(column=0, row=2, sticky="w")
@@ -644,15 +937,43 @@ class DecompMenu():
         self.console.show()
     
     def findMDL(self):
+        folder = False
+        if self.typeSel.get() == "Folder":
+            folder = True
         startDir = self.options["startFolder"]
         if startDir.startswith("~"):
             startDir = os.path.expanduser(startDir)
-        fileTypes = [("GoldSRC Model", "*.mdl"), ("All Files", "*.*")]
-        userSel = askopenfilename(title="Select MDL", initialdir=startDir, filetypes=fileTypes)
-        if userSel != "":
-            self.name.set(userSel)
-        if not self.name.get() == "" and self.options["gsMV"]["selectedMV"] > 0:
-            self.hlmv.grid(column=1, row=4, pady=(10,0), sticky="w")
+        if not folder:
+            self.clearBatch()
+            fileTypes = [("GoldSRC Model", "*.mdl"), ("All Files", "*.*")]
+            userSel = askopenfilename(title="Select MDL", initialdir=startDir, filetypes=fileTypes)
+            if userSel != "":
+                self.name.set(userSel)
+            if not self.name.get() == "" and self.options["gsMV"]["selectedMV"] > 0:
+                self.hlmv.grid(column=1, row=4, pady=(10,0), sticky="w")
+        else:
+            userSel = askdirectory(title="Select Folder containing MDL files", initialdir=startDir)
+            if userSel != "":
+                self.name.set(userSel)
+                self.getBatch(userSel)
+    
+    def clearBatch(self):
+        self.batchManager.clearBatch('decomp')
+    
+    def getBatch(self, folder):
+        allFiles = os.listdir(folder)
+        batchFiles = []
+        for f in allFiles:
+            mdl = os.path.join(folder, f)
+            if not os.path.isfile(mdl):
+                continue
+            elif not mdl.endswith(".mdl"):
+                continue
+            print(f)
+            mdl = BatchMDL(f.replace(".mdl", ""), os.path.join(mdl, f), "out")
+            batchFiles.append(mdl)
+        self.batchManager.setBatch(batchFiles, 'decomp')
+
     def output(self):
         startDir = self.options["startFolder"]
         if startDir.startswith("~"):
@@ -676,8 +997,38 @@ class DecompMenu():
         return(cmdArgs)
     
     def startDecomp(self):
-        mdl = self.name.get()
-        output = self.out.get()
+        SINGLE = False
+        BATCH = True
+        if self.typeSel.get() == "File":
+            self.singleDec(self.name.get(), self.out.get(), SINGLE)
+        else:
+            mdls = self.batchManager.getBatch('decomp')
+            fallbackFolder = os.path.dirname(mdls[0].mdlLoc)
+            fallbackOutput = os.path.join(fallbackFolder, "BATCH DECOMPILE")
+            print(f"Fallback Output Folder: {fallbackOutput}")
+            for m in mdls:
+                if m.skip:
+                    continue
+                if m.output == "out":
+                    print("Default Output Folder")
+                    if self.out.get() == "" or self.out.get() == None:
+                        print("FALLBACK")
+                        print(m.mdlLoc)
+                        self.singleDec(m.mdlLoc, f"{fallbackOutput}/{m.name}/", BATCH)
+                    else:
+                        self.singleDec(m.mdlLoc, f"{self.out.get()}/{m.name}/", BATCH)
+                else:
+                    print("Alternate Output Folder")
+                    self.singleDec(m.mdlLoc, f"{m.output}/{m.name}/", BATCH)
+            consoleOutput = "All models have been decompiled!"
+            if self.out.get() == "" or self.out.get() == None:
+                consoleOutput = f"All models have been decompiled!\nSince you did not specify an output folder, all the models that were set to be placed there are now somewhere else\nYou can find them in \'{fallbackOutput}\'"
+            self.console.setOutput(consoleOutput)
+
+    
+    def singleDec(self, mdl, out, batch):
+        mdl = mdl
+        output = out
         gotArgs = False
         cmdArgs = self.getArgs()
         error = False
@@ -720,8 +1071,9 @@ class DecompMenu():
                 tOutput = subprocess.getoutput(f'\"{os.getcwd()}/third_party/mdl6dec.exe\" \"{mdl}\" -p \"{output}\"')
         elif tOutput.find("ERROR:") != -1:
             error = True
-        print(tOutput)
-        self.console.setOutput(tOutput)
+        if not batch:
+            print(tOutput)
+            self.console.setOutput(tOutput)
         if self.logVal.get():
             date = datetime.datetime.now()
             curDate = f"{date.strftime('%d')}-{date.strftime('%m')}-{date.strftime('%Y')}-{date.strftime('%H')}-{date.strftime('%M')}-{date.strftime('%S')}"
@@ -756,10 +1108,11 @@ class DecompMenu():
                 pass
 
 class CompMenu():
-    def __init__(self, template, master, startHidden:bool=False):
+    def __init__(self, template, master, batchManager:BatchManagerM, startHidden:bool=False):
         self.curFont = font.nametofont('TkDefaultFont').actual()
         self.widthFix = 52
         self.conFix = 47
+        self.batchManager = batchManager
         thme = template.thme
         self.thme, self.safeWidth = thme, template.safeWidth
         self.advOptFix = True
@@ -786,7 +1139,7 @@ class CompMenu():
         self.profiles = json.loads(js.read())
         js.close()
         self.options = template.options
-        if self.safeWidth > 609:
+        if self.safeWidth > 659:
             n = 2
             self.widthFix, self.conFix = self.widthFix-n, self.conFix-n
         self.selects = Frame(master, borderwidth=2, bg=thme["bg"])
@@ -827,13 +1180,6 @@ class CompMenu():
         # All options for Half-Life's StudioMDL can be found here https://github.com/ValveSoftware/halflife/blob/master/utils/studiomdl/studiomdl.c at line 3362-3408
         # Note that the Half-Life SDK doesn't document every command available to the compiler
         # Some information for other GoldSRC compilers can be found here: https://developer.valvesoftware.com/wiki/StudioMDL_(GoldSrc)
-        """ Commands that have yet to be implemented into the GUI:
-                -n - Tags bad normals (IMPLEMENTED!)
-                -f - Flips all triangles (IMPLEMENTED!)
-                -i - Ignore warnings (IMPLEMENTED!)
-                -p - Force power of 2 textures (Unavailable in Sven Co-op StudioMDL)
-                -g - Sets the maximum group size for sequences in KB (IMPLEMENTED)
-        """
         self.advOptLabel = Label(self.advOpt, text="Advanced Options")
         self.logVal = BooleanVar(self.advOpt, value=False)
         self.logChk = Checkbutton(self.advOpt, text="Write log to file", variable=self.logVal, command=self.setLog)
@@ -866,10 +1212,10 @@ class CompMenu():
         else:
             self.ignoreB = BooleanVar(self.advOpt, value=False)
             self.ignoreChk = Checkbutton(self.advOpt, text="-i", variable=self.ignoreB)
-            self.bNormB = BooleanVar(self.advOpt2, value=False)
-            self.bNormChk = Checkbutton(self.advOpt2, text="-n", variable=self.bNormB)
-            self.flipB = BooleanVar(self.advOpt2, value=False)
-            self.flipChk = Checkbutton(self.advOpt2, text="-f", variable=self.flipB)
+            self.bNormB = BooleanVar(self.advOpt, value=False)
+            self.bNormChk = Checkbutton(self.advOpt, text="-n", variable=self.bNormB)
+            self.flipB = BooleanVar(self.advOpt, value=False)
+            self.flipChk = Checkbutton(self.advOpt, text="-f", variable=self.flipB)
             self.groupB = BooleanVar(self.advOpt2, value=False)
             self.groupChk = Checkbutton(self.advOpt2, text="-g", variable=self.groupB, command=self.groupSBhandler)
             self.groupSB = BoolSpinbox(self.advOpt2, range=[0,4096], bg=thme["ent"], bBG=thme["btn"][0], fg=thme["txt"], increment=16)
@@ -1097,7 +1443,7 @@ class CompMenu():
         self.advOpt.grid(column=0, row=3, sticky="nsew", columnspan=10, pady=(20,0))
         self.advOptLabel.grid(column=0, row=0, sticky="w")
         self.logChk.grid(column=0, row=1, sticky="w")
-        if self.advOptFix or self.safeWidth > 609:
+        if self.advOptFix or self.safeWidth > 659:
             self.dashT.grid(column=2, row=1, sticky="w")
             self.dashTChk.grid(column=1, row=1, sticky="w")
         else:
@@ -1115,11 +1461,11 @@ class CompMenu():
         if self.advOptFix:
             self.bNormChk.grid(column=8, row=1, sticky="w")
         else:
-            self.bNormChk.grid(column=1, row=2, sticky="w")
+            self.bNormChk.grid(column=8, row=1, sticky="w")
         if self.advOptFix:
-            self.flipChk.grid(column=0, row=2, sticky="w")
+            self.flipChk.grid(column=9, row=1, sticky="w")
         else:
-            self.flipChk.grid(column=2, row=2, sticky="w")
+            self.flipChk.grid(column=9, row=1, sticky="w")
         if self.advOptFix:
             self.groupChk.grid(column=0, row=2, sticky="w",padx=(40,0))
             self.groupSB.grid(column=0, row=2, sticky="w",padx=(81,0))
@@ -1152,8 +1498,9 @@ class CompMenu():
             fileTypes = [("Quake Compile Files", "*.qc"), ("All Files", "*.*")]
             userSel = askopenfilename(title="Select QC", initialdir=startDir, filetypes=fileTypes)
             if userSel != "":
-                self.name.set()
+                self.name.set(userSel)
                 self.compatChk()
+                self.clearBatch()
                 mdlPath = os.path.dirname(self.name.get())
                 mdlPath = os.path.join(mdlPath, "models")
                 if os.path.exists(mdlPath) and self.options["gsMV"]["selectedMV"] > 0:
@@ -1187,7 +1534,33 @@ class CompMenu():
             userSel = askdirectory(title="Select Folder containing your models", initialdir=startDir)
             if userSel != "":
                 self.name.set(userSel)
-            self.compatChk(enabled=False)
+                self.compatChk(enabled=False)
+                self.getBatch(userSel)
+    
+    def clearBatch(self):
+        self.batchManager.clearBatch('comp')
+    
+    def getBatch(self, folder):
+        allFolders = os.listdir(folder)
+        batchFolders = []
+        for f in allFolders:
+            mdlFld = os.path.join(folder, f)
+            if os.path.isfile(mdlFld):
+                continue
+            print(f)
+            files = os.listdir(mdlFld)
+            qcFiles = []
+            for f in files:
+                if f.endswith(".qc"):
+                    qcFiles.append(f)
+            if len(qcFiles) > 1:
+                for qc in qcFiles:
+                    mdl = BatchMDL(f"{os.path.basename(mdlFld)} ({qc.replace(".qc", "")})", os.path.join(mdlFld, qc), "out")
+                    batchFolders.append(mdl)
+            elif len(qcFiles) > 0:
+                mdl = BatchMDL(os.path.basename(mdlFld), os.path.join(mdlFld, qcFiles[0]), "out")
+                batchFolders.append(mdl)
+        self.batchManager.setBatch(batchFolders, 'comp')
     
     def compatChk(self, e=False, enabled=True):
         if enabled:
@@ -1309,8 +1682,32 @@ class CompMenu():
             return None
 
     def startCompile(self):
-        mdl = self.name.get()
-        output = self.out.get()
+        SINGLE = False
+        BATCH = True
+        if self.typeSel.get() == "File":
+            self.singleComp(self.name.get(), self.out.get(), SINGLE)
+        else:
+            mdls = self.batchManager.getBatch('comp')
+            fallbackFolder = os.path.dirname(mdls[0].qcLoc)
+            # fallbackOutput = os.path.join(fallbackFolder, "BATCH COMPILE")
+            for m in mdls:
+                if m.skip:
+                    continue
+                if m.output == "out":
+                    if not self.out.get() == "" or not self.out.get() == None:
+                        self.singleComp(m.qcLoc, self.out.get(), BATCH)
+                    else:
+                        self.singleComp(m.qcLoc, fallbackOutput, BATCH)
+                else:
+                    self.singleComp(m.mdlLoc, m.output, BATCH)
+            consoleOutput = "All models have been compiled!"
+            if self.out.get() == "" or self.out.get() == None:
+                consoleOutput = f"All models have been compiled!\nSince you did not specify an output folder, all the models that were set to be placed there are now somewhere else\nYou can find them in \'{fallbackOutput}\'"
+            self.console.setOutput(consoleOutput)
+    
+    def singleComp(self, mdl:str, out:str, batch:bool):
+        mdl = mdl
+        output = out
         tOutput = ''
         compilerPath = ''
         compilerFound = False
@@ -1376,13 +1773,10 @@ class CompMenu():
                 tOutput = subprocess.getoutput(f'\"{compilerPath}\" {cOpts} \"{mdl}\"')
         else:
             self.console.setOutput("ERROR: Couldn't find compiler, have you installed it?")
-        # I don't have a Mac so I can't compile mdldec to Mac targets :(
-        # So instead I have to use wine for Mac systems
-        """elif sys.platform == 'darwin':
-            tOutput = subprocess.getoutput(f'wine third_party/mdldec_win32.exe \"{mdl}\"')"""
         if compilerFound:
-            print(tOutput)
-            self.console.setOutput(tOutput)
+            if not batch:
+                print(tOutput)
+                self.console.setOutput(tOutput)
             # Removing temporary QC file used to compile model when the QC file supplied had used relative pathing
             if qcRelChk.cbarFrmt:
                 os.remove(mdl)
@@ -1393,6 +1787,7 @@ class CompMenu():
                 log.write(tOutput)
                 log.close()
             # Moving the compiled MDL file to the output folder
+            print(output)
             mdlFolder = ""
             if output == "" or output == None:
                 mdlFolder = qcRelChk.qcLoc
@@ -1414,8 +1809,6 @@ class CompMenu():
                 if f.find(".mdl") != -1:
                     shutil.copy(f, os.path.join(mdlFolder, f))
                     os.remove(os.path.join(os.getcwd(), f))
-            # shutil.copy(mdlF, os.path.join(mdlFolder, mdlF))
-            # os.remove(mdlF)
 
 class AboutMenu():
     def __init__(self, template, master, startHidden:bool=False):
@@ -1896,138 +2289,3 @@ class OptionsMenu():
             self.mvPathLabel.grid(column=1, row=2, sticky="w")
             self.mvPathEnt.grid(column=2, row=2, sticky="w")
             self.setMVP.grid(column=3, row=2, sticky="w")
-
-class BatchManagerM():
-    def __init__(self, template, master, startHidden:bool=False):
-        self.curFont = font.nametofont('TkDefaultFont').actual()
-        self.widthFix = 86
-        self.conFix = 46
-        self.conHeight = 11
-        self.logOutput = False
-        self.blankListStr = "Select a folder of compilable models and they will show up here!"
-        if self.curFont["family"].lower() == "nimbus sans l" or sys.platform == "win32":
-            self.widthFix = self.widthFix+7
-            self.conFix = self.conFix+13
-            self.conHeight = self.conHeight+2
-        else:
-            pass
-        self.hidden = startHidden
-        self.master = master
-        thme = template.thme
-        self.thme, self.safeWidth = thme, template.safeWidth
-        if self.safeWidth > 609:
-            n = 3
-            self.widthFix, self.conFix = self.widthFix-n, self.conFix-n
-        self.opts = Frame(master, borderwidth=2, bg=thme["bg"], relief="sunken")
-        # Setting up options
-        js = open("save/options.json", 'r')
-        self.options = json.loads(js.read())
-        js.close()
-        self.mdls = []
-        if getattr(sys, 'frozen', False):
-            EXE_LOCATION = os.path.dirname( sys.executable )
-        else:
-            EXE_LOCATION = os.path.dirname( os.path.realpath( __file__ ) )
-        """self.scr_dir = os.path.join(EXE_LOCATION, "mdls")
-        for s in os.listdir(self.scr_dir):
-            if not s.startswith("template"):
-                self.mdls.append(s)"""
-        
-        self.scr_list = Listbox(master, width=self.widthFix, selectmode=SINGLE)
-        self.scr_list.insert(0, self.blankListStr)
-        # self.runBtn = Button(master, text="Run script", cursor="hand2", command=self.readScript)
-        # self.console = Console(master, 'Run a script and an output of the script\'s progress will appear here!', 0, 2, self.conFix, self.conHeight)
-        self.enableMDLvar = BooleanVar(self.opts, value=False)
-        self.enableMDL = Checkbutton(self.opts, text="Include source in task", variable=self.enableMDLvar)
-        self.cPathLabel = Label(self.opts, text="Output path: ")
-        pOpts = ["Output Path", "Other"]
-        self.pathSel = ttk.Combobox(self.opts, values=pOpts, width=10)
-        self.pathSel.set(pOpts[0])
-        self.pathSel.bind("<<ComboboxSelected>>", self.cPathChk)
-        self.cPathVar = StringVar(self.opts, value="\'path/to/your/other/output/folder\'")
-        self.cPath = BoolEntry(self.opts, textvariable=self.cPathVar, placeholder="\'path/to/your/other/output/folder\'")
-        self.pathBrowse = Button(self.opts, text='Browse', command=self.getCPath, cursor="hand2")
-        if not startHidden:
-            self.show()
-        
-        # Applying theme
-        self.applyTheme(master)
-        self.applyTheme(self.opts)
-    
-    """def readScript(self):
-        selected_scr = self.mdls[int(self.scr_list.curselection()[0])]
-        a = SSTReader(os.path.join(self.scr_dir, selected_scr), self.options, self.console)"""
-
-    def applyTheme(self, master):
-        style= ttk.Style()
-        style.theme_use('clam')
-        style.configure("TCombobox", fieldbackground=self.thme["ent"])
-        for w in master.winfo_children():
-            if w.winfo_class() == "Button":
-                w.configure(bg=self.thme["btn"][0])
-                w.configure(highlightbackground=self.thme["btn"][1])
-                w.configure(activebackground=self.thme["btn"][2])
-                w.configure(fg=self.thme["txt"])
-            elif w.winfo_class() == "Entry":
-                w.configure(bg=self.thme["ent"])
-                w.configure(fg=self.thme["txt"])
-            elif isinstance(w, ttk.Combobox):
-                pass
-                w.configure(foreground='white')
-                # w["menu"].config(bg=self.thme["btn"][1])
-            elif isinstance(w, Text):
-                w.configure(bg=self.thme["ent"])
-                w.configure(fg=self.thme["txt"])
-            elif w.winfo_class() == "Checkbutton":
-                w.configure(bg=self.thme["bg"])
-                w.configure(highlightbackground=self.thme["bg"])
-                w.configure(activebackground=self.thme["bg"])
-                w.configure(fg=self.thme["txt"])
-                w.configure(selectcolor=self.thme["ent"])
-            else:
-                w.configure(bg=self.thme["bg"])
-                try:
-                    w.configure(fg=self.thme["txt"])
-                except:
-                    pass
-    
-    def cPathChk(self, e=False):
-        if self.pathSel.get() == "Other":
-            self.cPath.unlock()
-        else:
-            self.cPath.lock()
-    
-    def getCPath(self):
-        if self.pathSel.get() == "Other":
-            startDir = self.options["startFolder"]
-            if startDir.startswith("~"):
-                startDir = os.path.expanduser(startDir)
-            userDir = askdirectory(title="Select Output Folder", initialdir=startDir)
-            if userDir != "":
-                self.cPath.set(userDir)
-    
-    def changeTheme(self, newTheme):
-        self.thme = newTheme
-        self.applyTheme(self.master)
-    
-    def updateOpt(self, key, value):
-        if not key.startswith("gsMV"):
-            self.options[key] = value
-        else:
-            self.options["gsMV"][key.replace("gsMV", "")] = value
-
-    def hide(self):
-        self.hidden = True
-        for w in self.master.winfo_children():
-            w.grid_remove()
-    
-    def show(self):
-        self.hidden = False
-        self.scr_list.grid(column=0, row=0, sticky=(W))
-        # self.runBtn.grid(column=0, row=1)
-        self.opts.grid(column=0, row=1, sticky="nsew", pady=(10,0))
-        self.enableMDL.grid(column=0, row=0, pady=15)
-        self.cPathLabel.grid(column=1, row=0, padx=5)
-        self.pathSel.grid(column=2, row=0)
-        self.cPath.grid(column=3, row=0, padx=5, pady=15)
-        self.pathBrowse.grid(column=4, row=0)
