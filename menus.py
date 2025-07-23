@@ -970,7 +970,7 @@ class DecompMenu():
             elif not mdl.endswith(".mdl"):
                 continue
             print(f)
-            mdl = BatchMDL(f.replace(".mdl", ""), os.path.join(mdl, f), "out")
+            mdl = BatchMDL(f.replace(".mdl", ""), mdl, "out")
             batchFiles.append(mdl)
         self.batchManager.setBatch(batchFiles, 'decomp')
 
@@ -1014,21 +1014,26 @@ class DecompMenu():
                     if self.out.get() == "" or self.out.get() == None:
                         print("FALLBACK")
                         print(m.mdlLoc)
-                        self.singleDec(m.mdlLoc, f"{fallbackOutput}/{m.name}/", BATCH)
+                        self.singleDec(m.mdlLoc, f"{fallbackOutput}/{m.name}/", BATCH, m.name, True)
                     else:
-                        self.singleDec(m.mdlLoc, f"{self.out.get()}/{m.name}/", BATCH)
+                        print(m.mdlLoc)
+                        self.singleDec(m.mdlLoc, f"{self.out.get()}/{m.name}/", BATCH, m.name, False)
+                        print(f"Does the folder exist?: {os.path.exists(f"{self.out.get()}/{m.name}")}")
                 else:
                     print("Alternate Output Folder")
-                    self.singleDec(m.mdlLoc, f"{m.output}/{m.name}/", BATCH)
+                    self.singleDec(m.mdlLoc, f"{m.output}/{m.name}/", BATCH, m.name, False)
             consoleOutput = "All models have been decompiled!"
             if self.out.get() == "" or self.out.get() == None:
                 consoleOutput = f"All models have been decompiled!\nSince you did not specify an output folder, all the models that were set to be placed there are now somewhere else\nYou can find them in \'{fallbackOutput}\'"
             self.console.setOutput(consoleOutput)
 
     
-    def singleDec(self, mdl, out, batch):
+    def singleDec(self, mdl:str, out:str, batch:bool, mdlName:str, fallback:bool):
         mdl = mdl
         output = out
+        decOut = "./MDLDEC/"
+        if batch:
+            decOut = f"./{mdlName}/"
         gotArgs = False
         cmdArgs = self.getArgs()
         error = False
@@ -1041,14 +1046,14 @@ class DecompMenu():
         tOutput = ''
         if sys.platform == 'linux':
             if gotArgs:
-                tOutput = subprocess.getoutput(f'./third_party/mdldec -a {cmdArgs} \"{mdl}\"')
+                tOutput = subprocess.getoutput(f'./third_party/mdldec -a {cmdArgs} \"{mdl}\" \"{decOut}\"')
             else:
-                tOutput = subprocess.getoutput(f'./third_party/mdldec -a \"{mdl}\"')
+                tOutput = subprocess.getoutput(f'./third_party/mdldec -a \"{mdl}\" \"{decOut}\"')
         elif sys.platform == 'win32':
             if gotArgs:
-                tOutput = subprocess.getoutput(f'\"{os.getcwd()}/third_party/mdldec.exe\" -a {cmdArgs} \"{mdl}\"')
+                tOutput = subprocess.getoutput(f'\"{os.getcwd()}/third_party/mdldec.exe\" -a {cmdArgs} \"{mdl}\" \"{decOut}\"')
             else:
-                tOutput = subprocess.getoutput(f'\"{os.getcwd()}/third_party/mdldec.exe\" -a \"{mdl}\"')
+                tOutput = subprocess.getoutput(f'\"{os.getcwd()}/third_party/mdldec.exe\" -a \"{mdl}\" \"{decOut}\"')
         # I don't have a Mac so I can't compile mdldec to Mac targets :(
         # So instead I have to use wine for Mac systems
         """elif sys.platform == 'darwin':
@@ -1071,8 +1076,8 @@ class DecompMenu():
                 tOutput = subprocess.getoutput(f'\"{os.getcwd()}/third_party/mdl6dec.exe\" \"{mdl}\" -p \"{output}\"')
         elif tOutput.find("ERROR:") != -1:
             error = True
+        print(tOutput)
         if not batch:
-            print(tOutput)
             self.console.setOutput(tOutput)
         if self.logVal.get():
             date = datetime.datetime.now()
@@ -1080,21 +1085,22 @@ class DecompMenu():
             log = open(f"logs/decomp-{curDate}.txt", 'w')
             log.write(tOutput)
             log.close()
-        # Moving files to output directory (this is a workaround to a bug with Xash3D's model decompiler)
+        # Moving files to output directory (this is a workaround to a bug with Xash3D's model decompiler, where absolute paths result in an error)
         if not error:
+            if batch and fallback and not os.path.exists(os.path.dirname(output)):
+                os.mkdir(os.path.dirname(output))
             if not os.path.exists(output):
                 os.mkdir(output)
-            mdlFolder = os.path.dirname(mdl)
-            anims = os.path.join(mdlFolder, 'anims/')
-            texFolder = os.path.join(mdlFolder, 'textures/')
-            for f in os.listdir(mdlFolder):
+            anims = os.path.join(decOut, 'anims/')
+            texFolder = os.path.join(decOut, 'textures/')
+            for f in os.listdir(decOut):
                 print(f)
                 if f.endswith("smd") or f.endswith("qc"):
-                    shutil.copy(f"{mdlFolder}/{f}", os.path.join(output, f))
-                    os.remove(f"{mdlFolder}/{f}")
+                    shutil.copy(f"{decOut}/{f}", os.path.join(output, f))
+                    os.remove(f"{decOut}/{f}")
                 elif f.endswith("bmp") and not self.tVal.get():
-                    shutil.copy(f"{mdlFolder}/{f}", os.path.join(output, f))
-                    os.remove(f"{mdlFolder}/{f}")
+                    shutil.copy(f"{decOut}/{f}", os.path.join(output, f))
+                    os.remove(f"{decOut}/{f}")
             shutil.copytree(anims, os.path.join(output, 'anims/'))
             if self.tVal.get():
                 shutil.copytree(texFolder, os.path.join(output, 'textures/'))
@@ -1106,6 +1112,7 @@ class DecompMenu():
                 shutil.rmtree(anims)
             except:
                 pass
+            shutil.rmtree(decOut)
 
 class CompMenu():
     def __init__(self, template, master, batchManager:BatchManagerM, startHidden:bool=False):
