@@ -943,6 +943,11 @@ class DecompMenu():
         startDir = self.options["startFolder"]
         if startDir.startswith("~"):
             startDir = os.path.expanduser(startDir)
+        if self.name.get() != "":
+            if folder:
+                startDir = self.name.get()
+            else:
+                startDir = os.path.dirname(self.name.get())
         if not folder:
             self.clearBatch()
             fileTypes = [("GoldSRC Model", "*.mdl"), ("All Files", "*.*")]
@@ -978,6 +983,8 @@ class DecompMenu():
         startDir = self.options["startFolder"]
         if startDir.startswith("~"):
             startDir = os.path.expanduser(startDir)
+        if self.out.get() != "":
+            startDir = self.out.get()
         userSel = askdirectory(title="Select Output Folder", initialdir=startDir)
         if userSel != "":
             self.out.set(userSel)
@@ -1501,6 +1508,11 @@ class CompMenu():
         startDir = self.options["startFolder"]
         if startDir.startswith("~"):
             startDir = os.path.expanduser(startDir)
+        if self.name.get() != "":
+            if folder:
+                startDir = self.name.get()
+            else:
+                startDir = os.path.dirname(self.name.get())
         if not folder:
             fileTypes = [("Quake Compile Files", "*.qc"), ("All Files", "*.*")]
             userSel = askopenfilename(title="Select QC", initialdir=startDir, filetypes=fileTypes)
@@ -1631,6 +1643,8 @@ class CompMenu():
         startDir = self.options["startFolder"]
         if startDir.startswith("~"):
             startDir = os.path.expanduser(startDir)
+        if self.out.get() != "":
+            startDir = self.out.get()
         userDir = askdirectory(title="Select Output Folder", initialdir=startDir)
         if userDir != "":
             self.out.set(userDir)
