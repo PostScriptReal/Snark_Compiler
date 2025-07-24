@@ -265,7 +265,7 @@ class CompSetupMenu():
         self.name.set(cOptions[0])
         self.nameEntry = Entry(self.top, textvariable=self.name, width=50)
         self.csPath = StringVar()
-        self.csPath.set(self.csPaths["GoldSRC"])
+        self.csPath.set(self.csPaths["Other"]["GoldSRC"])
         self.csPathEntry = Entry(self.top, textvariable=self.csPath, width=40)
         self.csPathEntry.bind("<FocusOut>", self.inputHandler)
         self.csPathButton = Button(self.top, text="Save Path", command=self.savePath)
@@ -353,7 +353,7 @@ class CompSetupMenu():
     
     def inputHandler(self, e=False):
         self.csPath.set(self.csPathEntry.get())
-        self.csPaths[self.gameSel.get()] = self.csPath.get()
+        self.csPaths["Other"][self.gameSel.get()] = self.csPath.get()
         js = open("save/paths.json", 'w')
         nJS = json.dumps(self.csPaths, sort_keys=True, indent=5)
         js.write(nJS)
@@ -362,7 +362,7 @@ class CompSetupMenu():
     
     def savePath(self):
         self.csPath.set(self.csPathEntry.get())
-        self.csPaths[self.gameSel.get()] = self.csPath.get()
+        self.csPaths["Other"][self.gameSel.get()] = self.csPath.get()
         js = open("save/paths.json", 'w')
         nJS = json.dumps(self.csPaths, sort_keys=True, indent=5)
         js.write(nJS)
@@ -383,7 +383,7 @@ class CompSetupMenu():
     def chComp(self, e):
         self.selComp = self.gameSel.get()
         self.name.set(self.selComp)
-        self.csPath.set(self.csPaths[self.selComp])
+        self.csPath.set(self.csPaths["Other"][self.selComp])
         # If editing options were removed and the compiler doesn't have editing disabled
         if self.hiddenEdit and not self.compDat[self.selComp]["disableEdit"]:
             self.hiddenEdit = False
@@ -435,6 +435,8 @@ class BatchManagerM():
         self.blankDlistStr = "Select a folder of decompilable models and they will show up here!"
         self.curCBatch, self.curDBatch = [], []
         self.curTab = 0
+        self.compOutput = ""
+        self.decompOutput = ""
         if self.curFont["family"].lower() == "nimbus sans l" or sys.platform == "win32":
             self.widthFix = self.widthFix+7
             self.conFix = self.conFix+13
@@ -552,18 +554,37 @@ class BatchManagerM():
                 if self.curTab == DECOMP_TAB:
                     focus = self.mdl_list
                     batch = self.curDBatch
+                    outputF = self.compOutput
+                    listItems = self.mdl_list
+                    fallbackStr = "BATCH DECOMPILE"
                 else:
                     focus = self.qc_list
                     batch = self.curCBatch
+                    outputF = self.decompOutput
+                    listItems = self.qc_list
+                    fallbackStr = "BATCH COMPILE"
                 
                 selection = focus.curselection()
                 if len(selection) == 1 and not focus.get(0).startswith("Select a folder of "):
                     curMDL = batch[selection[0]]
-                    curMDL.output = self.cPathVar.get()
+                    if os.path.isabs(self.cPathVar.get()):
+                        curMDL.output = self.cPathVar.get()
+                    else:
+                        fallbackFolder = os.path.dirname(listItems.get(0).mdlLoc)
+                        fallbackOutput = os.path.join(fallbackFolder, fallbackStr)
+                        curMDL.output = os.path.join(outputF, self.cPathVar.get())
                 elif not focus.get(0).startswith("Select a folder of "):
                     mdls = batch[int(selection[0]):selection[len(selection)-1]+1]
                     for i in mdls:
-                        i.output = self.cPathVar.get()
+                        if os.path.isabs(self.cPathVar.get()):
+                            i.output = self.cPathVar.get()
+                        else:
+                            fallbackFolder = os.path.dirname(listItems.get(0).mdlLoc)
+                            fallbackOutput = os.path.join(fallbackFolder, fallbackStr)
+                            if outputF != "":
+                                i.output = os.path.join(outputF, self.cPathVar.get())
+                            else:
+                                i.output = os.path.join(fallbackOutput, self.cPathVar.get())
     
     def setBatch(self, batch, tab:str):
         if tab == 'comp':
@@ -988,6 +1009,7 @@ class DecompMenu():
         userSel = askdirectory(title="Select Output Folder", initialdir=startDir)
         if userSel != "":
             self.out.set(userSel)
+            self.batchManager.decompOutput = userSel
     
     def getArgs(self):
         args = []
@@ -1429,7 +1451,7 @@ class CompMenu():
             self.options["gsMV"][key.replace("gsMV", "")] = value
     
     def updateComp(self, comp, value):
-        self.csPaths[comp] = value
+        self.csPaths["Other"][comp] = value
     
     def updateGames(self, game):
         self.games = game
@@ -1648,6 +1670,7 @@ class CompMenu():
         userDir = askdirectory(title="Select Output Folder", initialdir=startDir)
         if userDir != "":
             self.out.set(userDir)
+            self.batchManager.compOutput = userSel
     
     def getCompilerOptions(self):
         self.boolVars = []
@@ -1743,12 +1766,12 @@ class CompMenu():
                         compilerFound = True
                         break
                 if not compilerFound:
-                    paths = self.csPaths[self.compSel.get()]
+                    paths = self.csPaths["Other"][self.compSel.get()]
                     if os.path.exists(paths):
                         compilerPath = paths
                         compilerFound = True
             else:
-                paths = self.csPaths[self.compSel.get()]
+                paths = self.csPaths["Other"][self.compSel.get()]
                 if not paths == "":
                     if os.path.exists(paths):
                         compilerPath = paths
@@ -1932,8 +1955,9 @@ class OptionsMenu():
         self.updFunc = updFunc
         # Grabbing options
         self.options = template.options
+        self.curJSONVer = 5
         # Checking if options JSON is from a previous version...
-        if not self.options["version"] == 4:
+        if not self.options["version"] == self.curJSONVer:
             self.upgradeJSON()
         # Pages
         self.pageButtons = Frame(master, borderwidth=2, bg=thme["bg"])
@@ -2028,6 +2052,8 @@ class OptionsMenu():
         self.presetSel.current(self.options["defDPreset"])
         self.presetDat = self.presets["presets"][self.presetSel.get()]
         self.presetSel.bind("<<ComboboxSelected>>", self.setDP)
+        self.spLabel = Label(master, text="Save paths")
+        self.forceDefault = Checkbutton(master, command=self.chFDP, variable=self.forceDefB)
         # Checking if anything is exceeding the width of the "safe zone"
         """self.show()
         self.checkWidth()
@@ -2051,54 +2077,52 @@ class OptionsMenu():
         print(curWidth)
     
     def upgradeJSON(self):
+        upgradePaths = False
+        defaultComp = self.options.get("defComp", 0)
+        defaultGame = self.options.get("defGame", 0)
+        defaultDecompPreset = self.options.get("defDPreset", 0)
+        forceDefaultPaths = self.options.get("forceDefPaths", False)
+        savePaths = self.options.get("save_paths", True)
+        startingFolder = self.options.get("startFolder", "~/Documents")
+        theme = self.options.get("theme", "Freeman")
+        goldSRCModelViewer = self.options.get("gsMV", {"selectedMV": 0, "csPath": ""})
+        if self.options["version"] < 5:
+            savePaths = True
+            upgradePaths = True
         # Upgrade from version 1 to 4
-        if self.options["version"] == 1:
-            newOptions = {
-                "defComp": 0,
-                "defGame": 0,
-                "defDPreset": 0,
-                "forceDefPaths": self.options["forceDefPaths"],
-                "save_paths": False,
-                "startFolder": self.options["startFolder"],
-                "theme": self.options["theme"],
-                "gsMV": {
-                    "selectedMV": 0,
-                    "csPath": ""
+        newOptions = {
+            "defComp": defaultComp,
+            "defGame": defaultGame,
+            "defDPreset": defaultDecompPreset,
+            "forceDefPaths": forceDefaultPaths,
+            "save_paths": savePaths,
+            "startFolder": startingFolder,
+            "theme": theme,
+            "gsMV": goldSRCModelViewer,
+            "version": self.curJSONVer
+        }
+        if upgradePaths:
+            pathJSON = open("save/paths.json", "r")
+            paths = json.load(pathJSON)
+            pathJSON.close()
+            goldSRCpath = paths.get("GoldSRC", "")
+            svenginePath = paths.get("Svengine", "")
+            newPaths = {
+                "Snark": {
+                    "compileIn": "",
+                    "compileOut": "",
+                    "decompileIn": "",
+                    "decompileOut": ""
                 },
-                "version": 4
+                "Other": {
+                    "GoldSRC": goldSRCpath,
+                    "Svengine": svenginePath
+                }
             }
-        # Upgrade from version 2 to 4
-        elif self.options["version"] == 2:
-            newOptions = {
-                "defComp": 0,
-                "defGame": 0,
-                "defDPreset": 0,
-                "forceDefPaths": self.options["forceDefPaths"],
-                "save_paths": False,
-                "startFolder": self.options["startFolder"],
-                "theme": self.options["theme"],
-                "gsMV": {
-                    "selectedMV": self.options["gsMV"]["selectedMV"],
-                    "csPath": self.options["gsMV"]["csPath"]
-                },
-                "version": 4
-            }
-        # Upgrade from version 3 to 4
-        elif self.options["version"] == 3:
-            newOptions = {
-                "defComp": self.options["defComp"],
-                "defGame": self.options["defGame"],
-                "defDPreset": 0,
-                "forceDefPaths": self.options["forceDefPaths"],
-                "save_paths": False,
-                "startFolder": self.options["startFolder"],
-                "theme": self.options["theme"],
-                "gsMV": {
-                    "selectedMV": self.options["gsMV"]["selectedMV"],
-                    "csPath": self.options["gsMV"]["csPath"]
-                },
-                "version": 4
-            }
+            newPathJSON = open("save/paths.json", "w")
+            newJSON = json.dumps(newPaths, sort_keys=True, indent=5)
+            newPathJSON.write(newJSON)
+            newPathJSON.close()
         # Save the JSON data of the new options
         self.options = newOptions
         self.save_options()

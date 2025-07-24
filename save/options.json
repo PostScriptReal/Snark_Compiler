@@ -7,8 +7,8 @@
           "csPath": "",
           "selectedMV": 0
      },
-     "save_paths": false,
+     "save_paths": true,
      "startFolder": "~/Documents",
      "theme": "Freeman",
-     "version": 4
+     "version": 5
 }

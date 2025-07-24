@@ -352,14 +352,14 @@ class GUI(Tk):
 					"txt": "white",
 					"tt": "#dc5200"
 				}
-		if self.options["save_paths"]:
+		"""if self.options["save_paths"]:
 			self.save_paths = True
 			js = open("save/paths.json", 'r')
 			self.sPaths = json.loads(js.read())
 			self.bonez = self.sPaths["bonez"]
 			self.matfix = self.sPaths["matFix"]
 		else:
-			self.save_paths = False
+			self.save_paths = False"""
 		
 		self.chkVerTheme = thCol
 
