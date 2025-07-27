@@ -26,6 +26,16 @@ class MenuTemp():
         js = open("save/options.json", 'r')
         self.options = json.loads(js.read())
         js.close()
+    
+    def setPath(self, key:str="Snark", pathKey:str="", pathVal:str=""):
+        pathJSON = open("save/paths.json", "r")
+        paths = json.load(pathJSON)
+        pathJSON.close()
+        paths[key][pathKey] = pathVal
+        newPathJSON = open("save/paths.json", "w")
+        newPath = json.dumps(paths, indent=5, sort_keys=True)
+        newPathJSON.write(newPath)
+        newPathJSON.close()
 
 class SetupMenu():
     def __init__(self, template, master, updFunc, startHidden:bool=False, allowGUI:bool=True):
@@ -569,22 +579,21 @@ class BatchManagerM():
                     curMDL = batch[selection[0]]
                     if os.path.isabs(self.cPathVar.get()):
                         curMDL.output = self.cPathVar.get()
+                        if not os.path.exists(self.cPathVar.get()):
+                            os.mkdir(self.cPathVar.get())
                     else:
-                        fallbackFolder = os.path.dirname(listItems.get(0).mdlLoc)
-                        fallbackOutput = os.path.join(fallbackFolder, fallbackStr)
-                        curMDL.output = os.path.join(outputF, self.cPathVar.get())
+                        curMDL.output = "out"
+                        self.cPathVar.set("Please specify an ABSOLUTE path!")
                 elif not focus.get(0).startswith("Select a folder of "):
                     mdls = batch[int(selection[0]):selection[len(selection)-1]+1]
                     for i in mdls:
                         if os.path.isabs(self.cPathVar.get()):
                             i.output = self.cPathVar.get()
+                            if not os.path.exists(self.cPathVar.get()):
+                                os.mkdir(self.cPathVar.get())
                         else:
-                            fallbackFolder = os.path.dirname(listItems.get(0).mdlLoc)
-                            fallbackOutput = os.path.join(fallbackFolder, fallbackStr)
-                            if outputF != "":
-                                i.output = os.path.join(outputF, self.cPathVar.get())
-                            else:
-                                i.output = os.path.join(fallbackOutput, self.cPathVar.get())
+                            i.output = "out"
+                            self.cPathVar.set("Please specify an ABSOLUTE path!")
     
     def setBatch(self, batch, tab:str):
         if tab == 'comp':
@@ -746,12 +755,16 @@ class DecompMenu():
         thme = template.thme
         self.thme, self.safeWidth = thme, template.safeWidth
         self.batchManager = batchManager
+        self.menuTemp = template
         if self.safeWidth > 609:
             n = 2
             self.widthFix, self.conFix = self.widthFix-n, self.conFix-n
         self.quick = Frame(master, borderwidth=2, bg=thme["bg"])
         self.advOpt = Frame(master, borderwidth=2, bg=thme["bg"], relief="sunken")
         self.advOptR2 = Frame(self.advOpt, borderwidth=2, bg=thme["bg"])
+        js = open("save/paths.json", 'r')
+        self.csPaths = json.loads(js.read())
+        js.close()
         # Setting up options
         self.options = template.options
         self.presets = {
@@ -793,17 +806,28 @@ class DecompMenu():
         self.name = StringVar()
         self.nameEntry = Entry(master, textvariable=self.name, width=self.widthFix)
         self.nameEntry.bind("<FocusOut>", self.inputHandler)
+        if self.options["save_paths"]:
+            self.name.set(self.csPaths["Snark"]["decompileIn"])
         tOpts = ["File", "Folder"]
         self.typeSel = ttk.Combobox(master, values=tOpts, width=7)
         self.typeSel.set(tOpts[0])
+        self.typeSel.bind("<<ComboboxSelected>>", self.clearInput)
         self.out = StringVar()
+        if self.options["save_paths"]:
+            self.out.set(self.csPaths["Snark"]["decompileOut"])
+            if os.path.isdir(self.csPaths["Snark"]["decompileOut"]):
+                self.batchManager.decompOutput = self.csPaths["Snark"]["decompileOut"]
         self.outputEntry = Entry(master, textvariable=self.out, width=self.widthFix)
+        self.outputEntry.bind("<FocusOut>", self.outputHandler)
         self.mdlBrowse = Button(master, text='Browse', command=self.findMDL, cursor="hand2")
         self.outBrowse = Button(master, text='Browse', command=self.output, cursor="hand2")
         self.advOptLabel = Label(self.advOpt, text="Advanced Options")
         self.decomp = Button(master, text='Decompile', command=self.startDecomp, cursor="hand2")
         self.hlmv = Button(master, text='Open model in HLMV', command=self.openHLAM, cursor="hand2")
         self.console = Console(master, 'Start a decompile and the terminal output will appear here!', 0, 5, self.conFix, 12)
+        if self.options["save_paths"] and os.path.isdir(self.name.get()):
+            self.typeSel.set(tOpts[1])
+            self.getBatch(self.name.get())
         # Advanced options
         self.logVal = BooleanVar(self.advOpt, value=False)
         self.logChk = Checkbutton(self.advOpt, text="Write log to file", variable=self.logVal, command=self.setLog)
@@ -835,6 +859,10 @@ class DecompMenu():
     def setLog(self):
         self.logOutput = self.logVal.get()
     
+    def clearInput(self, e=None):
+        self.name.set("")
+        self.menuTemp.setPath(pathKey="decompileIn", pathVal="")
+    
     def openHLAM(self):
         print("Opening model in HLMV")
         # If "Half-Life Asset Manager" is selected
@@ -862,8 +890,15 @@ class DecompMenu():
     
     def inputHandler(self, e=False):
         self.name.set(self.nameEntry.get())
+        if self.options["save_paths"]:
+            self.menuTemp.setPath(pathKey="decompileIn", pathVal=self.name.get())
         if not self.name.get() == "" and self.options["gsMV"]["selectedMV"] > 0:
             self.hlmv.grid(column=1, row=4, pady=(10,0), sticky="w")
+    
+    def outputHandler(self, e=False):
+        self.out.set(self.outputEntry.get())
+        if self.options["save_paths"]:
+            self.menuTemp.setPath(pathKey="decompileOut", pathVal=self.out.get())
     
     def chPreset(self, e=False):
         self.presetDat = self.presets["presets"][self.presetSel.get()]
@@ -975,13 +1010,23 @@ class DecompMenu():
             userSel = askopenfilename(title="Select MDL", initialdir=startDir, filetypes=fileTypes)
             if userSel != "":
                 self.name.set(userSel)
+                if self.options["save_paths"]:
+                    self.menuTemp.setPath("Snark", "decompileIn", userSel)
             if not self.name.get() == "" and self.options["gsMV"]["selectedMV"] > 0:
                 self.hlmv.grid(column=1, row=4, pady=(10,0), sticky="w")
         else:
             userSel = askdirectory(title="Select Folder containing MDL files", initialdir=startDir)
             if userSel != "":
                 self.name.set(userSel)
+                newOutput = os.path.join(os.path.dirname(userSel), 'BATCH DECOMPILE/')
+                if not os.path.exists(newOutput):
+                    os.mkdir(newOutput)
+                self.out.set(newOutput)
+                self.batchManager.decompOutput = newOutput
                 self.getBatch(userSel)
+                if self.options["save_paths"]:
+                    self.menuTemp.setPath("Snark", "decompileIn", userSel)
+                    self.menuTemp.setPath("Snark", "decompileOut", self.out.get())
     
     def clearBatch(self):
         self.batchManager.clearBatch('decomp')
@@ -1010,6 +1055,8 @@ class DecompMenu():
         if userSel != "":
             self.out.set(userSel)
             self.batchManager.decompOutput = userSel
+            if self.options["save_paths"]:
+                self.menuTemp.setPath(pathKey="decompileOut", pathVal=userSel)
     
     def getArgs(self):
         args = []
@@ -1151,6 +1198,7 @@ class CompMenu():
         self.batchManager = batchManager
         thme = template.thme
         self.thme, self.safeWidth = thme, template.safeWidth
+        self.menuTemp = template
         self.advOptFix = True
         if self.curFont["family"].lower() == "nimbus sans l" or sys.platform == "win32":
             self.widthFix = self.widthFix+6
@@ -1184,13 +1232,21 @@ class CompMenu():
         self.setupLabel = Label(master, text="QC Input: ")
         self.nameLabel = Label(master, text="Output: ")
         self.name = StringVar()
+        if self.options["save_paths"]:
+            self.name.set(self.csPaths["Snark"]["compileIn"])
         self.nameEntry = Entry(master, textvariable=self.name, width=self.widthFix)
         tOpts = ["File", "Folder"]
         self.typeSel = ttk.Combobox(master, values=tOpts, width=7)
         self.typeSel.set(tOpts[0])
+        self.typeSel.bind("<<ComboboxSelected>>", self.clearInput)
         self.nameEntry.bind("<FocusOut>", self.inputHandler)
         self.out = StringVar()
+        if self.options["save_paths"]:
+            self.out.set(self.csPaths["Snark"]["compileOut"])
+            if os.path.isdir(self.csPaths["Snark"]["compileOut"]):
+                self.batchManager.decompOutput = self.csPaths["Snark"]["compileOut"]
         self.outputEntry = Entry(master, textvariable=self.out, width=self.widthFix)
+        self.outputEntry.bind("<FocusOut>", self.outputHandler)
         self.mdlBrowse = Button(master, text='Browse', command=self.findMDL, cursor="hand2")
         self.outBrowse = Button(master, text='Browse', command=self.output, cursor="hand2")
         self.compLabel = Label(self.selects, text="Compiler: ")
@@ -1273,14 +1329,21 @@ class CompMenu():
         self.pf2ChkTT = ToolTip(self.pf2Chk, "Forces power of 2 textures when enabled", background=thme["tt"], foreground=thme["txt"])
         self.mdlTT = ToolTip(self.mdlBrowse, "REQUIRED, specifies the QC file used to compile your model, you cannot leave this blank.", background=thme["tt"], foreground=thme["txt"])
         self.outputTT = ToolTip(self.outBrowse, "OPTIONAL, if an output folder is not specified, then it will place the compiled model in a subfolder of where the QC file is located.", background=thme["tt"], foreground=thme["txt"])
-
-        # Checking if the default compiler has the engine type Svengine.
-        self.compilerStuff()
         
         self.decomp = Button(master, text='Compile', command=self.startCompile, cursor="hand2")
         self.console = Console(master, 'Currently no warnings or errors!', 0, 5, self.conFix, 12)
+        fldrChk = False
+        if self.options["save_paths"] and os.path.isdir(self.name.get()):
+            self.typeSel.set(tOpts[1])
+            self.getBatch(self.name.get())
+            fldrChk = True
         if not startHidden:
             self.show()
+
+        # Checking if the default compiler has the engine type Svengine.
+        self.compilerStuff(isFolder=fldrChk)
+
+        self.batchErrors = []
         
         # Applying theme
         self.applyTheme(master)
@@ -1293,8 +1356,14 @@ class CompMenu():
     def setLog(self):
         self.logOutput = self.logVal.get()
     
+    def clearInput(self, e=None):
+        self.name.set("")
+        self.menuTemp.setPath(pathKey="compileIn", pathVal="")
+    
     def inputHandler(self, e=False):
         self.name.set(self.nameEntry.get())
+        if self.options["save_paths"]:
+            self.menuTemp.setPath(pathKey="compileIn", pathVal=self.name.get())
         self.compatChk()
         mdlPath = os.path.dirname(self.name.get())
         mdlPath = os.path.join(mdlPath, "models")
@@ -1324,6 +1393,11 @@ class CompMenu():
                 self.mdlPath = os.path.join(mdlPath, f)
                 self.hlmv.grid(column=1, row=4, pady=(10,0), sticky="w")
     
+    def outputHandler(self, e=False):
+        self.out.set(self.outputEntry.get())
+        if self.options["save_paths"]:
+            self.menuTemp.setPath(pathKey="compileOut", pathVal=self.out.get())
+    
     def dashThandler(self):
         if self.dashTbool.get():
             self.dashT.unlock()
@@ -1342,7 +1416,7 @@ class CompMenu():
         else:
             self.groupSB.lock()
     
-    def compilerStuff(self, event=None):
+    def compilerStuff(self, event=None, isFolder:bool=False):
         self.compJS = self.fullCJS["compilers"][self.compSel.get()]
         if self.compJS["type"].lower() == "svengine":
             self.svengine = True
@@ -1358,7 +1432,10 @@ class CompMenu():
                 self.pf2Chk.grid(column=1, row=2, sticky="w")
             else:
                 self.pf2Chk.grid(column=5, row=2, sticky="w")
-        self.compatChk()
+        if isFolder:
+            self.compatChk(enabled=False)
+        else:
+            self.compatChk()
     
     def openHLAM(self):
         # If "Half-Life Asset Manager" is selected
@@ -1542,6 +1619,8 @@ class CompMenu():
                 self.name.set(userSel)
                 self.compatChk()
                 self.clearBatch()
+                if self.options["save_paths"]:
+                    self.menuTemp.setPath(pathKey="compileIn", pathVal=userSel)
                 mdlPath = os.path.dirname(self.name.get())
                 mdlPath = os.path.join(mdlPath, "models")
                 if os.path.exists(mdlPath) and self.options["gsMV"]["selectedMV"] > 0:
@@ -1575,8 +1654,16 @@ class CompMenu():
             userSel = askdirectory(title="Select Folder containing your models", initialdir=startDir)
             if userSel != "":
                 self.name.set(userSel)
+                newOutput = os.path.join(os.path.dirname(userSel), 'BATCH COMPILE/')
+                if not os.path.exists(newOutput):
+                    os.mkdir(newOutput)
+                self.out.set(newOutput)
+                self.batchManager.compOutput = newOutput
                 self.compatChk(enabled=False)
                 self.getBatch(userSel)
+                if self.options["save_paths"]:
+                    self.menuTemp.setPath(pathKey="compileIn", pathVal=userSel)
+                    self.menuTemp.setPath("Snark", "compileOut", self.out.get())
     
     def clearBatch(self):
         self.batchManager.clearBatch('comp')
@@ -1670,7 +1757,9 @@ class CompMenu():
         userDir = askdirectory(title="Select Output Folder", initialdir=startDir)
         if userDir != "":
             self.out.set(userDir)
-            self.batchManager.compOutput = userSel
+            self.batchManager.compOutput = userDir
+            if self.options["save_paths"]:
+                self.menuTemp.setPath(pathKey="compileOut", pathVal=userDir)
     
     def getCompilerOptions(self):
         self.boolVars = []
@@ -1731,6 +1820,7 @@ class CompMenu():
         if self.typeSel.get() == "File":
             self.singleComp(self.name.get(), self.out.get(), SINGLE)
         else:
+            self.batchErrors = []
             mdls = self.batchManager.getBatch('comp')
             fallbackFolder = os.path.dirname(mdls[0].qcLoc)
             # fallbackOutput = os.path.join(fallbackFolder, "BATCH COMPILE")
@@ -1739,22 +1829,25 @@ class CompMenu():
                     continue
                 if m.output == "out":
                     if not self.out.get() == "" or not self.out.get() == None:
-                        self.singleComp(m.qcLoc, self.out.get(), BATCH)
+                        self.singleComp(m.qcLoc, self.out.get(), BATCH, m.name)
                     else:
-                        self.singleComp(m.qcLoc, fallbackOutput, BATCH)
+                        self.singleComp(m.qcLoc, fallbackOutput, BATCH, m.name)
                 else:
-                    self.singleComp(m.mdlLoc, m.output, BATCH)
+                    self.singleComp(m.mdlLoc, m.output, BATCH, m.name)
             consoleOutput = "All models have been compiled!"
             if self.out.get() == "" or self.out.get() == None:
                 consoleOutput = f"All models have been compiled!\nSince you did not specify an output folder, all the models that were set to be placed there are now somewhere else\nYou can find them in \'{fallbackOutput}\'"
+            if len(self.batchErrors) > 0:
+                consoleOutput = f"Some models were not compiled due to an error\nThese are {', '.join(self.batchErrors)}.\nPlease check the logs folder for details!"
             self.console.setOutput(consoleOutput)
     
-    def singleComp(self, mdl:str, out:str, batch:bool):
+    def singleComp(self, mdl:str, out:str, batch:bool, mdlName:str=""):
         mdl = mdl
         output = out
         tOutput = ''
         compilerPath = ''
         compilerFound = False
+        error = False
         forceDefault = self.options["forceDefPaths"]
         try:
             if forceDefault:
@@ -1818,8 +1911,8 @@ class CompMenu():
         else:
             self.console.setOutput("ERROR: Couldn't find compiler, have you installed it?")
         if compilerFound:
+            # print(tOutput)
             if not batch:
-                print(tOutput)
                 self.console.setOutput(tOutput)
             # Removing temporary QC file used to compile model when the QC file supplied had used relative pathing
             if qcRelChk.cbarFrmt:
@@ -1827,32 +1920,43 @@ class CompMenu():
             if self.logVal.get():
                 date = datetime.datetime.now()
                 curDate = f"{date.strftime('%d')}-{date.strftime('%m')}-{date.strftime('%Y')}-{date.strftime('%H')}-{date.strftime('%M')}-{date.strftime('%S')}"
-                log = open(f"logs/compile-{curDate}.txt", 'w')
+                if not batch:
+                    log = open(f"logs/compile-{curDate}.txt", 'w')
+                    log.write(tOutput)
+                    log.close()
+            if batch and tOutput.find('ERROR'):
+                self.batchErrors.append(mdlName)
+                date = datetime.datetime.now()
+                curDate = f"{date.strftime('%d')}-{date.strftime('%m')}-{date.strftime('%Y')}-{date.strftime('%H')}-{date.strftime('%M')}-{date.strftime('%S')}"
+                log = open(f"logs/batchCompile-{mdlName}-{curDate}.txt", 'w')
                 log.write(tOutput)
                 log.close()
+                error = True
             # Moving the compiled MDL file to the output folder
-            print(output)
-            mdlFolder = ""
-            if output == "" or output == None:
-                mdlFolder = qcRelChk.qcLoc
-                mdlFolder = os.path.join(mdlFolder, "models/")\
-                # If there is no models folder, make one!
-                if not os.path.exists(mdlFolder):
-                    os.mkdir(mdlFolder)
-            else:
-                mdlFolder = output
-            mdlF = qcRelChk.getMDLname()
-            self.mdlPath = os.path.join(mdlFolder, mdlF)
-            if not self.mdlPath == "" and self.options["gsMV"]["selectedMV"] > 0:
-                self.hlmv.grid(column=1, row=4, pady=(10,0), sticky="w")
-            # I'm doing this instead of directly copying the mdl file because depending on the options used (e.g. $externaltextures),
-            # the compiler will output more than one .mdl file which is needed in order for the compiled model to work.
-            # If you are using $externaltextures, the compiler will output a (mdlname).mdl file and (mdlname)T.mdl file,
-            # both of them are needed as one has the textures for the model and the other contains the model itself.
-            for f in os.listdir(os.getcwd()):
-                if f.find(".mdl") != -1:
-                    shutil.copy(f, os.path.join(mdlFolder, f))
-                    os.remove(os.path.join(os.getcwd(), f))
+            if not error:
+                mdlFolder = ""
+                if output == "" or output == None:
+                    mdlFolder = qcRelChk.qcLoc
+                    mdlFolder = os.path.join(mdlFolder, "models/")\
+                    # If there is no models folder, make one!
+                    if not os.path.exists(mdlFolder):
+                        os.mkdir(mdlFolder)
+                else:
+                    mdlFolder = output
+                    if not os.path.exists(mdlFolder):
+                        os.mkdir(mdlFolder)
+                mdlF = qcRelChk.getMDLname()
+                self.mdlPath = os.path.join(mdlFolder, mdlF)
+                if not self.mdlPath == "" and self.options["gsMV"]["selectedMV"] > 0:
+                    self.hlmv.grid(column=1, row=4, pady=(10,0), sticky="w")
+                # I'm doing this instead of directly copying the mdl file because depending on the options used (e.g. $externaltextures),
+                # the compiler will output more than one .mdl file which is needed in order for the compiled model to work.
+                # If you are using $externaltextures, the compiler will output a (mdlname).mdl file and (mdlname)T.mdl file,
+                # both of them are needed as one has the textures for the model and the other contains the model itself.
+                for f in os.listdir(os.getcwd()):
+                    if f.find(".mdl") != -1:
+                        shutil.copy(f, os.path.join(mdlFolder, f))
+                        os.remove(os.path.join(os.getcwd(), f))
 
 class AboutMenu():
     def __init__(self, template, master, startHidden:bool=False):
@@ -2052,8 +2156,9 @@ class OptionsMenu():
         self.presetSel.current(self.options["defDPreset"])
         self.presetDat = self.presets["presets"][self.presetSel.get()]
         self.presetSel.bind("<<ComboboxSelected>>", self.setDP)
-        self.spLabel = Label(master, text="Save paths")
-        self.forceDefault = Checkbutton(master, command=self.chFDP, variable=self.forceDefB)
+        self.spLabel = Label(master, text="Save paths: ")
+        self.savePathsB = BooleanVar(master, value=self.options["save_paths"])
+        self.savePathsCB = Checkbutton(master, command=self.chSP, variable=self.savePathsB)
         # Checking if anything is exceeding the width of the "safe zone"
         """self.show()
         self.checkWidth()
@@ -2065,6 +2170,7 @@ class OptionsMenu():
         self.forceDefTT = ToolTip(self.forceDefault, "By default, Snark prioritises the custom path you set over the default paths for compilers, enabling this will prioritise the default paths instead, meaning that Snark won't use the custom path if it finds the compiler in its default path.", background=thme["tt"], foreground=thme["txt"])
         self.hlmvTT = ToolTip(self.hlmvCBox, "Sets the model viewer you want to use when clicking the \"Open model in HLMV\" button, if this is set to None, the button will not show up!", background=thme["tt"], foreground=thme["txt"])
         self.setMVPtt = ToolTip(self.setMVP, "Sets the path to the model viewer you want to use if you select \"Other\"", background=thme["tt"], foreground=thme["txt"])
+        self.savePathsTT = ToolTip(self.savePathsCB, "Disabling this will make Snark go back to its old behaviour of not keeping the paths you set in the previous session. If you have high read/write speeds (above 30-40 MB/s), it's recommended that you leave this on, otherwise, turn it off.", background=thme["tt"], foreground=thme["txt"])
         if not startHidden:
             self.show()
         
@@ -2149,6 +2255,8 @@ class OptionsMenu():
         self.defPLabel.grid(column=1, row=6, sticky="w")
         self.gameSel.grid(column=2, row=5, sticky="w")
         self.presetSel.grid(column=2, row=6, sticky="w")
+        self.spLabel.grid(column=1, row=7, sticky="w")
+        self.savePathsCB.grid(column=2, row=7, sticky="w")
         self.hlmvLabel.grid_remove()
         self.hlmvCBox.grid_remove()
         self.mvPathLabel.grid_remove()
@@ -2170,6 +2278,8 @@ class OptionsMenu():
         self.defPLabel.grid_remove()
         self.gameSel.grid_remove()
         self.presetSel.grid_remove()
+        self.spLabel.grid_remove()
+        self.savePathsCB.grid_remove()
         self.hlmvLabel.grid(column=1, row=1, sticky="w")
         self.hlmvCBox.grid(column=2, row=1, sticky="w")
         self.mvPathLabel.grid(column=1, row=2, sticky="w")
@@ -2218,6 +2328,7 @@ class OptionsMenu():
         self.forceDefTT.changeTheme(newTheme["tt"], newTheme["txt"])
         self.hlmvTT.changeTheme(newTheme["tt"], newTheme["txt"])
         self.setMVPtt.changeTheme(newTheme["tt"], newTheme["txt"])
+        self.savePathsTT.changeTheme(newTheme["tt"], newTheme["txt"])
     
     def chSF(self):
         path = askdirectory(title="Set starting directory for this file explorer")
@@ -2291,6 +2402,11 @@ class OptionsMenu():
         self.options["forceDefPaths"] = self.forceDefB.get()
         self.save_options()
         self.updFunc("forceDefPaths", self.forceDefB.get())
+    
+    def chSP(self):
+        self.options["save_paths"] = self.savePathsB.get()
+        self.save_options()
+        self.updFunc("save_paths", self.savePathsB.get())
 
     
     def save_options(self):
@@ -2328,6 +2444,8 @@ class OptionsMenu():
             self.defPLabel.grid(column=1, row=6, sticky="w")
             self.gameSel.grid(column=2, row=5, sticky="w")
             self.presetSel.grid(column=2, row=6, sticky="w")
+            self.spLabel.grid(column=1, row=7, sticky="w")
+            self.savePathsCB.grid(column=2, row=7, sticky="w")
         elif self.curPage == 1:
             self.hlmvLabel.grid(column=1, row=1, sticky="w")
             self.hlmvCBox.grid(column=2, row=1, sticky="w")
