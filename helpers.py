@@ -43,7 +43,7 @@ class Console():
         self.miniTerminal['state'] = 'disabled'
     
     # Sets the output of the console to something else.
-    def setOutput(self, replace):
+    def setOutput(self, replace:str):
         self.miniTerminal['state'] = 'normal'
         self.miniTerminal.delete('1.0', 'end')
         self.miniTerminal.insert('1.0', replace)
@@ -54,7 +54,7 @@ class Console():
             self.lines.append(replace)
     
     # Appends a new line to the bottom of the console.
-    def append(self, e):
+    def append(self, e:str):
         self.miniTerminal['state'] = 'normal'
         self.miniTerminal.insert('end', e)
         self.lines.append(e)
@@ -101,9 +101,9 @@ class Console():
 
 class BoolEntry():
 
-    def __init__(self, master, textvariable, placeholder="placeholder", bg="white", fg="black"):
+    def __init__(self, master, textvariable, placeholder="placeholder", bg="white", fg="black", width=20):
         self.placeholder = placeholder
-        self.entry = Entry(master, state="disabled", textvariable=textvariable, bg=bg, fg=fg)
+        self.entry = Entry(master, state="disabled", textvariable=textvariable, bg=bg, fg=fg, width=width)
     
     def grid(self, column=0, row=0, padx=0, pady=0, sticky="nsew"):
         self.entry.grid(column=column, row=row, padx=padx, pady=pady, sticky=sticky)
@@ -426,3 +426,11 @@ class GamesHandler():
             if g.name == name and g.isCustom:
                 return True
         return False
+
+class BatchMDL():
+
+    def __init__(self, name:str, qcLoc:str, output:str):
+        self.name = name
+        self.qcLoc, self.mdlLoc = qcLoc, qcLoc
+        self.skip = False
+        self.output = output

@@ -1,4 +1,12 @@
 {
-     "GoldSRC": "",
-     "Svengine": ""
+     "Other": {
+          "GoldSRC": "",
+          "Svengine": ""
+     },
+     "Snark": {
+          "compileIn": "",
+          "compileOut": "",
+          "decompileIn": "",
+          "decompileOut": ""
+     }
 }

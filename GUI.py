@@ -27,7 +27,7 @@ class Flags:
 		self.devMode = False
 		# Flag specifically for Snark, scripts are currently not implemented yet and is a copy of the scripting system from SMD Tools v1.1
 		# This will allow me to disable the functionality for it until I come up with a proper implementation
-		self.allowScripts = False
+		self.allowScripts = True
 		# Another flag for Snark, it disables booting to the "games" menu and makes the menu show a "This menu will be completed soon" message
 		# instead of showing the menu
 		self.allowGames = True
@@ -285,8 +285,9 @@ class GUI(Tk):
 		self.selTheme = self.options["theme"]
 
 		winSizeFile = False
-		if sys.platform == "linux" and os.path.exists("WinSize.txt"):
-			wsFile = open("WinSize.txt", "r")
+		winSizeVer = 2
+		if sys.platform == "linux" and os.path.exists(f"WinSize{winSizeVer}.txt"):
+			wsFile = open(f"WinSize{winSizeVer}.txt", "r")
 			ws = wsFile.readlines()
 			wsFile.close()
 			winSizeFile = True
@@ -351,14 +352,14 @@ class GUI(Tk):
 					"txt": "white",
 					"tt": "#dc5200"
 				}
-		if self.options["save_paths"]:
+		"""if self.options["save_paths"]:
 			self.save_paths = True
 			js = open("save/paths.json", 'r')
 			self.sPaths = json.loads(js.read())
 			self.bonez = self.sPaths["bonez"]
 			self.matfix = self.sPaths["matFix"]
 		else:
-			self.save_paths = False
+			self.save_paths = False"""
 		
 		self.chkVerTheme = thCol
 
@@ -405,7 +406,7 @@ class GUI(Tk):
 		self.comp_button = Button(self.header, text="Compile", command=self.cmp_menu, bg=thCol["btn"][0], cursor="hand2")
 		self.comp_button.grid(column=3, row=0, sticky=(N), ipadx=buttonPad)
 
-		self.scripts = Button(self.header, text="Scripts", command=self.scripts, bg=thCol["btn"][0], cursor="hand2")
+		self.scripts = Button(self.header, text="Batch Manager", command=self.scripts, bg=thCol["btn"][0], cursor="hand2")
 		self.scripts.grid(column=4, row=0, sticky=(N), ipadx=buttonPad)
 		
 		self.options = Button(self.header, text="Options", command=self.optionsMenu, bg=thCol["btn"][0], cursor="hand2")
@@ -436,11 +437,16 @@ class GUI(Tk):
 		self.dumbFixMenu4.grid(column=0, row=2, sticky="nsew", columnspan=10)
 		self.compSetMenu = CompSetupMenu(self.mTemplate, self.dumbFixMenu4, self.updateComps, self.flags.allowGames)
 		self.dumbFixMenu4.grid_remove()
+
+		if self.flags.allowScripts:
+			self.dumbFixMenu5.grid(column=0, row=2, sticky="nsew", columnspan=10)
+			self.batchMenu = BatchManagerM(self.mTemplate, self.dumbFixMenu5, True)
+			self.dumbFixMenu5.grid_remove()
 		
-		self.decMenu = DecompMenu(self.mTemplate, menu, True)
+		self.decMenu = DecompMenu(self.mTemplate, menu, self.batchMenu, True)
 		
 		self.dumbFixMenu.grid(column=0, row=2, sticky="nsew", columnspan=10)
-		self.cmpMenu = CompMenu(self.mTemplate, self.dumbFixMenu, False)
+		self.cmpMenu = CompMenu(self.mTemplate, self.dumbFixMenu, self.batchMenu, False)
 		if winSizeFile:
 			self.dumbFixMenu.grid_remove()
 			self.cmpMenu.hidden = True
@@ -448,11 +454,7 @@ class GUI(Tk):
 		self.dumbFixMenu2.grid(column=0, row=2, sticky="nsew", columnspan=10)
 		self.abtMenu = AboutMenu(self.mTemplate, self.dumbFixMenu2, True)
 		self.dumbFixMenu2.grid_remove()
-		
-		if self.flags.allowScripts:
-			self.dumbFixMenu5.grid(column=0, row=2, sticky="nsew", columnspan=10)
-			self.scrMenu = ScriptMenu(self.mTemplate, self.dumbFixMenu5, True)
-			self.dumbFixMenu5.grid_remove()
+
 		# Getting the maximum height
 		if not self.cmpMenu.hidden or winSizeFile:
 			if winSizeFile and not ws[1] == "":
@@ -472,8 +474,8 @@ class GUI(Tk):
 		else:
 			self.geometry("501x443")
 		
-		if not os.path.exists("WinSize.txt"):
-			wsf = open("WinSize.txt", "w")
+		if not os.path.exists(f"WinSize{winSizeVer}.txt"):
+			wsf = open(f"WinSize{winSizeVer}.txt", "w")
 			wsf.write(f"{self.goodWidth}\n{self.goodHeight}")
 			wsf.close()
 
@@ -504,6 +506,8 @@ class GUI(Tk):
 			browser.open_new('https://github.com/PostScriptReal/Snark_Compiler/wiki/How-to-use-Snark#decompiling')
 		elif not self.optMenu.hidden and self.optMenu.curPage == 1:
 			browser.open_new('https://github.com/PostScriptReal/Snark_Compiler/wiki/How-to-use-Snark#setting-up-hlamhlmv-for-snark')
+		elif not self.batchMenu.hidden:
+			browser.open_new('https://github.com/PostScriptReal/Snark_Compiler/wiki/How-to-use-Snark#batch-decompiling-and-compiling')
 		else:
 			browser.open_new('https://github.com/PostScriptReal/Snark_Compiler/wiki')
 	
@@ -577,13 +581,13 @@ class GUI(Tk):
 		self.decMenu.changeTheme(thCol)
 		self.optMenu.changeTheme(thCol)
 		self.compSetMenu.changeTheme(thCol)
-		self.scrMenu.changeTheme(thCol)
+		self.batchMenu.changeTheme(thCol)
 		self.setupMenu.master.config(bg=thCol["bg"])
 		self.cmpMenu.master.config(bg=thCol["bg"])
 		self.abtMenu.master.config(bg=thCol["bg"])
 		self.optMenu.master.config(bg=thCol["bg"])
 		self.compSetMenu.master.config(bg=thCol["bg"])
-		self.scrMenu.master.config(bg=thCol["bg"])
+		self.batchMenu.master.config(bg=thCol["bg"])
 		self.frame.config(bg=thCol["bg"])
 		self.header.config(bg=thCol["bg"])
 		for w in self.header.winfo_children():
@@ -609,7 +613,7 @@ class GUI(Tk):
 			self.decMenu.hide()
 			self.optMenu.hide()
 			if self.flags.allowScripts:
-				self.scrMenu.hide()
+				self.batchMenu.hide()
 	
 	def updateOpt(self, key, val):
 		self.setupMenu.updateOpt(key, val)
@@ -619,7 +623,7 @@ class GUI(Tk):
 		self.decMenu.updateOpt(key, val)
 		self.optMenu.updateOpt(key, val)
 		if self.flags.allowScripts:
-			self.scrMenu.updateOpt(key, val)
+			self.batchMenu.updateOpt(key, val)
 	
 	def updateGames(self, comp):
 		self.cmpMenu.updateGames(comp)
@@ -641,7 +645,7 @@ class GUI(Tk):
 			self.decMenu.hide()
 			self.optMenu.show()
 			if self.flags.allowScripts:
-				self.scrMenu.hide()
+				self.batchMenu.hide()
 	
 	def openfile(self):
 		startDir = self.options["startFolder"]
@@ -678,7 +682,7 @@ class GUI(Tk):
 			self.abtMenu.hide()
 			self.optMenu.hide()
 			if self.flags.allowScripts:
-				self.scrMenu.hide()
+				self.batchMenu.hide()
 	
 	def cmpSetupMenu(self):
 		if self.compSetMenu.hidden:
@@ -694,7 +698,7 @@ class GUI(Tk):
 			self.abtMenu.hide()
 			self.optMenu.hide()
 			if self.flags.allowScripts:
-				self.scrMenu.hide()
+				self.batchMenu.hide()
 		
 	
 	""" Switches menu to Decompile Menu """
@@ -712,7 +716,7 @@ class GUI(Tk):
 			self.optMenu.hide()
 			self.compSetMenu.hide()
 			if self.flags.allowScripts:
-				self.scrMenu.hide()
+				self.batchMenu.hide()
 	
 	""" Switches menu to Compile Menu """
 	def cmp_menu(self):
@@ -729,12 +733,12 @@ class GUI(Tk):
 			self.abtMenu.hide()
 			self.optMenu.hide()
 			if self.flags.allowScripts:
-				self.scrMenu.hide()
+				self.batchMenu.hide()
 			# print(f"width: {self.winfo_width()} height: {self.winfo_height()}")
 	
 	def scripts(self):
 		if self.flags.allowScripts:
-			if self.scrMenu.hidden:
+			if self.batchMenu.hidden:
 				self.setupMenu.hide()
 				self.compSetMenu.hide()
 				self.dumbFixMenu.grid_remove()
@@ -746,7 +750,7 @@ class GUI(Tk):
 				self.decMenu.hide()
 				self.abtMenu.hide()
 				self.optMenu.hide()
-				self.scrMenu.show()
+				self.batchMenu.show()
 		else:
 			a = ScriptWin()
 	
