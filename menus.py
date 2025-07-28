@@ -1104,7 +1104,7 @@ class DecompMenu():
             self.console.setOutput(consoleOutput)
 
     
-    def singleDec(self, mdl:str, out:str, batch:bool, mdlName:str, fallback:bool):
+    def singleDec(self, mdl:str, out:str, batch:bool, mdlName:str="", fallback:bool=False):
         mdl = mdl
         output = out
         decOut = "./MDLDEC/"
@@ -1122,25 +1122,28 @@ class DecompMenu():
         tOutput = ''
         if sys.platform == 'linux':
             if gotArgs:
-                tOutput = subprocess.getoutput(f'./third_party/mdldec -a {cmdArgs} \"{mdl}\" \"{decOut}\"')
+                tOutput = subprocess.getoutput(f'./third_party/mdldec -a {cmdArgs} \"{mdl}\" \"{output}\"')
             else:
-                tOutput = subprocess.getoutput(f'./third_party/mdldec -a \"{mdl}\" \"{decOut}\"')
+                tOutput = subprocess.getoutput(f'./third_party/mdldec -a \"{mdl}\" \"{output}\"')
         elif sys.platform == 'win32':
             if gotArgs:
-                tOutput = subprocess.getoutput(f'\"{os.getcwd()}/third_party/mdldec.exe\" -a {cmdArgs} \"{mdl}\" \"{decOut}\"')
+                tOutput = subprocess.getoutput(f'\"{os.getcwd()}/third_party/mdldec.exe\" -a {cmdArgs} \"{mdl}\" \"{output}\"')
             else:
-                tOutput = subprocess.getoutput(f'\"{os.getcwd()}/third_party/mdldec.exe\" -a \"{mdl}\" \"{decOut}\"')
+                tOutput = subprocess.getoutput(f'\"{os.getcwd()}/third_party/mdldec.exe\" -a \"{mdl}\" \"{output}\"')
         # I don't have a Mac so I can't compile mdldec to Mac targets :(
         # So instead I have to use wine for Mac systems
         """elif sys.platform == 'darwin':
             tOutput = subprocess.getoutput(f'wine third_party/mdldec_win32.exe \"{mdl}\"')"""
         # Checking for errors (especially the 'unknown Studio MDL format')
+        v6MDL = False
         if tOutput.find("unknown Studio MDL format version 6") != -1:
             error = True
             if sys.platform == 'linux':
+                v6MDL = True
                 shutil.copy(mdl, './')
-                tOutput = subprocess.getoutput(f'wine \"{os.getcwd()}/third_party/mdl6dec.exe\" \"{os.path.basename(mdl)}\" -p \"MDL6job\"')
-                os.remove(f"{os.path.basename(mdl)}")
+                v6MDLname = os.path.basename(mdl)
+                tOutput = subprocess.getoutput(f'wine \"{os.getcwd()}/third_party/mdl6dec.exe\" \"{v6MDLname}\" -p \"MDL6job\"')
+                os.remove(f"{v6MDLname}")
                 # Moving the decompiler output to the output folder!
                 if not os.path.exists(output):
                     os.mkdir(output)
@@ -1149,6 +1152,8 @@ class DecompMenu():
                     shutil.copy(f"MDL6job/{f}", os.path.join(output, f))
                 shutil.rmtree('MDL6job')
             else:
+                v6MDL = True
+                v6MDLname = os.path.basename(mdl)
                 tOutput = subprocess.getoutput(f'\"{os.getcwd()}/third_party/mdl6dec.exe\" \"{mdl}\" -p \"{output}\"')
         elif tOutput.find("ERROR:") != -1:
             error = True
@@ -1162,7 +1167,7 @@ class DecompMenu():
             log.write(tOutput)
             log.close()
         # Moving files to output directory (this is a workaround to a bug with Xash3D's model decompiler, where absolute paths result in an error)
-        if not error:
+        """if not error:
             if batch and fallback and not os.path.exists(os.path.dirname(output)):
                 os.mkdir(os.path.dirname(output))
             if not os.path.exists(output):
@@ -1188,7 +1193,7 @@ class DecompMenu():
                 shutil.rmtree(anims)
             except:
                 pass
-            shutil.rmtree(decOut)
+            shutil.rmtree(decOut)"""
 
 class CompMenu():
     def __init__(self, template, master, batchManager:BatchManagerM, startHidden:bool=False):
