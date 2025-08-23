@@ -12,7 +12,9 @@ from helpers import BoolEntry, Console, BoolSpinbox, QCHandler, HyperlinkImg, Ga
 import json
 import sys
 import jsonc
-from interp import SSTReader
+# from interp import SSTReader
+from platform import freedesktop_os_release as distroInfo
+import pyperclip
 
 DECOMP_TAB = 0
 COMP_TAB = 1
@@ -26,6 +28,7 @@ class MenuTemp():
         js = open("save/options.json", 'r')
         self.options = json.loads(js.read())
         js.close()
+        print(distroInfo())
     
     def setPath(self, key:str="Snark", pathKey:str="", pathVal:str=""):
         pathJSON = open("save/paths.json", "r")
@@ -1979,6 +1982,7 @@ class AboutMenu():
         self.snarkLogo = Label(master, image=self.snarkLogoPNG)
         self.githubLogo = HyperlinkImg(master, image=self.gitLogoPNG, lID=0)
         self.gameBLogo = HyperlinkImg(master, image=self.gbLogoPNG, lID=1)
+        self.getDistro = Button(master, text='Get Distro Information', command=self.grabOSRel, cursor="hand2")
         # Text
         vnum = open('version.txt', "r")
         self.ver = vnum.read().replace("(OS)", sys.platform)
@@ -1990,6 +1994,7 @@ class AboutMenu():
         # Tooltips
         self.githubTT = ToolTip(self.githubLogo.link, "Source Code and Releases on Github", background=thme["tt"], foreground=thme["txt"])
         self.gameBtt = ToolTip(self.gameBLogo.link, "Official Download page on Gamebanana", background=thme["tt"], foreground=thme["txt"])
+        self.getDistroTT = ToolTip(self.getDistro, "Clicking this will copy the information for your Linux distro to your clipboard, make sure xclip is installed or this won't work.", background=thme["tt"], foreground=thme["txt"])
         if not startHidden:
             self.show()
         
@@ -2034,12 +2039,17 @@ class AboutMenu():
         self.applyTheme(self.master)
         self.githubTT.changeTheme(newTheme["tt"], newTheme["txt"])
         self.gameBtt.changeTheme(newTheme["tt"], newTheme["txt"])
+        self.getDistroTT.changeTheme(newTheme["tt"], newTheme["txt"])
 
     def updateOpt(self, key, value):
         if not key.startswith("gsMV"):
             self.options[key] = value
         else:
             self.options["gsMV"][key.replace("gsMV", "")] = value
+    
+    def grabOSRel(self):
+        pyperclip.copy(distroInfo())
+        print("The information for your Linux distro has been copied to your clipboard!")
     
     def hide(self):
         self.hidden = True
@@ -2052,6 +2062,8 @@ class AboutMenu():
         self.gameBLogo.grid(column=1,row=1, padx=(50,0))
         self.setupLabel.grid(column=1, row=2)
         self.nameLabel.grid(column=1, row=3)
+        if sys.platform == 'linux':
+            self.getDistro.grid(column=1, row=4, pady=(30,0))
 
 class OptionsMenu():
     def __init__(self, template, master, thmecallback, updFunc, startHidden:bool=False):
@@ -2064,9 +2076,9 @@ class OptionsMenu():
         self.updFunc = updFunc
         # Grabbing options
         self.options = template.options
-        self.curJSONVer = 5
+        self.curJSONVer = 6
         # Checking if options JSON is from a previous version...
-        if not self.options["version"] == self.curJSONVer:
+        if not self.options["version"] >= self.curJSONVer:
             self.upgradeJSON()
         # Pages
         self.pageButtons = Frame(master, borderwidth=2, bg=thme["bg"])
@@ -2197,10 +2209,11 @@ class OptionsMenu():
         startingFolder = self.options.get("startFolder", "~/Documents")
         theme = self.options.get("theme", "Freeman")
         goldSRCModelViewer = self.options.get("gsMV", {"selectedMV": 0, "csPath": ""})
+        linuxWinFix = self.options.get("linuxFix", "KDE")
         if self.options["version"] < 5:
             savePaths = True
             upgradePaths = True
-        # Upgrade from version 1 to 4
+        # Upgrade from version 1 to 6
         newOptions = {
             "defComp": defaultComp,
             "defGame": defaultGame,
@@ -2210,6 +2223,7 @@ class OptionsMenu():
             "startFolder": startingFolder,
             "theme": theme,
             "gsMV": goldSRCModelViewer,
+            "linuxFix": linuxWinFix,
             "version": self.curJSONVer
         }
         if upgradePaths:

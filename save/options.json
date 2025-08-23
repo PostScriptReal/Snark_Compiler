@@ -7,8 +7,9 @@
           "csPath": "",
           "selectedMV": 0
      },
+     "linuxFix": "Cinnamon",
      "save_paths": true,
      "startFolder": "~/Documents",
      "theme": "Freeman",
-     "version": 5
+     "version": 6
 }

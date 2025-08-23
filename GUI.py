@@ -16,6 +16,7 @@ from menus import *
 import jsonc
 import certifi
 import ssl
+from am_i_connected import CheckThereIsConnection
 
 selected_scr = ''
 scr_dat = ''
@@ -71,58 +72,6 @@ class Interp:
 		print(scr)
 		scr_dat = [self.mode, scr]
 		guii.exec_script(scr_dat)
-
-class ScriptWin:
-
-	def __init__(self):
-		self.nroot = Tk()
-		self.win()
-		self.nroot.mainloop()
-
-	def win(self):
-		self.flags = Flags()
-		self.nroot.title("Scripts")
-
-		frame = Frame(self.nroot, borderwidth=2, relief="sunken")
-		frame.grid(column=1, row=1, sticky=(N, E, S, W))
-		self.nroot.columnconfigure(1, weight=1)
-		self.nroot.rowconfigure(1, weight=1)
-
-		if self.flags.allowScripts:
-			self.scripts = []
-			if getattr(sys, 'frozen', False):
-				EXE_LOCATION = os.path.dirname( sys.executable )
-			else:
-				EXE_LOCATION = os.path.dirname( os.path.realpath( __file__ ) )
-			scr_dir = os.path.join(EXE_LOCATION, "scripts")
-			for s in os.listdir(scr_dir):
-				self.scripts.append(s.replace('.txt', ''))
-			print(self.scripts)
-
-			self.scr_list = Listbox(frame)
-			self.scr_list.grid(column=1, row=1, sticky=(N, S, E, W), padx=40, pady=(40, 0), rowspan=5)
-			count = 0
-			for n in self.scripts:
-				count += 1
-				self.scr_list.insert(count, n)
-
-			select_scr = Button(frame, text="Select", command=self.select)
-			select_scr.grid(column=1, row=6, sticky=(S))
-		else:
-			b_smd = Label(frame, text=f"Proper script functionality will be implemented in a future release,\nfor now though, the script button is here so I don't have to\ncompletely remodel the GUI with its removal.")
-			b_smd.grid(column=1, row=1, sticky=(S), padx=25, pady=25)
-
-			select_scr = Button(frame, text="I understand", command=self.close)
-			select_scr.grid(column=1, row=6, sticky=(S))
-	def close(self):
-		self.nroot.destroy()
-
-	def select(self):
-		global selected_scr
-		selected_scr = self.scripts[int(self.scr_list.curselection()[0])]
-		print(selected_scr)
-		scr_interp = Interp(selected_scr)
-		self.nroot.destroy()
 
 class OptWin:
 
@@ -261,15 +210,16 @@ class GUI(Tk):
 	
 	def check_version(self):
 		url = "https://github.com/PostScriptReal/Snark_Compiler/raw/refs/heads/main/version.txt"
-		webVer = urlopen(url, context=ssl.create_default_context(cafile=certifi.where())).read().decode('utf-8')
-		print(webVer)
+		if CheckThereIsConnection():
+			webVer = urlopen(url, context=ssl.create_default_context(cafile=certifi.where())).read().decode('utf-8')
+			print(webVer)
 
-		# Don't you dare make a Fortnite joke
-		vFile = open("version.txt", "r")
-		curVer = vFile.read()
+			# Don't you dare make a Fortnite joke
+			vFile = open("version.txt", "r")
+			curVer = vFile.read()
 
-		if curVer != webVer:
-			a = GetNewVersion(webVer, self.chkVerTheme)
+			if curVer != webVer:
+				a = GetNewVersion(webVer, self.chkVerTheme)
 
 	def __init__(self):
 		super().__init__()
@@ -370,9 +320,7 @@ class GUI(Tk):
 		self.frame = Frame(self, borderwidth=2, relief="sunken", bg=thCol["bg"])
 		self.frame.grid(column=6, row=2, sticky=(N, E, S, W))
 		self.header = Frame(self.frame, borderwidth=2, bg=thCol["bg"])
-		self.header.grid(column=1, row=1, sticky=(N, W, E), columnspan=69)
-		mtbtns = Frame(self.frame, borderwidth=2, bg=thCol["bg"])
-		mtbtns.grid(column=1, row=9, sticky=(S), columnspan=69)
+		self.header.grid(column=0, row=1, sticky=(N, W, E), columnspan=69)
 		menu = Frame(self.frame, borderwidth=2, bg=thCol["bg"])
 		menu.grid(column=0, row=2, sticky=(W, S), columnspan=69)
 		"""
@@ -395,28 +343,28 @@ class GUI(Tk):
 
 		# Create Header Buttons
 		self.dupe_button = Button(self.header, text="Games", command=self.bd_menu, bg=thCol["btn"][0], cursor="hand2")
-		self.dupe_button.grid(column=0, row=0, sticky=(N), ipadx=buttonPad)
+		self.dupe_button.grid(column=0, row=0, sticky="nw", ipadx=buttonPad)
 
 		self.cmpiler_button = Button(self.header, text="Compilers", command=self.cmpSetupMenu, bg=thCol["btn"][0], cursor="hand2")
-		self.cmpiler_button.grid(column=1, row=0, sticky=(N), ipadx=buttonPad)
+		self.cmpiler_button.grid(column=1, row=0, sticky="nw", ipadx=buttonPad)
 
 		self.mat_button = Button(self.header, text="Decompile", command=self.mnc_menu, bg=thCol["btn"][0], cursor="hand2")
-		self.mat_button.grid(column=2, row=0, sticky=(N), ipadx=buttonPad)
+		self.mat_button.grid(column=2, row=0, sticky="nw", ipadx=buttonPad)
 
 		self.comp_button = Button(self.header, text="Compile", command=self.cmp_menu, bg=thCol["btn"][0], cursor="hand2")
-		self.comp_button.grid(column=3, row=0, sticky=(N), ipadx=buttonPad)
+		self.comp_button.grid(column=3, row=0, sticky="nw", ipadx=buttonPad)
 
 		self.scripts = Button(self.header, text="Batch Manager", command=self.scripts, bg=thCol["btn"][0], cursor="hand2")
-		self.scripts.grid(column=4, row=0, sticky=(N), ipadx=buttonPad)
+		self.scripts.grid(column=4, row=0, sticky="nw", ipadx=buttonPad)
 		
 		self.options = Button(self.header, text="Options", command=self.optionsMenu, bg=thCol["btn"][0], cursor="hand2")
-		self.options.grid(column=6, row=0, sticky=(N), ipadx=buttonPad)
+		self.options.grid(column=6, row=0, sticky="nw", ipadx=buttonPad)
 
 		self.help = Button(self.header, text="Help", command=self.help, bg=thCol["btn"][0], cursor="hand2")
-		self.help.grid(column=7, row=0, sticky=(N), ipadx=buttonPad)
+		self.help.grid(column=7, row=0, sticky="nw", ipadx=buttonPad)
 		
 		self.aboutB = Button(self.header, text="About", command=self.about, cursor="hand2")
-		self.aboutB.grid(column=5, row=0, sticky=(N), ipadx=buttonPad)
+		self.aboutB.grid(column=5, row=0, sticky="nw", ipadx=buttonPad)
 
 		# Getting the width of the window before adding in the menus so I can fix the width of the window on different OSs/distros
 		if winSizeFile and not ws[0] == "":

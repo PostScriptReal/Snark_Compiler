@@ -4,7 +4,7 @@ from tkinter.filedialog import askopenfilename, askdirectory
 import os
 import sys
 import subprocess
-import yaml
+# import yaml
 
 # Class that gets information from the script header (the lines of text sandwiched inbetween the dashes)
 class SSTVer:
