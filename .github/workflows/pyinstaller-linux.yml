@@ -19,7 +19,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install pyinstaller
-          pip install jsonc-with-comments
+          pip install jsoncparser
           pip install certifi
           pip install am-i-connected
           pip install pyperclip
