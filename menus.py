@@ -28,7 +28,8 @@ class MenuTemp():
         js = open("save/options.json", 'r')
         self.options = json.loads(js.read())
         js.close()
-        print(distroInfo())
+        divider = "--------------------------------------------------------------------------------"
+        print(f"DISTRO INFORMATION:{divider[19:]}\n{distroInfo()}\n{divider}")
     
     def setPath(self, key:str="Snark", pathKey:str="", pathVal:str=""):
         pathJSON = open("save/paths.json", "r")
@@ -466,17 +467,20 @@ class BatchManagerM():
         self.opts = Frame(master, borderwidth=2, bg=thme["bg"], relief="sunken")
         self.tabs = Frame(master, borderwidth=2, bg=thme["bg"])
         # Setting up options
-        js = open("save/options.json", 'r')
-        self.options = json.loads(js.read())
-        js.close()
+        self.options = template.options
+        self.linuxWFix = 0
+        self.batchListFix = 0
+        if self.options["linuxFix"] == "Cinnamon":
+            self.linuxWFix = 4
+            self.batchListFix = 6
         self.mdls = []
         
         self.decompTab = Button(self.tabs, text="Decompiling", cursor="hand2", command=self.switchTabDecomp)
         self.compTab = Button(self.tabs, text="Compiling", cursor="hand2", command=self.switchTabComp)
         
-        self.qc_list = Listbox(master, width=self.widthFix, selectmode=EXTENDED, height=15)
+        self.qc_list = Listbox(master, width=self.widthFix-self.batchListFix, selectmode=EXTENDED, height=15)
         self.qc_list.insert(0, self.blankClistStr)
-        self.mdl_list = Listbox(master, width=self.widthFix, selectmode=EXTENDED, height=15)
+        self.mdl_list = Listbox(master, width=self.widthFix-self.batchListFix, selectmode=EXTENDED, height=15)
         self.mdl_list.insert(0, self.blankDlistStr)
         self.qc_list.bind("<<ListboxSelect>>", self.lbSelHandler)
         self.mdl_list.bind("<<ListboxSelect>>", self.lbSelHandler)
@@ -489,7 +493,7 @@ class BatchManagerM():
         self.pathSelVar = BooleanVar(self.opts, value=True)
         self.pathSel = Checkbutton(self.opts, text="Use Output Path", variable=self.pathSelVar, command=self.cPathChk)
         self.cPathVar = StringVar(self.opts, value="")
-        self.cPath = BoolEntry(self.opts, textvariable=self.cPathVar, placeholder="", width=27)
+        self.cPath = BoolEntry(self.opts, textvariable=self.cPathVar, placeholder="", width=27-self.linuxWFix)
         self.pathBrowse = Button(self.opts, text='Save Path', command=self.getCPath, cursor="hand2")
         if not startHidden:
             self.show()
@@ -737,7 +741,7 @@ class BatchManagerM():
         # self.runBtn.grid(column=0, row=1)
         self.opts.grid(column=0, row=2, sticky="nsew", pady=(10,0))
         self.skipMDL.grid(column=0, row=0, pady=15)
-        self.cPathLabel.grid(column=1, row=0, padx=10)
+        self.cPathLabel.grid(column=1, row=0, padx=10-self.linuxWFix)
         self.pathSel.grid(column=2, row=0)
         self.cPath.grid(column=3, row=0, padx=5, pady=15)
         self.pathBrowse.grid(column=4, row=0)
@@ -770,6 +774,11 @@ class DecompMenu():
         js.close()
         # Setting up options
         self.options = template.options
+        self.linuxWFix = 0
+        self.conWFix = 0
+        if self.options["linuxFix"] == "Cinnamon":
+            self.linuxWFix = 2
+            self.conWFix = 6
         self.presets = {
             "presets": {
                 # For most compilers
@@ -807,12 +816,12 @@ class DecompMenu():
         self.presetDat = self.presets["presets"][self.presetSel.get()]
         self.presetSel.bind("<<ComboboxSelected>>", self.chPreset)
         self.name = StringVar()
-        self.nameEntry = Entry(master, textvariable=self.name, width=self.widthFix)
+        self.nameEntry = Entry(master, textvariable=self.name, width=self.widthFix-self.linuxWFix)
         self.nameEntry.bind("<FocusOut>", self.inputHandler)
         if self.options["save_paths"]:
             self.name.set(self.csPaths["Snark"]["decompileIn"])
         tOpts = ["File", "Folder"]
-        self.typeSel = ttk.Combobox(master, values=tOpts, width=7)
+        self.typeSel = ttk.Combobox(master, values=tOpts, width=7-self.linuxWFix)
         self.typeSel.set(tOpts[0])
         self.typeSel.bind("<<ComboboxSelected>>", self.clearInput)
         self.out = StringVar()
@@ -820,14 +829,14 @@ class DecompMenu():
             self.out.set(self.csPaths["Snark"]["decompileOut"])
             if os.path.isdir(self.csPaths["Snark"]["decompileOut"]):
                 self.batchManager.decompOutput = self.csPaths["Snark"]["decompileOut"]
-        self.outputEntry = Entry(master, textvariable=self.out, width=self.widthFix)
+        self.outputEntry = Entry(master, textvariable=self.out, width=self.widthFix-self.linuxWFix)
         self.outputEntry.bind("<FocusOut>", self.outputHandler)
         self.mdlBrowse = Button(master, text='Browse', command=self.findMDL, cursor="hand2")
         self.outBrowse = Button(master, text='Browse', command=self.output, cursor="hand2")
         self.advOptLabel = Label(self.advOpt, text="Advanced Options")
         self.decomp = Button(master, text='Decompile', command=self.startDecomp, cursor="hand2")
         self.hlmv = Button(master, text='Open model in HLMV', command=self.openHLAM, cursor="hand2")
-        self.console = Console(master, 'Start a decompile and the terminal output will appear here!', 0, 5, self.conFix, 12)
+        self.console = Console(master, 'Start a decompile and the terminal output will appear here!', 0, 5, self.conFix-self.conWFix, 12)
         if self.options["save_paths"] and os.path.isdir(self.name.get()):
             self.typeSel.set(tOpts[1])
             self.getBatch(self.name.get())
@@ -1209,8 +1218,6 @@ class CompMenu():
         self.menuTemp = template
         self.advOptFix = True
         if self.curFont["family"].lower() == "nimbus sans l" or sys.platform == "win32":
-            self.widthFix = self.widthFix+6
-            self.conFix = self.conFix-7
             self.advOptFix = False
         elif self.safeWidth > 609:
             self.advOptFix = False
@@ -1231,9 +1238,11 @@ class CompMenu():
         self.profiles = json.loads(js.read())
         js.close()
         self.options = template.options
-        if self.safeWidth > 659:
-            n = 2
-            self.widthFix, self.conFix = self.widthFix-n, self.conFix-n
+        self.linuxWFix = 0
+        self.conWFix = 0
+        if self.options["linuxFix"] == "Cinnamon":
+            self.linuxWFix = 2
+            self.conWFix = 6
         self.selects = Frame(master, borderwidth=2, bg=thme["bg"])
         self.advOpt = Frame(master, borderwidth=2, bg=thme["bg"], relief="sunken")
         self.advOpt2 = Frame(self.advOpt, borderwidth=2, bg=thme["bg"])
@@ -1242,9 +1251,9 @@ class CompMenu():
         self.name = StringVar()
         if self.options["save_paths"]:
             self.name.set(self.csPaths["Snark"]["compileIn"])
-        self.nameEntry = Entry(master, textvariable=self.name, width=self.widthFix)
+        self.nameEntry = Entry(master, textvariable=self.name, width=self.widthFix-self.linuxWFix*2)
         tOpts = ["File", "Folder"]
-        self.typeSel = ttk.Combobox(master, values=tOpts, width=7)
+        self.typeSel = ttk.Combobox(master, values=tOpts, width=7-self.linuxWFix)
         self.typeSel.set(tOpts[0])
         self.typeSel.bind("<<ComboboxSelected>>", self.clearInput)
         self.nameEntry.bind("<FocusOut>", self.inputHandler)
@@ -1253,7 +1262,7 @@ class CompMenu():
             self.out.set(self.csPaths["Snark"]["compileOut"])
             if os.path.isdir(self.csPaths["Snark"]["compileOut"]):
                 self.batchManager.decompOutput = self.csPaths["Snark"]["compileOut"]
-        self.outputEntry = Entry(master, textvariable=self.out, width=self.widthFix)
+        self.outputEntry = Entry(master, textvariable=self.out, width=self.widthFix-self.linuxWFix*2)
         self.outputEntry.bind("<FocusOut>", self.outputHandler)
         self.mdlBrowse = Button(master, text='Browse', command=self.findMDL, cursor="hand2")
         self.outBrowse = Button(master, text='Browse', command=self.output, cursor="hand2")
@@ -1339,7 +1348,7 @@ class CompMenu():
         self.outputTT = ToolTip(self.outBrowse, "OPTIONAL, if an output folder is not specified, then it will place the compiled model in a subfolder of where the QC file is located.", background=thme["tt"], foreground=thme["txt"])
         
         self.decomp = Button(master, text='Compile', command=self.startCompile, cursor="hand2")
-        self.console = Console(master, 'Currently no warnings or errors!', 0, 5, self.conFix, 12)
+        self.console = Console(master, 'Currently no warnings or errors!', 0, 5, self.conFix-self.conWFix, 12)
         fldrChk = False
         if self.options["save_paths"] and os.path.isdir(self.name.get()):
             self.typeSel.set(tOpts[1])
@@ -2210,6 +2219,14 @@ class OptionsMenu():
         theme = self.options.get("theme", "Freeman")
         goldSRCModelViewer = self.options.get("gsMV", {"selectedMV": 0, "csPath": ""})
         linuxWinFix = self.options.get("linuxFix", "KDE")
+        # Detecting which version of Linux you're using for the Windowing fixes
+        cinnamonDesktops = ['linuxmint']
+        try:
+            cinnamonDesktops.index(distroInfo()["ID"])
+            linuxWinFix = 'Cinnamon'
+        except:
+            if distroInfo().get("VARIANT_ID", 'kde').lower() == "cinnamon":
+                linuxWinFix = 'Cinnamon'
         if self.options["version"] < 5:
             savePaths = True
             upgradePaths = True
