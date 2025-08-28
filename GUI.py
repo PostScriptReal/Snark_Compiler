@@ -570,8 +570,7 @@ class GUI(Tk):
 		self.cmpMenu.updateOpt(key, val)
 		self.decMenu.updateOpt(key, val)
 		self.optMenu.updateOpt(key, val)
-		if self.flags.allowScripts:
-			self.batchMenu.updateOpt(key, val)
+		self.batchMenu.updateOpt(key, val)
 	
 	def updateGames(self, comp):
 		self.cmpMenu.updateGames(comp)

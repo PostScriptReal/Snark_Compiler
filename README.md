@@ -69,5 +69,9 @@
 			<td><a href="http://geckons.com/halflife/">GeckoN's v6 MDL Decompiler</a></td>
 			<td>Proprietary</td>
 		</tr>
+		<tr>
+			<td><a href="https://store.steampowered.com/app/225840/Sven_Coop/">Sven Co-op StudioMDL</a></td>
+			<td>Proprietary</td>
+		</tr>
 	</table>
 </div>

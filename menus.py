@@ -721,6 +721,16 @@ class BatchManagerM():
     def updateOpt(self, key, value):
         if not key.startswith("gsMV"):
             self.options[key] = value
+            if key == "linuxFix":
+                if self.options["linuxFix"] == "Cinnamon":
+                    self.linuxWFix = 2
+                    self.batchListFix = 6
+                else:
+                    self.linuxWFix = 0
+                    self.batchListFix = 0
+                self.cPath.entry.configure(width=27-self.linuxWFix)
+                self.mdl_list.configure(width=self.widthFix-self.batchListFix)
+                self.qc_list.configure(width=self.widthFix-self.batchListFix)
         else:
             self.options["gsMV"][key.replace("gsMV", "")] = value
 
@@ -971,6 +981,13 @@ class DecompMenu():
             if key == "defDPreset":
                 self.presetSel.current(value)
                 self.chPreset()
+            elif key == "linuxFix":
+                if self.options["linuxFix"] == "Cinnamon":
+                    self.linuxWFix = 2
+                    self.conWFix = 6
+                else:
+                    self.linuxWFix = 0
+                    self.conWFix = 0
         else:
             self.options["gsMV"][key.replace("gsMV", "")] = value
 
@@ -1539,6 +1556,13 @@ class CompMenu():
                 self.compilerStuff()
             elif key == "defGame":
                 self.gameSel.current(self.options[key])
+            elif key == "linuxFix":
+                if self.options["linuxFix"] == "Cinnamon":
+                    self.linuxWFix = 2
+                    self.conWFix = 6
+                else:
+                    self.linuxWFix = 0
+                    self.conWFix = 0
         # Doing this since the gsMV option needs two square bracket data things in order to update stuff properly,
         # and the function can only use strings.
         else:
@@ -2185,10 +2209,13 @@ class OptionsMenu():
         self.spLabel = Label(master, text="Save paths: ")
         self.savePathsB = BooleanVar(master, value=self.options["save_paths"])
         self.savePathsCB = Checkbutton(master, command=self.chSP, variable=self.savePathsB)
-        # Checking if anything is exceeding the width of the "safe zone"
-        """self.show()
-        self.checkWidth()
-        self.hide()"""
+        self.distroLabel = Label(master, text="Distro Resize: ")
+        self.restartReq1 = Label(master, text="(RESTART REQUIRED)")
+        self.distros = ["KDE", "Cinnamon"]
+        if sys.platform == 'linux':
+            self.distroSel = ttk.Combobox(master, values=self.distros)
+            self.distroSel.set(self.options["linuxFix"])
+            self.distroSel.bind("<<ComboboxSelected>>", self.setLF)
         # Tooltips
         self.themeTT = ToolTip(self.themeCBox, "Changes the program's theme, the built-in themes are: Freeman, Shephard, Calhoun and Cross.", background=thme["tt"], foreground=thme["txt"])
         self.startFolderTT = ToolTip(self.startFent, "Sets the directory that the built-in file explorer will start in, the default is the documents folder.", background=thme["tt"], foreground=thme["txt"])
@@ -2197,6 +2224,7 @@ class OptionsMenu():
         self.hlmvTT = ToolTip(self.hlmvCBox, "Sets the model viewer you want to use when clicking the \"Open model in HLMV\" button, if this is set to None, the button will not show up!", background=thme["tt"], foreground=thme["txt"])
         self.setMVPtt = ToolTip(self.setMVP, "Sets the path to the model viewer you want to use if you select \"Other\"", background=thme["tt"], foreground=thme["txt"])
         self.savePathsTT = ToolTip(self.savePathsCB, "Disabling this will make Snark go back to its old behaviour of not keeping the paths you set in the previous session. If you have high read/write speeds (above 30-40 MB/s), it's recommended that you leave this on, otherwise, turn it off.", background=thme["tt"], foreground=thme["txt"])
+        self.distroTT = ToolTip(self.distroSel, "This Linux-only selector will tell Snark which distro variant you use, it will resize itself so everything looks correct on your system when you select the option. If there's still windowing bugs, please create an issue on Github or Gamebanana with your distro information copied from the terminal or the about menu.", background=thme["tt"], foreground=thme["txt"])
         if not startHidden:
             self.show()
         
@@ -2293,6 +2321,10 @@ class OptionsMenu():
         self.presetSel.grid(column=2, row=6, sticky="w")
         self.spLabel.grid(column=1, row=7, sticky="w")
         self.savePathsCB.grid(column=2, row=7, sticky="w")
+        if sys.platform == 'linux':
+            self.distroLabel.grid(column=1, row=8, sticky="w")
+            self.distroSel.grid(column=2, row=8, sticky="w")
+            self.restartReq1.grid(column=3, row=8, sticky="w")
         self.hlmvLabel.grid_remove()
         self.hlmvCBox.grid_remove()
         self.mvPathLabel.grid_remove()
@@ -2316,6 +2348,10 @@ class OptionsMenu():
         self.presetSel.grid_remove()
         self.spLabel.grid_remove()
         self.savePathsCB.grid_remove()
+        if sys.platform == 'linux':
+            self.distroLabel.grid_remove()
+            self.distroSel.grid_remove()
+            self.restartReq1.grid_remove()
         self.hlmvLabel.grid(column=1, row=1, sticky="w")
         self.hlmvCBox.grid(column=2, row=1, sticky="w")
         self.mvPathLabel.grid(column=1, row=2, sticky="w")
@@ -2365,6 +2401,7 @@ class OptionsMenu():
         self.hlmvTT.changeTheme(newTheme["tt"], newTheme["txt"])
         self.setMVPtt.changeTheme(newTheme["tt"], newTheme["txt"])
         self.savePathsTT.changeTheme(newTheme["tt"], newTheme["txt"])
+        self.distroTT.changeTheme(newTheme["tt"], newTheme["txt"])
     
     def chSF(self):
         path = askdirectory(title="Set starting directory for this file explorer")
@@ -2444,6 +2481,11 @@ class OptionsMenu():
         self.save_options()
         self.updFunc("save_paths", self.savePathsB.get())
 
+    def setLF(self, e=False):
+        opt = self.distroSel.get()
+        self.options["linuxFix"] = opt
+        self.save_options()
+        self.updFunc("linuxFix", opt)
     
     def save_options(self):
         newjson = json.dumps(self.options, sort_keys=True, indent=5)
@@ -2482,6 +2524,10 @@ class OptionsMenu():
             self.presetSel.grid(column=2, row=6, sticky="w")
             self.spLabel.grid(column=1, row=7, sticky="w")
             self.savePathsCB.grid(column=2, row=7, sticky="w")
+            if sys.platform == 'linux':
+                self.distroLabel.grid(column=1, row=8, sticky="w")
+                self.distroSel.grid(column=2, row=8, sticky="w")
+                self.restartReq1.grid(column=3, row=8, sticky="w")
         elif self.curPage == 1:
             self.hlmvLabel.grid(column=1, row=1, sticky="w")
             self.hlmvCBox.grid(column=2, row=1, sticky="w")
