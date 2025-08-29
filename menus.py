@@ -397,7 +397,7 @@ class CompSetupMenu():
     def chComp(self, e):
         self.selComp = self.gameSel.get()
         self.name.set(self.selComp)
-        self.csPath.set(self.csPaths["Other"][self.selComp])
+        self.csPath.set(self.csPaths["Other"].get(self.selComp, ""))
         # If editing options were removed and the compiler doesn't have editing disabled
         if self.hiddenEdit and not self.compDat[self.selComp]["disableEdit"]:
             self.hiddenEdit = False
@@ -1899,17 +1899,33 @@ class CompMenu():
                         compilerPath = os.path.expanduser(p)
                         compilerFound = True
                         break
+                    if not os.path.isabs(p):
+                        newPath = os.path.join(os.getcwd(), p)
+                        if os.path.exists(newPath):
+                            compilerPath = newPath
+                            compilerFound = True
+                            break
                 if not compilerFound:
                     paths = self.csPaths["Other"][self.compSel.get()]
                     if os.path.exists(paths):
                         compilerPath = paths
                         compilerFound = True
+                    if not os.path.isabs(paths):
+                        newPath = os.path.join(os.getcwd(), paths)
+                        if os.path.exists(newPath):
+                            compilerPath = newPath
+                            compilerFound = True
             else:
                 paths = self.csPaths["Other"][self.compSel.get()]
                 if not paths == "":
                     if os.path.exists(paths):
                         compilerPath = paths
                         compilerFound = True
+                    if not os.path.isabs(paths):
+                        newPath = os.path.join(os.getcwd(), paths)
+                        if os.path.exists(newPath):
+                            compilerPath = newPath
+                            compilerFound = True
                 else:
                     paths = self.compJS["path"]["default"][sys.platform]
                     for p in paths:
@@ -1918,6 +1934,12 @@ class CompMenu():
                             compilerPath = os.path.expanduser(p)
                             compilerFound = True
                             break
+                        if not os.path.isabs(p):
+                            newPath = os.path.join(os.getcwd(), p)
+                            if os.path.exists(newPath):
+                                compilerPath = newPath
+                                compilerFound = True
+                                break
         except:
             self.console.setOutput("ERROR: Couldn't find compiler, have you selected one?")
             return

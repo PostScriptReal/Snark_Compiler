@@ -35,13 +35,13 @@
             "path": {
                 "default": {
                     "win32": [
-                        "/third_party/StudioMDL/SC.exe"
+                        "third_party/StudioMDL/SC.exe"
                     ],
                     "linux": [
-                        "/third_party/StudioMDL/SC.exe"
+                        "third_party/StudioMDL/SC.exe"
                     ],
                     "darwin": [
-                        "/third_party/StudioMDL/SC.exe"
+                        "third_party/StudioMDL/SC.exe"
                     ]
                 }
             },
@@ -61,13 +61,13 @@
             "path": {
                 "default": {
                     "win32": [
-                        "/third_party/StudioMDL/SC2018.exe"
+                        "third_party/StudioMDL/SC2018.exe"
                     ],
                     "linux": [
-                        "/third_party/StudioMDL/SC2018.exe"
+                        "third_party/StudioMDL/SC2018.exe"
                     ],
                     "darwin": [
-                        "/third_party/StudioMDL/SC2018.exe"
+                        "third_party/StudioMDL/SC2018.exe"
                     ]
                 }
             },
