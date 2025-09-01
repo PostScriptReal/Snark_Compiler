@@ -35,13 +35,39 @@
             "path": {
                 "default": {
                     "win32": [
-                        "C:/Program Files (x86)/Steam/steamapps/common/Sven Co-op SDK/modelling/studiomdl.exe",
-                        "C:/Program Files/Steam/steamapps/common/Sven Co-op SDK/modelling/studiomdl.exe"
+                        "third_party/StudioMDL/SC.exe"
                     ],
                     "linux": [
-                        "~/.steam/steam/steamapps/common/Sven Co-op SDK/modelling/studiomdl.exe",
-                        "~/.var/app/com.valvesoftware.Steam/.local/share/Steam/steamapps/common/Sven Co-op SDK/modelling/studiomdl.exe",
-                        "~/snap/steam/common/Steam/steamapps/common/Sven Co-op SDK/modelling/studiomdl.exe"
+                        "third_party/StudioMDL/SC.exe"
+                    ],
+                    "darwin": [
+                        "third_party/StudioMDL/SC.exe"
+                    ]
+                }
+            },
+            "type": "Svengine",
+            "capabilities": {
+                "fullbright": true,
+                "flatshade": true,
+                "chromeTRM": true,
+                "1024px": true,
+                "unlockedChrome": true,
+                "noUVshift": true,
+                "cliptotextures": false
+            },
+            "disableEdit": true
+        },
+        "Sven2018": {
+            "path": {
+                "default": {
+                    "win32": [
+                        "third_party/StudioMDL/SC2018.exe"
+                    ],
+                    "linux": [
+                        "third_party/StudioMDL/SC2018.exe"
+                    ],
+                    "darwin": [
+                        "third_party/StudioMDL/SC2018.exe"
                     ]
                 }
             },

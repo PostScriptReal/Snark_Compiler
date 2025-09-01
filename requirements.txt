@@ -1,4 +1,4 @@
-jsonc-parser
-scikit-build
-tksvg
+jsonc-with-comments
 certifi
+am-i-connected
+pyperclip

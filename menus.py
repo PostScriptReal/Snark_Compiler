@@ -12,7 +12,9 @@ from helpers import BoolEntry, Console, BoolSpinbox, QCHandler, HyperlinkImg, Ga
 import json
 import sys
 import jsonc
-from interp import SSTReader
+# from interp import SSTReader
+from platform import freedesktop_os_release as distroInfo
+import pyperclip
 
 DECOMP_TAB = 0
 COMP_TAB = 1
@@ -26,6 +28,8 @@ class MenuTemp():
         js = open("save/options.json", 'r')
         self.options = json.loads(js.read())
         js.close()
+        divider = "--------------------------------------------------------------------------------"
+        print(f"DISTRO INFORMATION:{divider[19:]}\n{distroInfo()}\n{divider}")
     
     def setPath(self, key:str="Snark", pathKey:str="", pathVal:str=""):
         pathJSON = open("save/paths.json", "r")
@@ -393,7 +397,7 @@ class CompSetupMenu():
     def chComp(self, e):
         self.selComp = self.gameSel.get()
         self.name.set(self.selComp)
-        self.csPath.set(self.csPaths["Other"][self.selComp])
+        self.csPath.set(self.csPaths["Other"].get(self.selComp, ""))
         # If editing options were removed and the compiler doesn't have editing disabled
         if self.hiddenEdit and not self.compDat[self.selComp]["disableEdit"]:
             self.hiddenEdit = False
@@ -463,17 +467,20 @@ class BatchManagerM():
         self.opts = Frame(master, borderwidth=2, bg=thme["bg"], relief="sunken")
         self.tabs = Frame(master, borderwidth=2, bg=thme["bg"])
         # Setting up options
-        js = open("save/options.json", 'r')
-        self.options = json.loads(js.read())
-        js.close()
+        self.options = template.options
+        self.linuxWFix = 0
+        self.batchListFix = 0
+        if self.options["linuxFix"] == "Cinnamon":
+            self.linuxWFix = 4
+            self.batchListFix = 6
         self.mdls = []
         
         self.decompTab = Button(self.tabs, text="Decompiling", cursor="hand2", command=self.switchTabDecomp)
         self.compTab = Button(self.tabs, text="Compiling", cursor="hand2", command=self.switchTabComp)
         
-        self.qc_list = Listbox(master, width=self.widthFix, selectmode=EXTENDED, height=15)
+        self.qc_list = Listbox(master, width=self.widthFix-self.batchListFix, selectmode=EXTENDED, height=15)
         self.qc_list.insert(0, self.blankClistStr)
-        self.mdl_list = Listbox(master, width=self.widthFix, selectmode=EXTENDED, height=15)
+        self.mdl_list = Listbox(master, width=self.widthFix-self.batchListFix, selectmode=EXTENDED, height=15)
         self.mdl_list.insert(0, self.blankDlistStr)
         self.qc_list.bind("<<ListboxSelect>>", self.lbSelHandler)
         self.mdl_list.bind("<<ListboxSelect>>", self.lbSelHandler)
@@ -486,7 +493,7 @@ class BatchManagerM():
         self.pathSelVar = BooleanVar(self.opts, value=True)
         self.pathSel = Checkbutton(self.opts, text="Use Output Path", variable=self.pathSelVar, command=self.cPathChk)
         self.cPathVar = StringVar(self.opts, value="")
-        self.cPath = BoolEntry(self.opts, textvariable=self.cPathVar, placeholder="", width=27)
+        self.cPath = BoolEntry(self.opts, textvariable=self.cPathVar, placeholder="", width=27-self.linuxWFix)
         self.pathBrowse = Button(self.opts, text='Save Path', command=self.getCPath, cursor="hand2")
         if not startHidden:
             self.show()
@@ -714,6 +721,16 @@ class BatchManagerM():
     def updateOpt(self, key, value):
         if not key.startswith("gsMV"):
             self.options[key] = value
+            if key == "linuxFix":
+                if self.options["linuxFix"] == "Cinnamon":
+                    self.linuxWFix = 2
+                    self.batchListFix = 6
+                else:
+                    self.linuxWFix = 0
+                    self.batchListFix = 0
+                self.cPath.entry.configure(width=27-self.linuxWFix)
+                self.mdl_list.configure(width=self.widthFix-self.batchListFix)
+                self.qc_list.configure(width=self.widthFix-self.batchListFix)
         else:
             self.options["gsMV"][key.replace("gsMV", "")] = value
 
@@ -734,7 +751,7 @@ class BatchManagerM():
         # self.runBtn.grid(column=0, row=1)
         self.opts.grid(column=0, row=2, sticky="nsew", pady=(10,0))
         self.skipMDL.grid(column=0, row=0, pady=15)
-        self.cPathLabel.grid(column=1, row=0, padx=10)
+        self.cPathLabel.grid(column=1, row=0, padx=10-self.linuxWFix)
         self.pathSel.grid(column=2, row=0)
         self.cPath.grid(column=3, row=0, padx=5, pady=15)
         self.pathBrowse.grid(column=4, row=0)
@@ -767,6 +784,11 @@ class DecompMenu():
         js.close()
         # Setting up options
         self.options = template.options
+        self.linuxWFix = 0
+        self.conWFix = 0
+        if self.options["linuxFix"] == "Cinnamon":
+            self.linuxWFix = 2
+            self.conWFix = 6
         self.presets = {
             "presets": {
                 # For most compilers
@@ -804,12 +826,12 @@ class DecompMenu():
         self.presetDat = self.presets["presets"][self.presetSel.get()]
         self.presetSel.bind("<<ComboboxSelected>>", self.chPreset)
         self.name = StringVar()
-        self.nameEntry = Entry(master, textvariable=self.name, width=self.widthFix)
+        self.nameEntry = Entry(master, textvariable=self.name, width=self.widthFix-self.linuxWFix)
         self.nameEntry.bind("<FocusOut>", self.inputHandler)
         if self.options["save_paths"]:
             self.name.set(self.csPaths["Snark"]["decompileIn"])
         tOpts = ["File", "Folder"]
-        self.typeSel = ttk.Combobox(master, values=tOpts, width=7)
+        self.typeSel = ttk.Combobox(master, values=tOpts, width=7-self.linuxWFix)
         self.typeSel.set(tOpts[0])
         self.typeSel.bind("<<ComboboxSelected>>", self.clearInput)
         self.out = StringVar()
@@ -817,14 +839,14 @@ class DecompMenu():
             self.out.set(self.csPaths["Snark"]["decompileOut"])
             if os.path.isdir(self.csPaths["Snark"]["decompileOut"]):
                 self.batchManager.decompOutput = self.csPaths["Snark"]["decompileOut"]
-        self.outputEntry = Entry(master, textvariable=self.out, width=self.widthFix)
+        self.outputEntry = Entry(master, textvariable=self.out, width=self.widthFix-self.linuxWFix)
         self.outputEntry.bind("<FocusOut>", self.outputHandler)
         self.mdlBrowse = Button(master, text='Browse', command=self.findMDL, cursor="hand2")
         self.outBrowse = Button(master, text='Browse', command=self.output, cursor="hand2")
         self.advOptLabel = Label(self.advOpt, text="Advanced Options")
         self.decomp = Button(master, text='Decompile', command=self.startDecomp, cursor="hand2")
         self.hlmv = Button(master, text='Open model in HLMV', command=self.openHLAM, cursor="hand2")
-        self.console = Console(master, 'Start a decompile and the terminal output will appear here!', 0, 5, self.conFix, 12)
+        self.console = Console(master, 'Start a decompile and the terminal output will appear here!', 0, 5, self.conFix-self.conWFix, 12)
         if self.options["save_paths"] and os.path.isdir(self.name.get()):
             self.typeSel.set(tOpts[1])
             self.getBatch(self.name.get())
@@ -959,6 +981,13 @@ class DecompMenu():
             if key == "defDPreset":
                 self.presetSel.current(value)
                 self.chPreset()
+            elif key == "linuxFix":
+                if self.options["linuxFix"] == "Cinnamon":
+                    self.linuxWFix = 2
+                    self.conWFix = 6
+                else:
+                    self.linuxWFix = 0
+                    self.conWFix = 0
         else:
             self.options["gsMV"][key.replace("gsMV", "")] = value
 
@@ -1206,8 +1235,6 @@ class CompMenu():
         self.menuTemp = template
         self.advOptFix = True
         if self.curFont["family"].lower() == "nimbus sans l" or sys.platform == "win32":
-            self.widthFix = self.widthFix+6
-            self.conFix = self.conFix-7
             self.advOptFix = False
         elif self.safeWidth > 609:
             self.advOptFix = False
@@ -1228,9 +1255,11 @@ class CompMenu():
         self.profiles = json.loads(js.read())
         js.close()
         self.options = template.options
-        if self.safeWidth > 659:
-            n = 2
-            self.widthFix, self.conFix = self.widthFix-n, self.conFix-n
+        self.linuxWFix = 0
+        self.conWFix = 0
+        if self.options["linuxFix"] == "Cinnamon":
+            self.linuxWFix = 2
+            self.conWFix = 6
         self.selects = Frame(master, borderwidth=2, bg=thme["bg"])
         self.advOpt = Frame(master, borderwidth=2, bg=thme["bg"], relief="sunken")
         self.advOpt2 = Frame(self.advOpt, borderwidth=2, bg=thme["bg"])
@@ -1239,9 +1268,9 @@ class CompMenu():
         self.name = StringVar()
         if self.options["save_paths"]:
             self.name.set(self.csPaths["Snark"]["compileIn"])
-        self.nameEntry = Entry(master, textvariable=self.name, width=self.widthFix)
+        self.nameEntry = Entry(master, textvariable=self.name, width=50-self.linuxWFix)
         tOpts = ["File", "Folder"]
-        self.typeSel = ttk.Combobox(master, values=tOpts, width=7)
+        self.typeSel = ttk.Combobox(master, values=tOpts, width=7-self.linuxWFix)
         self.typeSel.set(tOpts[0])
         self.typeSel.bind("<<ComboboxSelected>>", self.clearInput)
         self.nameEntry.bind("<FocusOut>", self.inputHandler)
@@ -1250,7 +1279,7 @@ class CompMenu():
             self.out.set(self.csPaths["Snark"]["compileOut"])
             if os.path.isdir(self.csPaths["Snark"]["compileOut"]):
                 self.batchManager.decompOutput = self.csPaths["Snark"]["compileOut"]
-        self.outputEntry = Entry(master, textvariable=self.out, width=self.widthFix)
+        self.outputEntry = Entry(master, textvariable=self.out, width=50-self.linuxWFix)
         self.outputEntry.bind("<FocusOut>", self.outputHandler)
         self.mdlBrowse = Button(master, text='Browse', command=self.findMDL, cursor="hand2")
         self.outBrowse = Button(master, text='Browse', command=self.output, cursor="hand2")
@@ -1336,7 +1365,7 @@ class CompMenu():
         self.outputTT = ToolTip(self.outBrowse, "OPTIONAL, if an output folder is not specified, then it will place the compiled model in a subfolder of where the QC file is located.", background=thme["tt"], foreground=thme["txt"])
         
         self.decomp = Button(master, text='Compile', command=self.startCompile, cursor="hand2")
-        self.console = Console(master, 'Currently no warnings or errors!', 0, 5, self.conFix, 12)
+        self.console = Console(master, 'Currently no warnings or errors!', 0, 5, self.conFix-self.conWFix, 12)
         fldrChk = False
         if self.options["save_paths"] and os.path.isdir(self.name.get()):
             self.typeSel.set(tOpts[1])
@@ -1527,6 +1556,13 @@ class CompMenu():
                 self.compilerStuff()
             elif key == "defGame":
                 self.gameSel.current(self.options[key])
+            elif key == "linuxFix":
+                if self.options["linuxFix"] == "Cinnamon":
+                    self.linuxWFix = 2
+                    self.conWFix = 6
+                else:
+                    self.linuxWFix = 0
+                    self.conWFix = 0
         # Doing this since the gsMV option needs two square bracket data things in order to update stuff properly,
         # and the function can only use strings.
         else:
@@ -1561,12 +1597,8 @@ class CompMenu():
         self.advOpt.grid(column=0, row=3, sticky="nsew", columnspan=10, pady=(20,0))
         self.advOptLabel.grid(column=0, row=0, sticky="w")
         self.logChk.grid(column=0, row=1, sticky="w")
-        if self.advOptFix or self.safeWidth > 659:
-            self.dashT.grid(column=2, row=1, sticky="w")
-            self.dashTChk.grid(column=1, row=1, sticky="w")
-        else:
-            self.dashT.grid(column=0, row=1, sticky="w",padx=(145,0))
-            self.dashTChk.grid(column=0, row=1, sticky="w",padx=(110,0))
+        self.dashT.grid(column=2, row=1, sticky="w")
+        self.dashTChk.grid(column=1, row=1, sticky="w")
         self.rNormalChk.grid(column=3, row=1, sticky="w")
         self.angleChk.grid(column=4, row=1, sticky="w")
         self.angleSB.grid(column=5, row=1, sticky="w")
@@ -1576,20 +1608,10 @@ class CompMenu():
         else:
             self.advOpt2.grid(column=0, row=2, sticky="nsew", columnspan=20)
             self.ignoreChk.grid(column=7, row=1, sticky="w")
-        if self.advOptFix:
-            self.bNormChk.grid(column=8, row=1, sticky="w")
-        else:
-            self.bNormChk.grid(column=8, row=1, sticky="w")
-        if self.advOptFix:
-            self.flipChk.grid(column=9, row=1, sticky="w")
-        else:
-            self.flipChk.grid(column=9, row=1, sticky="w")
-        if self.advOptFix:
-            self.groupChk.grid(column=0, row=2, sticky="w",padx=(40,0))
-            self.groupSB.grid(column=0, row=2, sticky="w",padx=(81,0))
-        else:
-            self.groupChk.grid(column=3, row=2, sticky="w")
-            self.groupSB.grid(column=4, row=2, sticky="w")
+        self.bNormChk.grid(column=8, row=1, sticky="w")
+        self.flipChk.grid(column=9, row=1, sticky="w")
+        self.groupChk.grid(column=3, row=2, sticky="w")
+        self.groupSB.grid(column=4, row=2, sticky="w")
         if not self.svengine:
             if self.advOptFix:
                 self.pf2Chk.grid(column=1, row=2, sticky="w")
@@ -1863,17 +1885,33 @@ class CompMenu():
                         compilerPath = os.path.expanduser(p)
                         compilerFound = True
                         break
+                    if not os.path.isabs(p):
+                        newPath = os.path.join(os.getcwd(), p)
+                        if os.path.exists(newPath):
+                            compilerPath = newPath
+                            compilerFound = True
+                            break
                 if not compilerFound:
                     paths = self.csPaths["Other"][self.compSel.get()]
                     if os.path.exists(paths):
                         compilerPath = paths
                         compilerFound = True
+                    if not os.path.isabs(paths):
+                        newPath = os.path.join(os.getcwd(), paths)
+                        if os.path.exists(newPath):
+                            compilerPath = newPath
+                            compilerFound = True
             else:
                 paths = self.csPaths["Other"][self.compSel.get()]
                 if not paths == "":
                     if os.path.exists(paths):
                         compilerPath = paths
                         compilerFound = True
+                    if not os.path.isabs(paths):
+                        newPath = os.path.join(os.getcwd(), paths)
+                        if os.path.exists(newPath):
+                            compilerPath = newPath
+                            compilerFound = True
                 else:
                     paths = self.compJS["path"]["default"][sys.platform]
                     for p in paths:
@@ -1882,6 +1920,12 @@ class CompMenu():
                             compilerPath = os.path.expanduser(p)
                             compilerFound = True
                             break
+                        if not os.path.isabs(p):
+                            newPath = os.path.join(os.getcwd(), p)
+                            if os.path.exists(newPath):
+                                compilerPath = newPath
+                                compilerFound = True
+                                break
         except:
             self.console.setOutput("ERROR: Couldn't find compiler, have you selected one?")
             return
@@ -1979,6 +2023,7 @@ class AboutMenu():
         self.snarkLogo = Label(master, image=self.snarkLogoPNG)
         self.githubLogo = HyperlinkImg(master, image=self.gitLogoPNG, lID=0)
         self.gameBLogo = HyperlinkImg(master, image=self.gbLogoPNG, lID=1)
+        self.getDistro = Button(master, text='Get Distro Information', command=self.grabOSRel, cursor="hand2")
         # Text
         vnum = open('version.txt', "r")
         self.ver = vnum.read().replace("(OS)", sys.platform)
@@ -1990,6 +2035,7 @@ class AboutMenu():
         # Tooltips
         self.githubTT = ToolTip(self.githubLogo.link, "Source Code and Releases on Github", background=thme["tt"], foreground=thme["txt"])
         self.gameBtt = ToolTip(self.gameBLogo.link, "Official Download page on Gamebanana", background=thme["tt"], foreground=thme["txt"])
+        self.getDistroTT = ToolTip(self.getDistro, "Clicking this will copy the information for your Linux distro to your clipboard, make sure xclip is installed or this won't work.", background=thme["tt"], foreground=thme["txt"])
         if not startHidden:
             self.show()
         
@@ -2034,12 +2080,17 @@ class AboutMenu():
         self.applyTheme(self.master)
         self.githubTT.changeTheme(newTheme["tt"], newTheme["txt"])
         self.gameBtt.changeTheme(newTheme["tt"], newTheme["txt"])
+        self.getDistroTT.changeTheme(newTheme["tt"], newTheme["txt"])
 
     def updateOpt(self, key, value):
         if not key.startswith("gsMV"):
             self.options[key] = value
         else:
             self.options["gsMV"][key.replace("gsMV", "")] = value
+    
+    def grabOSRel(self):
+        pyperclip.copy(distroInfo())
+        print("The information for your Linux distro has been copied to your clipboard!")
     
     def hide(self):
         self.hidden = True
@@ -2052,6 +2103,8 @@ class AboutMenu():
         self.gameBLogo.grid(column=1,row=1, padx=(50,0))
         self.setupLabel.grid(column=1, row=2)
         self.nameLabel.grid(column=1, row=3)
+        if sys.platform == 'linux':
+            self.getDistro.grid(column=1, row=4, pady=(30,0))
 
 class OptionsMenu():
     def __init__(self, template, master, thmecallback, updFunc, startHidden:bool=False):
@@ -2064,9 +2117,9 @@ class OptionsMenu():
         self.updFunc = updFunc
         # Grabbing options
         self.options = template.options
-        self.curJSONVer = 5
+        self.curJSONVer = 6
         # Checking if options JSON is from a previous version...
-        if not self.options["version"] == self.curJSONVer:
+        if not self.options["version"] >= self.curJSONVer:
             self.upgradeJSON()
         # Pages
         self.pageButtons = Frame(master, borderwidth=2, bg=thme["bg"])
@@ -2164,10 +2217,14 @@ class OptionsMenu():
         self.spLabel = Label(master, text="Save paths: ")
         self.savePathsB = BooleanVar(master, value=self.options["save_paths"])
         self.savePathsCB = Checkbutton(master, command=self.chSP, variable=self.savePathsB)
-        # Checking if anything is exceeding the width of the "safe zone"
-        """self.show()
-        self.checkWidth()
-        self.hide()"""
+        self.distroLabel = Label(master, text="Distro Resize: ")
+        self.restartReq1 = Label(master, text="(RESTART REQUIRED)")
+        self.distros = ["KDE", "Cinnamon"]
+        if sys.platform == 'linux':
+            self.distroSel = ttk.Combobox(master, values=self.distros)
+            self.distroSel.set(self.options["linuxFix"])
+            self.distroSel.bind("<<ComboboxSelected>>", self.setLF)
+            self.distroTT = ToolTip(self.distroSel, "This Linux-only selector will tell Snark which distro variant you use, it will resize itself so everything looks correct on your system when you select the option. If there's still windowing bugs, please create an issue on Github or Gamebanana with your distro information copied from the terminal or the about menu.", background=thme["tt"], foreground=thme["txt"])
         # Tooltips
         self.themeTT = ToolTip(self.themeCBox, "Changes the program's theme, the built-in themes are: Freeman, Shephard, Calhoun and Cross.", background=thme["tt"], foreground=thme["txt"])
         self.startFolderTT = ToolTip(self.startFent, "Sets the directory that the built-in file explorer will start in, the default is the documents folder.", background=thme["tt"], foreground=thme["txt"])
@@ -2197,10 +2254,19 @@ class OptionsMenu():
         startingFolder = self.options.get("startFolder", "~/Documents")
         theme = self.options.get("theme", "Freeman")
         goldSRCModelViewer = self.options.get("gsMV", {"selectedMV": 0, "csPath": ""})
+        linuxWinFix = self.options.get("linuxFix", "KDE")
+        # Detecting which version of Linux you're using for the Windowing fixes
+        cinnamonDesktops = ['linuxmint']
+        try:
+            cinnamonDesktops.index(distroInfo()["ID"])
+            linuxWinFix = 'Cinnamon'
+        except:
+            if distroInfo().get("VARIANT_ID", 'kde').lower() == "cinnamon":
+                linuxWinFix = 'Cinnamon'
         if self.options["version"] < 5:
             savePaths = True
             upgradePaths = True
-        # Upgrade from version 1 to 4
+        # Upgrade from version 1 to 6
         newOptions = {
             "defComp": defaultComp,
             "defGame": defaultGame,
@@ -2210,6 +2276,7 @@ class OptionsMenu():
             "startFolder": startingFolder,
             "theme": theme,
             "gsMV": goldSRCModelViewer,
+            "linuxFix": linuxWinFix,
             "version": self.curJSONVer
         }
         if upgradePaths:
@@ -2262,6 +2329,10 @@ class OptionsMenu():
         self.presetSel.grid(column=2, row=6, sticky="w")
         self.spLabel.grid(column=1, row=7, sticky="w")
         self.savePathsCB.grid(column=2, row=7, sticky="w")
+        if sys.platform == 'linux':
+            self.distroLabel.grid(column=1, row=8, sticky="w")
+            self.distroSel.grid(column=2, row=8, sticky="w")
+            self.restartReq1.grid(column=3, row=8, sticky="w")
         self.hlmvLabel.grid_remove()
         self.hlmvCBox.grid_remove()
         self.mvPathLabel.grid_remove()
@@ -2285,6 +2356,10 @@ class OptionsMenu():
         self.presetSel.grid_remove()
         self.spLabel.grid_remove()
         self.savePathsCB.grid_remove()
+        if sys.platform == 'linux':
+            self.distroLabel.grid_remove()
+            self.distroSel.grid_remove()
+            self.restartReq1.grid_remove()
         self.hlmvLabel.grid(column=1, row=1, sticky="w")
         self.hlmvCBox.grid(column=2, row=1, sticky="w")
         self.mvPathLabel.grid(column=1, row=2, sticky="w")
@@ -2334,6 +2409,7 @@ class OptionsMenu():
         self.hlmvTT.changeTheme(newTheme["tt"], newTheme["txt"])
         self.setMVPtt.changeTheme(newTheme["tt"], newTheme["txt"])
         self.savePathsTT.changeTheme(newTheme["tt"], newTheme["txt"])
+        self.distroTT.changeTheme(newTheme["tt"], newTheme["txt"])
     
     def chSF(self):
         path = askdirectory(title="Set starting directory for this file explorer")
@@ -2413,6 +2489,11 @@ class OptionsMenu():
         self.save_options()
         self.updFunc("save_paths", self.savePathsB.get())
 
+    def setLF(self, e=False):
+        opt = self.distroSel.get()
+        self.options["linuxFix"] = opt
+        self.save_options()
+        self.updFunc("linuxFix", opt)
     
     def save_options(self):
         newjson = json.dumps(self.options, sort_keys=True, indent=5)
@@ -2451,6 +2532,10 @@ class OptionsMenu():
             self.presetSel.grid(column=2, row=6, sticky="w")
             self.spLabel.grid(column=1, row=7, sticky="w")
             self.savePathsCB.grid(column=2, row=7, sticky="w")
+            if sys.platform == 'linux':
+                self.distroLabel.grid(column=1, row=8, sticky="w")
+                self.distroSel.grid(column=2, row=8, sticky="w")
+                self.restartReq1.grid(column=3, row=8, sticky="w")
         elif self.curPage == 1:
             self.hlmvLabel.grid(column=1, row=1, sticky="w")
             self.hlmvCBox.grid(column=2, row=1, sticky="w")
