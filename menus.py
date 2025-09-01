@@ -1597,12 +1597,8 @@ class CompMenu():
         self.advOpt.grid(column=0, row=3, sticky="nsew", columnspan=10, pady=(20,0))
         self.advOptLabel.grid(column=0, row=0, sticky="w")
         self.logChk.grid(column=0, row=1, sticky="w")
-        if self.advOptFix or self.safeWidth > 659:
-            self.dashT.grid(column=2, row=1, sticky="w")
-            self.dashTChk.grid(column=1, row=1, sticky="w")
-        else:
-            self.dashT.grid(column=0, row=1, sticky="w",padx=(145,0))
-            self.dashTChk.grid(column=0, row=1, sticky="w",padx=(110,0))
+        self.dashT.grid(column=2, row=1, sticky="w")
+        self.dashTChk.grid(column=1, row=1, sticky="w")
         self.rNormalChk.grid(column=3, row=1, sticky="w")
         self.angleChk.grid(column=4, row=1, sticky="w")
         self.angleSB.grid(column=5, row=1, sticky="w")
@@ -1612,20 +1608,10 @@ class CompMenu():
         else:
             self.advOpt2.grid(column=0, row=2, sticky="nsew", columnspan=20)
             self.ignoreChk.grid(column=7, row=1, sticky="w")
-        if self.advOptFix:
-            self.bNormChk.grid(column=8, row=1, sticky="w")
-        else:
-            self.bNormChk.grid(column=8, row=1, sticky="w")
-        if self.advOptFix:
-            self.flipChk.grid(column=9, row=1, sticky="w")
-        else:
-            self.flipChk.grid(column=9, row=1, sticky="w")
-        if self.advOptFix:
-            self.groupChk.grid(column=0, row=2, sticky="w",padx=(40,0))
-            self.groupSB.grid(column=0, row=2, sticky="w",padx=(81,0))
-        else:
-            self.groupChk.grid(column=3, row=2, sticky="w")
-            self.groupSB.grid(column=4, row=2, sticky="w")
+        self.bNormChk.grid(column=8, row=1, sticky="w")
+        self.flipChk.grid(column=9, row=1, sticky="w")
+        self.groupChk.grid(column=3, row=2, sticky="w")
+        self.groupSB.grid(column=4, row=2, sticky="w")
         if not self.svengine:
             if self.advOptFix:
                 self.pf2Chk.grid(column=1, row=2, sticky="w")
