@@ -1268,7 +1268,7 @@ class CompMenu():
         self.name = StringVar()
         if self.options["save_paths"]:
             self.name.set(self.csPaths["Snark"]["compileIn"])
-        self.nameEntry = Entry(master, textvariable=self.name, width=self.widthFix-self.linuxWFix*2)
+        self.nameEntry = Entry(master, textvariable=self.name, width=50-self.linuxWFix)
         tOpts = ["File", "Folder"]
         self.typeSel = ttk.Combobox(master, values=tOpts, width=7-self.linuxWFix)
         self.typeSel.set(tOpts[0])
@@ -1279,7 +1279,7 @@ class CompMenu():
             self.out.set(self.csPaths["Snark"]["compileOut"])
             if os.path.isdir(self.csPaths["Snark"]["compileOut"]):
                 self.batchManager.decompOutput = self.csPaths["Snark"]["compileOut"]
-        self.outputEntry = Entry(master, textvariable=self.out, width=self.widthFix-self.linuxWFix*2)
+        self.outputEntry = Entry(master, textvariable=self.out, width=50-self.linuxWFix)
         self.outputEntry.bind("<FocusOut>", self.outputHandler)
         self.mdlBrowse = Button(master, text='Browse', command=self.findMDL, cursor="hand2")
         self.outBrowse = Button(master, text='Browse', command=self.output, cursor="hand2")
