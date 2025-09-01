@@ -2224,6 +2224,7 @@ class OptionsMenu():
             self.distroSel = ttk.Combobox(master, values=self.distros)
             self.distroSel.set(self.options["linuxFix"])
             self.distroSel.bind("<<ComboboxSelected>>", self.setLF)
+            self.distroTT = ToolTip(self.distroSel, "This Linux-only selector will tell Snark which distro variant you use, it will resize itself so everything looks correct on your system when you select the option. If there's still windowing bugs, please create an issue on Github or Gamebanana with your distro information copied from the terminal or the about menu.", background=thme["tt"], foreground=thme["txt"])
         # Tooltips
         self.themeTT = ToolTip(self.themeCBox, "Changes the program's theme, the built-in themes are: Freeman, Shephard, Calhoun and Cross.", background=thme["tt"], foreground=thme["txt"])
         self.startFolderTT = ToolTip(self.startFent, "Sets the directory that the built-in file explorer will start in, the default is the documents folder.", background=thme["tt"], foreground=thme["txt"])
@@ -2232,7 +2233,6 @@ class OptionsMenu():
         self.hlmvTT = ToolTip(self.hlmvCBox, "Sets the model viewer you want to use when clicking the \"Open model in HLMV\" button, if this is set to None, the button will not show up!", background=thme["tt"], foreground=thme["txt"])
         self.setMVPtt = ToolTip(self.setMVP, "Sets the path to the model viewer you want to use if you select \"Other\"", background=thme["tt"], foreground=thme["txt"])
         self.savePathsTT = ToolTip(self.savePathsCB, "Disabling this will make Snark go back to its old behaviour of not keeping the paths you set in the previous session. If you have high read/write speeds (above 30-40 MB/s), it's recommended that you leave this on, otherwise, turn it off.", background=thme["tt"], foreground=thme["txt"])
-        self.distroTT = ToolTip(self.distroSel, "This Linux-only selector will tell Snark which distro variant you use, it will resize itself so everything looks correct on your system when you select the option. If there's still windowing bugs, please create an issue on Github or Gamebanana with your distro information copied from the terminal or the about menu.", background=thme["tt"], foreground=thme["txt"])
         if not startHidden:
             self.show()
         
