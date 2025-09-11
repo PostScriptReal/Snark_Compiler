@@ -29,7 +29,8 @@ class MenuTemp():
         self.options = json.loads(js.read())
         js.close()
         divider = "--------------------------------------------------------------------------------"
-        print(f"DISTRO INFORMATION:{divider[19:]}\n{distroInfo()}\n{divider}")
+        if sys.platform == 'linux':
+            print(f"DISTRO INFORMATION:{divider[19:]}\n{distroInfo()}\n{divider}")
     
     def setPath(self, key:str="Snark", pathKey:str="", pathVal:str=""):
         pathJSON = open("save/paths.json", "r")
@@ -2255,14 +2256,15 @@ class OptionsMenu():
         theme = self.options.get("theme", "Freeman")
         goldSRCModelViewer = self.options.get("gsMV", {"selectedMV": 0, "csPath": ""})
         linuxWinFix = self.options.get("linuxFix", "KDE")
-        # Detecting which version of Linux you're using for the Windowing fixes
-        cinnamonDesktops = ['linuxmint']
-        try:
-            cinnamonDesktops.index(distroInfo()["ID"])
-            linuxWinFix = 'Cinnamon'
-        except:
-            if distroInfo().get("VARIANT_ID", 'kde').lower() == "cinnamon":
+        if sys.platform == 'linux':
+            # Detecting which version of Linux you're using for the Windowing fixes
+            cinnamonDesktops = ['linuxmint']
+            try:
+                cinnamonDesktops.index(distroInfo()["ID"])
                 linuxWinFix = 'Cinnamon'
+            except:
+                if distroInfo().get("VARIANT_ID", 'kde').lower() == "cinnamon":
+                    linuxWinFix = 'Cinnamon'
         if self.options["version"] < 5:
             savePaths = True
             upgradePaths = True
