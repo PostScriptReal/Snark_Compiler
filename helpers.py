@@ -434,3 +434,66 @@ class BatchMDL():
         self.qcLoc, self.mdlLoc = qcLoc, qcLoc
         self.skip = False
         self.output = output
+
+class AlphaPrettify():
+
+    def __init__(self, cmdOut:str, texSubFolder:bool, mdlDir:str):
+        self.cmdOut = cmdOut.split('\n')
+        self.texSF = texSubFolder
+        self.mDir = mdlDir
+        self.qcLoc = os.path.join(self.mDir, self.cmdOut[6].replace("QC script: MDL6job/", ""))
+        with open(self.qcLoc, 'r') as qc:
+            self.qcDat = qc.readlines()
+        
+        self.qcDat.insert(6, "\nOutput modified by Snark, the alternative to Crowbar for GoldSRC!\n")
+        self.qcDat.insert(7, "Github: https://github.com/PostScriptReal/Snark_Compiler Gamebanana: https://gamebanana.com/tools/19255\n")
+        self.qcDat.insert(8, "\n")
+        
+        texFolder = os.path.join(self.mDir, 'textures')
+        if self.texSF:
+            try:
+                os.mkdir(texFolder)
+            except:
+                pass
+            for f in os.listdir(self.mDir):
+                if f.endswith('.bmp'):
+                    shutil.copy(os.path.join(self.mDir, f), texFolder)
+                    os.remove(os.path.join(self.mDir, f))
+            cdLine = self.qcDat.index('$cd ".\\"\n')
+            cdtexLine = self.qcDat.index('$cdtexture \".\\"\n')
+            self.qcDat[cdLine] = '$cd \"./\"\n'
+            self.qcDat[cdtexLine] = '$cdtexture \"./textures/\"\n'
+        else:
+            cdLine = self.qcDat.index('$cd ".\\"\n')
+            cdtexLine = self.qcDat.index('$cdtexture \".\\"\n')
+            self.qcDat[cdLine] = '$cd \"./\"\n'
+            self.qcDat[cdtexLine] = '$cdtexture \"./\"\n'
+        
+        try:
+            animsFolder = os.path.join(self.mDir, 'anims')
+        except:
+            pass
+        try:
+            os.mkdir(animsFolder)
+        except:
+            pass
+        count = -1
+        for l in self.cmdOut:
+            if l.startswith("Sequence:"):
+                animF = l.replace("Sequence: MDL6job/", "")
+                shutil.copy(os.path.join(self.mDir, animF), animsFolder)
+                os.remove(os.path.join(self.mDir, animF))
+                animName = f"\"{animF.replace('.smd', '')}\""
+                for s in self.qcDat:
+                    count += 1
+                    if s.startswith('$sequence'):
+                        if s.find(animName) != -1:
+                            substringStart = s.find(animName)+len(animName)+1
+                            substring = s[substringStart:]
+                            newSS = substring.replace(animName, f"\"anims/{animName.replace('\"', "", 1)}")
+                            self.qcDat[count] = s.replace(substring, newSS)
+                            break
+                count = -1
+        self.newQC = open(self.qcLoc, 'w')
+        self.newQC.write(''.join(self.qcDat))
+        self.newQC.close()
