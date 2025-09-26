@@ -8,7 +8,7 @@ from tkinter.filedialog import askopenfilename, askdirectory
 import subprocess
 import shutil
 import datetime
-from helpers import BoolEntry, Console, BoolSpinbox, QCHandler, HyperlinkImg, Game, GamesHandler, BatchMDL
+from helpers import *
 import json
 import sys
 import jsonc
@@ -16,8 +16,12 @@ import jsonc
 from platform import freedesktop_os_release as distroInfo
 import pyperclip
 
+# Batch manager tabs
 DECOMP_TAB = 0
 COMP_TAB = 1
+# Options menu tabs
+GENERAL_TAB = 0
+MODELV_TAB = 1
 
 # To make things easier for myself, I'm making a new class that contains common values that won't (or usually doesn't) change for each menu.
 class MenuTemp():
@@ -552,7 +556,7 @@ class BatchManagerM():
                 curMDL = batch[selection[0]]
                 curMDL.output = self.cPathVar.get()
             elif not focus.get(0).startswith("Select a folder of "):
-                mdls = batch[int(selection[0]):selection[len(selection)-1]+1]
+                mdls = self.getFromSelection(selection)
                 for i in mdls:
                     i.output = self.cPathVar.get()
         else:
@@ -561,7 +565,7 @@ class BatchManagerM():
                 curMDL = batch[selection[0]]
                 curMDL.output = "out"
             elif not focus.get(0).startswith("Select a folder of "):
-                mdls = batch[int(selection[0]):selection[len(selection)-1]+1]
+                mdls = self.getFromSelection(selection)
                 for i in mdls:
                     i.output = "out"
     
@@ -593,7 +597,7 @@ class BatchManagerM():
                         curMDL.output = "out"
                         self.cPathVar.set("Please specify an ABSOLUTE path!")
                 elif not focus.get(0).startswith("Select a folder of "):
-                    mdls = batch[int(selection[0]):selection[len(selection)-1]+1]
+                    mdls = self.getFromSelection(selection)
                     for i in mdls:
                         if os.path.isabs(self.cPathVar.get()):
                             i.output = self.cPathVar.get()
@@ -645,6 +649,23 @@ class BatchManagerM():
         self.mdl_list.grid_remove()
         self.qc_list.grid(column=0, row=1)
     
+    def getFromSelection(self, selection):
+        if self.curTab == DECOMP_TAB:
+            batch = self.curDBatch
+        else:
+            batch = self.curCBatch
+        mdls = []
+        count = -1
+        selCount = 0
+        for b in batch:
+            count += 1
+            if selCount > len(selection)-1:
+                break
+            if count == int(selection[selCount]):
+                selCount += 1
+                mdls.append(b)
+        return mdls
+    
     def lbSelHandler(self, e=None):
         try:
             if self.curTab == DECOMP_TAB:
@@ -667,7 +688,8 @@ class BatchManagerM():
                     self.cPath.unlock()
                     self.cPathVar.set(curMDL.output)
             elif not focus.get(0).startswith("Select a folder of "):
-                mdls = batch[int(selection[0]):selection[len(selection)-1]+1]
+                # mdls = batch[int(selection[0]):selection[len(selection)-1]+1]
+                mdls = self.getFromSelection(selection)
                 skipVal = mdls[0].skip
                 outputVal = mdls[0].output
                 defaultOpts = False
@@ -709,7 +731,7 @@ class BatchManagerM():
             curMDL = batch[selection[0]]
             curMDL.skip = self.skipMDLvar.get()
         elif not focus.get(0).startswith("Select a folder of "):
-            mdls = batch[int(selection[0]):selection[len(selection)-1]+1]
+            mdls = self.getFromSelection(selection)
             for i in mdls:
                 i.skip = self.skipMDLvar.get()
     
@@ -818,14 +840,25 @@ class DecompMenu():
                 }
             }
         }
+        self.modelerPresets = {
+            "presets": {
+                "Blender+Maya": True,
+                "FRAG+MS3D": False
+            }
+        }
         presetNames = list(self.presets["presets"].keys())
+        modelerNames = list(self.modelerPresets["presets"].keys())
         self.quickStpLbl = Label(self.quick, text="Quick Setup Presets: ")
         self.setupLabel = Label(master, text="MDL Input: ")
         self.nameLabel = Label(master, text="Output: ")
-        self.presetSel = ttk.Combobox(self.quick, values=presetNames)
+        self.presetSel = ttk.Combobox(self.quick, values=presetNames, width=12)
         self.presetSel.current(self.options["defDPreset"])
         self.presetDat = self.presets["presets"][self.presetSel.get()]
         self.presetSel.bind("<<ComboboxSelected>>", self.chPreset)
+        self.mdlPresetSel = ttk.Combobox(self.quick, values=modelerNames, width=12)
+        self.mdlPresetSel.current(self.options["defMDLPreset"])
+        self.mdlPresetDat = self.modelerPresets["presets"][self.mdlPresetSel.get()]
+        self.mdlPresetSel.bind("<<ComboboxSelected>>", self.chMDLpreset)
         self.name = StringVar()
         self.nameEntry = Entry(master, textvariable=self.name, width=self.widthFix-self.linuxWFix)
         self.nameEntry.bind("<FocusOut>", self.inputHandler)
@@ -928,6 +961,10 @@ class DecompMenu():
         self.mVal.set(self.presetDat["-m"])
         self.uVal.set(self.presetDat["-u"])
         self.vVal.set(self.presetDat["-V"])
+    
+    def chMDLpreset(self, e=False):
+        self.presetDat = self.modelerPresets["presets"][self.mdlPresetSel.get()]
+        self.tVal.set(self.presetDat)
 
     def applyTheme(self, master):
         style= ttk.Style()
@@ -982,6 +1019,9 @@ class DecompMenu():
             if key == "defDPreset":
                 self.presetSel.current(value)
                 self.chPreset()
+            elif key == "defMDLPreset":
+                self.mdlPresetSel.current(value)
+                self.chMDLpreset()
             elif key == "linuxFix":
                 if self.options["linuxFix"] == "Cinnamon":
                     self.linuxWFix = 2
@@ -1009,6 +1049,7 @@ class DecompMenu():
         self.quick.grid(column=0,row=2,sticky="nsew", columnspan=10)
         self.quickStpLbl.grid(column=0, row=2, sticky="w")
         self.presetSel.grid(column=1,row=2)
+        self.mdlPresetSel.grid(column=2,row=2, padx=(10,0))
         self.advOpt.grid(column=0, row=3, sticky="nsew", columnspan=10, pady=(20,0))
         self.advOptR2.grid(column=0, row=2, sticky="nsew", columnspan=10)
         self.advOptLabel.grid(column=0, row=0, sticky="w")
@@ -1102,6 +1143,18 @@ class DecompMenu():
         print(cmdArgs)
         return(cmdArgs)
     
+    def checkMDLversion(self, mdlLoc:str):
+        mdlLoc = mdlLoc
+        # For anyone who doesn't know, the default MDL version is 10.
+        fileVer = 10
+        try:
+            with open(mdlLoc, 'rb') as mdlF:
+                mdlF.seek(4)  # Move to the 5th byte (index 4)
+                fileVer = int.from_bytes(mdlF.read(1))
+        except:
+            print("COULDN\'T FIND MDL VERSION, DEFAULTING TO 10")
+        return fileVer
+    
     def startDecomp(self):
         SINGLE = False
         BATCH = True
@@ -1142,51 +1195,51 @@ class DecompMenu():
             decOut = f"./{mdlName}/"
         gotArgs = False
         cmdArgs = self.getArgs()
-        error = False
         if not cmdArgs == "" or not cmdArgs == " ":
             gotArgs = True
         if output == "" or output == None:
             output = os.path.join(os.path.dirname(mdl), "Decompile/")
             if not os.path.exists(output):
                 os.mkdir(output)
-        tOutput = ''
-        if sys.platform == 'linux':
-            if gotArgs:
-                tOutput = subprocess.getoutput(f'./third_party/mdldec -a {cmdArgs} \"{mdl}\" \"{output}\"')
-            else:
-                tOutput = subprocess.getoutput(f'./third_party/mdldec -a \"{mdl}\" \"{output}\"')
-        elif sys.platform == 'win32':
-            if gotArgs:
-                tOutput = subprocess.getoutput(f'\"{os.getcwd()}/third_party/mdldec.exe\" -a {cmdArgs} \"{mdl}\" \"{output}\"')
-            else:
-                tOutput = subprocess.getoutput(f'\"{os.getcwd()}/third_party/mdldec.exe\" -a \"{mdl}\" \"{output}\"')
-        # I don't have a Mac so I can't compile mdldec to Mac targets :(
-        # So instead I have to use wine for Mac systems
-        """elif sys.platform == 'darwin':
-            tOutput = subprocess.getoutput(f'wine third_party/mdldec_win32.exe \"{mdl}\"')"""
-        # Checking for errors (especially the 'unknown Studio MDL format')
+        mdlVer = self.checkMDLversion(mdl)
+        print(f"MDL version: {mdlVer}")
         v6MDL = False
-        if tOutput.find("unknown Studio MDL format version 6") != -1:
-            error = True
+        if mdlVer != 6:
+            tOutput = ''
             if sys.platform == 'linux':
-                v6MDL = True
-                shutil.copy(mdl, './')
-                v6MDLname = os.path.basename(mdl)
+                if gotArgs:
+                    tOutput = subprocess.getoutput(f'./third_party/mdldec -a {cmdArgs} \"{mdl}\" \"{output}\"')
+                else:
+                    tOutput = subprocess.getoutput(f'./third_party/mdldec -a \"{mdl}\" \"{output}\"')
+            elif sys.platform == 'win32':
+                if gotArgs:
+                    tOutput = subprocess.getoutput(f'\"{os.getcwd()}/third_party/mdldec.exe\" -a {cmdArgs} \"{mdl}\" \"{output}\"')
+                else:
+                    tOutput = subprocess.getoutput(f'\"{os.getcwd()}/third_party/mdldec.exe\" -a \"{mdl}\" \"{output}\"')
+            # I don't have a Mac so I can't compile mdldec to Mac targets :(
+            # So instead I have to use wine for Mac systems
+            """elif sys.platform == 'darwin':
+                tOutput = subprocess.getoutput(f'wine third_party/mdldec_win32.exe \"{mdl}\"')"""
+        else:
+            v6MDL = True
+            shutil.copy(mdl, './')
+            v6MDLname = os.path.basename(mdl)
+            if sys.platform == 'linux':
                 tOutput = subprocess.getoutput(f'wine \"{os.getcwd()}/third_party/mdl6dec.exe\" \"{v6MDLname}\" -p \"MDL6job\"')
-                os.remove(f"{v6MDLname}")
-                # Moving the decompiler output to the output folder!
-                if not os.path.exists(output):
-                    os.mkdir(output)
-                for f in os.listdir('MDL6job'):
-                    print(f)
-                    shutil.copy(f"MDL6job/{f}", os.path.join(output, f))
-                shutil.rmtree('MDL6job')
             else:
-                v6MDL = True
-                v6MDLname = os.path.basename(mdl)
-                tOutput = subprocess.getoutput(f'\"{os.getcwd()}/third_party/mdl6dec.exe\" \"{mdl}\" -p \"{output}\"')
-        elif tOutput.find("ERROR:") != -1:
-            error = True
+                tOutput = subprocess.getoutput(f'\"{os.getcwd()}/third_party/mdl6dec.exe\" \"{v6MDLname}\" -p \"MDL6job\"')
+            os.remove(f"{v6MDLname}")
+            AlphaPrettify(tOutput, self.tVal.get(), os.path.join(os.getcwd(), 'MDL6job'))
+            # Moving the decompiler output to the output folder!
+            if not os.path.exists(output):
+                os.mkdir(output)
+            for f in os.listdir('MDL6job'):
+                print(f)
+                try:
+                    shutil.copy(f"MDL6job/{f}", os.path.join(output, f))
+                except:
+                    shutil.copytree(os.path.join(os.getcwd(), 'MDL6job', f), os.path.join(output, f), dirs_exist_ok=True)
+            shutil.rmtree('MDL6job')
         print(tOutput)
         if not batch:
             self.console.setOutput(tOutput)
@@ -1196,34 +1249,6 @@ class DecompMenu():
             log = open(f"logs/decomp-{curDate}.txt", 'w')
             log.write(tOutput)
             log.close()
-        # Moving files to output directory (this is a workaround to a bug with Xash3D's model decompiler, where absolute paths result in an error)
-        """if not error:
-            if batch and fallback and not os.path.exists(os.path.dirname(output)):
-                os.mkdir(os.path.dirname(output))
-            if not os.path.exists(output):
-                os.mkdir(output)
-            anims = os.path.join(decOut, 'anims/')
-            texFolder = os.path.join(decOut, 'textures/')
-            for f in os.listdir(decOut):
-                print(f)
-                if f.endswith("smd") or f.endswith("qc"):
-                    shutil.copy(f"{decOut}/{f}", os.path.join(output, f))
-                    os.remove(f"{decOut}/{f}")
-                elif f.endswith("bmp") and not self.tVal.get():
-                    shutil.copy(f"{decOut}/{f}", os.path.join(output, f))
-                    os.remove(f"{decOut}/{f}")
-            shutil.copytree(anims, os.path.join(output, 'anims/'))
-            if self.tVal.get():
-                shutil.copytree(texFolder, os.path.join(output, 'textures/'))
-                try:
-                    shutil.rmtree(texFolder)
-                except:
-                    pass
-            try:
-                shutil.rmtree(anims)
-            except:
-                pass
-            shutil.rmtree(decOut)"""
 
 class CompMenu():
     def __init__(self, template, master, batchManager:BatchManagerM, startHidden:bool=False):
@@ -2109,7 +2134,7 @@ class AboutMenu():
 
 class OptionsMenu():
     def __init__(self, template, master, thmecallback, updFunc, startHidden:bool=False):
-        self.curPage = 0
+        self.curPage = GENERAL_TAB
         self.hidden = startHidden
         self.master = master
         thme = template.thme
@@ -2118,7 +2143,7 @@ class OptionsMenu():
         self.updFunc = updFunc
         # Grabbing options
         self.options = template.options
-        self.curJSONVer = 6
+        self.curJSONVer = 7
         # Checking if options JSON is from a previous version...
         if not self.options["version"] >= self.curJSONVer:
             self.upgradeJSON()
@@ -2126,9 +2151,11 @@ class OptionsMenu():
         self.pageButtons = Frame(master, borderwidth=2, bg=thme["bg"])
         self.generalButton = Button(self.pageButtons, text="General", cursor="hand2", command=self.genPg)
         self.hlmvButton = Button(self.pageButtons, text="Model Viewers", cursor="hand2", command=self.hlmvPg)
+        
         # General options
         self.setupLabel = Label(master, text=f"Theme: ", background=thme["bg"], foreground=thme["txt"])
         self.nameLabel = Label(master, text="Starting directory: ", background=thme["bg"], fg=thme["txt"])
+        
         themes = ["Freeman", "Shephard", "Calhoun", "Cross"]
         usrThemes = self.checkNewThemes()
         if not usrThemes == False:
@@ -2143,20 +2170,24 @@ class OptionsMenu():
         self.themeCBox = ttk.Combobox(master, cursor="hand2", values=themes)
         self.themeCBox.bind("<<ComboboxSelected>>", thmecallback)
         self.themeCBox.set(self.options["theme"])
+        
         self.startFSV = StringVar(master, value=self.options["startFolder"])
         # I just realised I shortened the name so it looks like it's name is Start Fent.
         # I promise you there is no illicit drugs to be found anywhere in the program lol.
         self.startFent = Entry(master, textvariable=self.startFSV)
         self.setSF = Button(master, text="Set Start Folder", cursor="hand2", command=self.chSF)
+        
         self.forceDefB = BooleanVar(master, value=self.options["forceDefPaths"])
         self.fdLabel = Label(master, text="Prioritise default paths:")
         self.forceDefault = Checkbutton(master, command=self.chFDP, variable=self.forceDefB)
+        
         # Model Viewer Options
         self.hlmvLabel = Label(master, text="Model Viewer: ")
         hlmvValues = ["None", "Half-Life Asset Manager", "Other"]
         self.hlmvCBox = ttk.Combobox(master, cursor="hand2", values=hlmvValues)
         self.hlmvCBox.current(self.options["gsMV"]["selectedMV"])
         self.hlmvCBox.bind("<<ComboboxSelected>>", self.setMV)
+        
         self.mvPathLabel = Label(master, text="Path to model viewer: ")
         self.mvPathVar = StringVar(master, value="Path to model viewer (if \"Other\" is selected)")
         self.mvPathEnt = BoolEntry(master, textvariable=self.mvPathVar, placeholder="Path to model viewer (if \"Other\" is selected)")
@@ -2164,20 +2195,25 @@ class OptionsMenu():
         if self.options["gsMV"]["selectedMV"] > 1:
             self.mvPathEnt.unlock()
             self.mvPathVar.set(self.options["gsMV"]["csPath"])
+        
         # Options for setting defaults for profiles
         self.defCLabel = Label(master, text=f"Default Compiler: ", background=thme["bg"], foreground=thme["txt"])
         self.defGLabel = Label(master, text="Default Game: ", background=thme["bg"], fg=thme["txt"])
         self.defPLabel = Label(master, text="Default Decompile Preset:")
+        self.defMDLLabel = Label(master, text="Default Modeler Preset:")
+        
         cList = open("save/compilers.txt", "r")
         cOptions = cList.read().split('\n')
         cOptions.pop(len(cOptions)-1)
         self.compSel = ttk.Combobox(master, values=cOptions)
         self.compSel.bind("<<ComboboxSelected>>", self.setCmp)
         self.compSel.current(self.options["defComp"])
+
         gList = open("save/games.txt", "r")
         self.gOptions = gList.read().split('\n')
         self.gOptions.pop(len(self.gOptions)-1)
         gList.close()
+
         self.games = GamesHandler(self.gOptions)
         self.gameSel = ttk.Combobox(master, values=self.games.gNames)
         self.gameSel.bind("<<ComboboxSelected>>", self.setGame)
@@ -2210,14 +2246,29 @@ class OptionsMenu():
                 }
             }
         }
+        self.modelerPresets = {
+            "presets": {
+                "Blender+Maya": True,
+                "FRAG+MS3D": False
+            }
+        }
         presetNames = list(self.presets["presets"].keys())
+        modelerNames = list(self.modelerPresets["presets"].keys())
+
         self.presetSel = ttk.Combobox(master, values=presetNames)
         self.presetSel.current(self.options["defDPreset"])
         self.presetDat = self.presets["presets"][self.presetSel.get()]
         self.presetSel.bind("<<ComboboxSelected>>", self.setDP)
+
+        self.mdlPresetSel = ttk.Combobox(master, values=modelerNames)
+        self.mdlPresetSel.current(self.options["defMDLPreset"])
+        self.mdlPresetDat = self.modelerPresets["presets"][self.mdlPresetSel.get()]
+        self.mdlPresetSel.bind("<<ComboboxSelected>>", self.setDMDL)
+
         self.spLabel = Label(master, text="Save paths: ")
         self.savePathsB = BooleanVar(master, value=self.options["save_paths"])
         self.savePathsCB = Checkbutton(master, command=self.chSP, variable=self.savePathsB)
+
         self.distroLabel = Label(master, text="Distro Resize: ")
         self.restartReq1 = Label(master, text="(RESTART REQUIRED)")
         self.distros = ["KDE", "Cinnamon"]
@@ -2226,6 +2277,7 @@ class OptionsMenu():
             self.distroSel.set(self.options["linuxFix"])
             self.distroSel.bind("<<ComboboxSelected>>", self.setLF)
             self.distroTT = ToolTip(self.distroSel, "This Linux-only selector will tell Snark which distro variant you use, it will resize itself so everything looks correct on your system when you select the option. If there's still windowing bugs, please create an issue on Github or Gamebanana with your distro information copied from the terminal or the about menu.", background=thme["tt"], foreground=thme["txt"])
+        
         # Tooltips
         self.themeTT = ToolTip(self.themeCBox, "Changes the program's theme, the built-in themes are: Freeman, Shephard, Calhoun and Cross.", background=thme["tt"], foreground=thme["txt"])
         self.startFolderTT = ToolTip(self.startFent, "Sets the directory that the built-in file explorer will start in, the default is the documents folder.", background=thme["tt"], foreground=thme["txt"])
@@ -2265,6 +2317,7 @@ class OptionsMenu():
             except:
                 if distroInfo().get("VARIANT_ID", 'kde').lower() == "cinnamon":
                     linuxWinFix = 'Cinnamon'
+        defaultModelerPreset = self.options.get("defMDLPreset", 0)
         if self.options["version"] < 5:
             savePaths = True
             upgradePaths = True
@@ -2273,6 +2326,7 @@ class OptionsMenu():
             "defComp": defaultComp,
             "defGame": defaultGame,
             "defDPreset": defaultDecompPreset,
+            "defMDLPreset": defaultModelerPreset,
             "forceDefPaths": forceDefaultPaths,
             "save_paths": savePaths,
             "startFolder": startingFolder,
@@ -2315,7 +2369,7 @@ class OptionsMenu():
         return False
     
     def genPg(self):
-        self.curPage = 0
+        self.curPage = GENERAL_TAB
         self.setupLabel.grid(column=1, row=1, sticky="w")
         self.themeCBox.grid(column=2, row=1, sticky="w")
         self.nameLabel.grid(column=1, row=2, sticky="w")
@@ -2342,7 +2396,7 @@ class OptionsMenu():
         self.setMVP.grid_remove()
     
     def hlmvPg(self):
-        self.curPage = 1
+        self.curPage = MODELV_TAB
         self.setupLabel.grid_remove()
         self.themeCBox.grid_remove()
         self.nameLabel.grid_remove()
@@ -2481,6 +2535,12 @@ class OptionsMenu():
         self.save_options()
         self.updFunc("defDPreset", opt)
     
+    def setDMDL(self, e=False):
+        opt = self.mdlPresetSel.current()
+        self.options["defMDLPreset"] = opt
+        self.save_options()
+        self.updFunc("defMDLPreset", opt)
+    
     def chFDP(self):
         self.options["forceDefPaths"] = self.forceDefB.get()
         self.save_options()
@@ -2518,7 +2578,7 @@ class OptionsMenu():
         self.pageButtons.grid(row=0, column=1, sticky="nsew", columnspan=10)
         self.generalButton.grid(row=0, column=1, sticky="w")
         self.hlmvButton.grid(row=0, column=2, sticky="w")
-        if self.curPage == 0:
+        if self.curPage == GENERAL_TAB:
             self.setupLabel.grid(column=1, row=1, sticky="w")
             self.themeCBox.grid(column=2, row=1, sticky="w")
             self.nameLabel.grid(column=1, row=2, sticky="w")
@@ -2532,13 +2592,15 @@ class OptionsMenu():
             self.defPLabel.grid(column=1, row=6, sticky="w")
             self.gameSel.grid(column=2, row=5, sticky="w")
             self.presetSel.grid(column=2, row=6, sticky="w")
-            self.spLabel.grid(column=1, row=7, sticky="w")
-            self.savePathsCB.grid(column=2, row=7, sticky="w")
+            self.spLabel.grid(column=1, row=8, sticky="w")
+            self.savePathsCB.grid(column=2, row=8, sticky="w")
             if sys.platform == 'linux':
-                self.distroLabel.grid(column=1, row=8, sticky="w")
-                self.distroSel.grid(column=2, row=8, sticky="w")
-                self.restartReq1.grid(column=3, row=8, sticky="w")
-        elif self.curPage == 1:
+                self.distroLabel.grid(column=1, row=9, sticky="w")
+                self.distroSel.grid(column=2, row=9, sticky="w")
+                self.restartReq1.grid(column=3, row=9, sticky="w")
+            self.defMDLLabel.grid(column=1, row=7, sticky="w")
+            self.mdlPresetSel.grid(column=2, row=7, sticky="w")
+        elif self.curPage == MODELV_TAB:
             self.hlmvLabel.grid(column=1, row=1, sticky="w")
             self.hlmvCBox.grid(column=2, row=1, sticky="w")
             self.mvPathLabel.grid(column=1, row=2, sticky="w")
