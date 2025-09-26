@@ -16,8 +16,12 @@ import jsonc
 from platform import freedesktop_os_release as distroInfo
 import pyperclip
 
+# Batch manager tabs
 DECOMP_TAB = 0
 COMP_TAB = 1
+# Options menu tabs
+GENERAL_TAB = 0
+MODELV_TAB = 1
 
 # To make things easier for myself, I'm making a new class that contains common values that won't (or usually doesn't) change for each menu.
 class MenuTemp():
@@ -552,7 +556,7 @@ class BatchManagerM():
                 curMDL = batch[selection[0]]
                 curMDL.output = self.cPathVar.get()
             elif not focus.get(0).startswith("Select a folder of "):
-                mdls = batch[int(selection[0]):selection[len(selection)-1]+1]
+                mdls = self.getFromSelection(selection)
                 for i in mdls:
                     i.output = self.cPathVar.get()
         else:
@@ -561,7 +565,7 @@ class BatchManagerM():
                 curMDL = batch[selection[0]]
                 curMDL.output = "out"
             elif not focus.get(0).startswith("Select a folder of "):
-                mdls = batch[int(selection[0]):selection[len(selection)-1]+1]
+                mdls = self.getFromSelection(selection)
                 for i in mdls:
                     i.output = "out"
     
@@ -593,7 +597,7 @@ class BatchManagerM():
                         curMDL.output = "out"
                         self.cPathVar.set("Please specify an ABSOLUTE path!")
                 elif not focus.get(0).startswith("Select a folder of "):
-                    mdls = batch[int(selection[0]):selection[len(selection)-1]+1]
+                    mdls = self.getFromSelection(selection)
                     for i in mdls:
                         if os.path.isabs(self.cPathVar.get()):
                             i.output = self.cPathVar.get()
@@ -645,6 +649,23 @@ class BatchManagerM():
         self.mdl_list.grid_remove()
         self.qc_list.grid(column=0, row=1)
     
+    def getFromSelection(self, selection):
+        if self.curTab == DECOMP_TAB:
+            batch = self.curDBatch
+        else:
+            batch = self.curCBatch
+        mdls = []
+        count = -1
+        selCount = 0
+        for b in batch:
+            count += 1
+            if selCount > len(selection)-1:
+                break
+            if count == int(selection[selCount]):
+                selCount += 1
+                mdls.append(b)
+        return mdls
+    
     def lbSelHandler(self, e=None):
         try:
             if self.curTab == DECOMP_TAB:
@@ -667,7 +688,8 @@ class BatchManagerM():
                     self.cPath.unlock()
                     self.cPathVar.set(curMDL.output)
             elif not focus.get(0).startswith("Select a folder of "):
-                mdls = batch[int(selection[0]):selection[len(selection)-1]+1]
+                # mdls = batch[int(selection[0]):selection[len(selection)-1]+1]
+                mdls = self.getFromSelection(selection)
                 skipVal = mdls[0].skip
                 outputVal = mdls[0].output
                 defaultOpts = False
@@ -709,7 +731,7 @@ class BatchManagerM():
             curMDL = batch[selection[0]]
             curMDL.skip = self.skipMDLvar.get()
         elif not focus.get(0).startswith("Select a folder of "):
-            mdls = batch[int(selection[0]):selection[len(selection)-1]+1]
+            mdls = self.getFromSelection(selection)
             for i in mdls:
                 i.skip = self.skipMDLvar.get()
     
@@ -2109,7 +2131,7 @@ class AboutMenu():
 
 class OptionsMenu():
     def __init__(self, template, master, thmecallback, updFunc, startHidden:bool=False):
-        self.curPage = 0
+        self.curPage = GENERAL_TAB
         self.hidden = startHidden
         self.master = master
         thme = template.thme
@@ -2315,7 +2337,7 @@ class OptionsMenu():
         return False
     
     def genPg(self):
-        self.curPage = 0
+        self.curPage = GENERAL_TAB
         self.setupLabel.grid(column=1, row=1, sticky="w")
         self.themeCBox.grid(column=2, row=1, sticky="w")
         self.nameLabel.grid(column=1, row=2, sticky="w")
@@ -2342,7 +2364,7 @@ class OptionsMenu():
         self.setMVP.grid_remove()
     
     def hlmvPg(self):
-        self.curPage = 1
+        self.curPage = MODELV_TAB
         self.setupLabel.grid_remove()
         self.themeCBox.grid_remove()
         self.nameLabel.grid_remove()
@@ -2518,7 +2540,7 @@ class OptionsMenu():
         self.pageButtons.grid(row=0, column=1, sticky="nsew", columnspan=10)
         self.generalButton.grid(row=0, column=1, sticky="w")
         self.hlmvButton.grid(row=0, column=2, sticky="w")
-        if self.curPage == 0:
+        if self.curPage == GENERAL_TAB:
             self.setupLabel.grid(column=1, row=1, sticky="w")
             self.themeCBox.grid(column=2, row=1, sticky="w")
             self.nameLabel.grid(column=1, row=2, sticky="w")
@@ -2538,7 +2560,7 @@ class OptionsMenu():
                 self.distroLabel.grid(column=1, row=8, sticky="w")
                 self.distroSel.grid(column=2, row=8, sticky="w")
                 self.restartReq1.grid(column=3, row=8, sticky="w")
-        elif self.curPage == 1:
+        elif self.curPage == MODELV_TAB:
             self.hlmvLabel.grid(column=1, row=1, sticky="w")
             self.hlmvCBox.grid(column=2, row=1, sticky="w")
             self.mvPathLabel.grid(column=1, row=2, sticky="w")
