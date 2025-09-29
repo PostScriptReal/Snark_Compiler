@@ -840,14 +840,14 @@ class DecompMenu():
                 }
             }
         }
-        self.modelerPresets = {
+        self.modellerPresets = {
             "presets": {
                 "Blender+Maya": True,
                 "FRAG+MS3D": False
             }
         }
         presetNames = list(self.presets["presets"].keys())
-        modelerNames = list(self.modelerPresets["presets"].keys())
+        modellerNames = list(self.modellerPresets["presets"].keys())
         self.quickStpLbl = Label(self.quick, text="Quick Setup Presets: ")
         self.setupLabel = Label(master, text="MDL Input: ")
         self.nameLabel = Label(master, text="Output: ")
@@ -855,9 +855,9 @@ class DecompMenu():
         self.presetSel.current(self.options["defDPreset"])
         self.presetDat = self.presets["presets"][self.presetSel.get()]
         self.presetSel.bind("<<ComboboxSelected>>", self.chPreset)
-        self.mdlPresetSel = ttk.Combobox(self.quick, values=modelerNames, width=12)
+        self.mdlPresetSel = ttk.Combobox(self.quick, values=modellerNames, width=12)
         self.mdlPresetSel.current(self.options["defMDLPreset"])
-        self.mdlPresetDat = self.modelerPresets["presets"][self.mdlPresetSel.get()]
+        self.mdlPresetDat = self.modellerPresets["presets"][self.mdlPresetSel.get()]
         self.mdlPresetSel.bind("<<ComboboxSelected>>", self.chMDLpreset)
         self.name = StringVar()
         self.nameEntry = Entry(master, textvariable=self.name, width=self.widthFix-self.linuxWFix)
@@ -963,7 +963,7 @@ class DecompMenu():
         self.vVal.set(self.presetDat["-V"])
     
     def chMDLpreset(self, e=False):
-        self.presetDat = self.modelerPresets["presets"][self.mdlPresetSel.get()]
+        self.presetDat = self.modellerPresets["presets"][self.mdlPresetSel.get()]
         self.tVal.set(self.presetDat)
 
     def applyTheme(self, master):
@@ -2200,7 +2200,7 @@ class OptionsMenu():
         self.defCLabel = Label(master, text=f"Default Compiler: ", background=thme["bg"], foreground=thme["txt"])
         self.defGLabel = Label(master, text="Default Game: ", background=thme["bg"], fg=thme["txt"])
         self.defPLabel = Label(master, text="Default Decompile Preset:")
-        self.defMDLLabel = Label(master, text="Default Modeler Preset:")
+        self.defMDLLabel = Label(master, text="Default Modeller Preset:")
         
         cList = open("save/compilers.txt", "r")
         cOptions = cList.read().split('\n')
@@ -2246,23 +2246,23 @@ class OptionsMenu():
                 }
             }
         }
-        self.modelerPresets = {
+        self.modellerPresets = {
             "presets": {
                 "Blender+Maya": True,
                 "FRAG+MS3D": False
             }
         }
         presetNames = list(self.presets["presets"].keys())
-        modelerNames = list(self.modelerPresets["presets"].keys())
+        modellerNames = list(self.modellerPresets["presets"].keys())
 
         self.presetSel = ttk.Combobox(master, values=presetNames)
         self.presetSel.current(self.options["defDPreset"])
         self.presetDat = self.presets["presets"][self.presetSel.get()]
         self.presetSel.bind("<<ComboboxSelected>>", self.setDP)
 
-        self.mdlPresetSel = ttk.Combobox(master, values=modelerNames)
+        self.mdlPresetSel = ttk.Combobox(master, values=modellerNames)
         self.mdlPresetSel.current(self.options["defMDLPreset"])
-        self.mdlPresetDat = self.modelerPresets["presets"][self.mdlPresetSel.get()]
+        self.mdlPresetDat = self.modellerPresets["presets"][self.mdlPresetSel.get()]
         self.mdlPresetSel.bind("<<ComboboxSelected>>", self.setDMDL)
 
         self.spLabel = Label(master, text="Save paths: ")
@@ -2317,7 +2317,7 @@ class OptionsMenu():
             except:
                 if distroInfo().get("VARIANT_ID", 'kde').lower() == "cinnamon":
                     linuxWinFix = 'Cinnamon'
-        defaultModelerPreset = self.options.get("defMDLPreset", 0)
+        defaultModellerPreset = self.options.get("defMDLPreset", 0)
         if self.options["version"] < 5:
             savePaths = True
             upgradePaths = True
@@ -2326,7 +2326,7 @@ class OptionsMenu():
             "defComp": defaultComp,
             "defGame": defaultGame,
             "defDPreset": defaultDecompPreset,
-            "defMDLPreset": defaultModelerPreset,
+            "defMDLPreset": defaultModellerPreset,
             "forceDefPaths": forceDefaultPaths,
             "save_paths": savePaths,
             "startFolder": startingFolder,
@@ -2383,12 +2383,14 @@ class OptionsMenu():
         self.defPLabel.grid(column=1, row=6, sticky="w")
         self.gameSel.grid(column=2, row=5, sticky="w")
         self.presetSel.grid(column=2, row=6, sticky="w")
-        self.spLabel.grid(column=1, row=7, sticky="w")
-        self.savePathsCB.grid(column=2, row=7, sticky="w")
+        self.spLabel.grid(column=1, row=8, sticky="w")
+        self.savePathsCB.grid(column=2, row=8, sticky="w")
         if sys.platform == 'linux':
-            self.distroLabel.grid(column=1, row=8, sticky="w")
-            self.distroSel.grid(column=2, row=8, sticky="w")
-            self.restartReq1.grid(column=3, row=8, sticky="w")
+            self.distroLabel.grid(column=1, row=9, sticky="w")
+            self.distroSel.grid(column=2, row=9, sticky="w")
+            self.restartReq1.grid(column=3, row=9, sticky="w")
+        self.defMDLLabel.grid(column=1, row=7, sticky="w")
+        self.mdlPresetSel.grid(column=2, row=7, sticky="w")
         self.hlmvLabel.grid_remove()
         self.hlmvCBox.grid_remove()
         self.mvPathLabel.grid_remove()
@@ -2416,6 +2418,8 @@ class OptionsMenu():
             self.distroLabel.grid_remove()
             self.distroSel.grid_remove()
             self.restartReq1.grid_remove()
+        self.defMDLLabel.grid_remove()
+        self.mdlPresetSel.grid_remove()
         self.hlmvLabel.grid(column=1, row=1, sticky="w")
         self.hlmvCBox.grid(column=2, row=1, sticky="w")
         self.mvPathLabel.grid(column=1, row=2, sticky="w")
