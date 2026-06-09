@@ -71,7 +71,20 @@
 		</tr>
 		<tr>
 			<td><a href="https://store.steampowered.com/app/225840/Sven_Coop/">Sven Co-op StudioMDL</a></td>
-			<td>Proprietary</td>
+			<td>HLSDK</td>
+		</tr>
+		</tr>
+		<tr>
+			<td><a href="https://github.com/SNMetamorph/PrimeXT/">PrimeXT StudioMDL</a></td>
+			<td>GPL</td>
+		</tr>
+		<tr>
+			<td><a href="https://github.com/PostScriptReal/studiomdl">FunnkyHD's StudioMDL (modified)</a></td>
+			<td>HLSDK</td>
+		</tr>
+		<tr>
+			<td><a href="https://github.com/L-P/studiomdl">Studiomdl (updated fork)</a></td>
+			<td>HLSDK</td>
 		</tr>
 	</table>
 </div>

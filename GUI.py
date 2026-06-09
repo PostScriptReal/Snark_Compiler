@@ -138,7 +138,7 @@ class GetNewVersion:
 		buttons = Frame(frame, borderwidth=2)
 		buttons.grid(column=1, row=1, sticky=(S), columnspan=10)
 
-		text = Label(frame, text="A new version of Snark has been released,\n do you want to update to the new version?")
+		text = Label(frame, text="A new version of Snark has been released,\ndo you want to update to the new version?")
 		text.grid(column=1, row=0, padx=50, pady=40)
 
 		self.dlButton = Button(buttons, text="Yes", command=self.releasesPage)
@@ -197,10 +197,32 @@ class GetNewVersion:
 
 class GUI(Tk):
 	def get_options(self):
-		jsf = open('save/options.json', 'r')
-		js = jsf.read()
-		jsf.close()
-		self.options = json.loads(js)
+		defOpts = {
+			"defComp": 0,
+			"defDPreset": 0,
+			"defGame": 0,
+			"defMDLPreset": 0,
+			"forceDefPaths": False,
+			"gsMV": {
+				"csPath": "",
+				"selectedMV": 0
+			},
+			"linuxFix": "KDE",
+			"save_paths": True,
+			"startFolder": "~/Documents",
+			"theme": "Freeman",
+			"version": 7
+		}
+		try:
+			jsf = open('save/options.json', 'r')
+			js = jsf.read()
+			jsf.close()
+			self.options = json.loads(js)
+		except:
+			with open('save/options.json', 'w') as optFile:
+				optFile.write(json.dumps(defOpts, sort_keys=True, indent=5))
+			with open('save/options.json', 'r') as opts:
+				self.options = json.loads(opts.read())
 	
 	def save_options(self):
 		newjson = json.dumps(self.options, sort_keys=True, indent=5)
@@ -283,6 +305,24 @@ class GUI(Tk):
 				"ent": "#e33d63",
 				"txt": "white",
 				"tt": "#dc0002"
+			}
+		elif self.selTheme == "Delta":
+			thCol = {
+				"bg": "#b429f4",
+				# First value is inactive colour, 2nd hover and 3rd being the active colour
+				"btn": ["#9222df", "#9d38e2", "#aa57e5"],
+				"ent": "#7c39d8",
+				"txt": "white",
+				"tt": "#820ac7"
+			}
+		elif self.selTheme == "Dark":
+			thCol = {
+				"bg": "#121128",
+				# First value is inactive colour, 2nd hover and 3rd being the active colour
+				"btn": ["#101120", "#111222", "#131426"],
+				"ent": "#131824",
+				"txt": "white",
+				"tt": "#0d0e1f"
 			}
 		else:
 			if os.path.exists(f'themes/{self.selTheme}.jsonc'):
@@ -504,6 +544,24 @@ class GUI(Tk):
 				"ent": "#e33d63",
 				"txt": "white",
 				"tt": "#dc0002"
+			}
+		elif self.selTheme == "Delta":
+			thCol = {
+				"bg": "#b429f4",
+				# First value is inactive colour, 2nd hover and 3rd being the active colour
+				"btn": ["#9222df", "#9d38e2", "#aa57e5"],
+				"ent": "#7c39d8",
+				"txt": "white",
+				"tt": "#820ac7"
+			}
+		elif self.selTheme == "Dark":
+			thCol = {
+				"bg": "#121128",
+				# First value is inactive colour, 2nd hover and 3rd being the active colour
+				"btn": ["#101120", "#111222", "#131426"],
+				"ent": "#131824",
+				"txt": "white",
+				"tt": "#0d0e1f"
 			}
 		else:
 			if os.path.exists(f'themes/{self.selTheme}.jsonc'):

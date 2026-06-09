@@ -48,5 +48,8 @@ class ToolTip(object):
         self.fg = foreground
 
     def close(self, event=None):
-        if self.window:
-            self.window.destroy()
+        try:
+            if self.window:
+                self.window.destroy()
+        except:
+            pass

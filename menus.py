@@ -15,6 +15,8 @@ import jsonc
 # from interp import SSTReader
 from platform import freedesktop_os_release as distroInfo
 import pyperclip
+from datetime import datetime as date
+import calendar
 
 # Batch manager tabs
 DECOMP_TAB = 0
@@ -22,6 +24,7 @@ COMP_TAB = 1
 # Options menu tabs
 GENERAL_TAB = 0
 MODELV_TAB = 1
+DEFAULTS_TAB = 2
 
 # To make things easier for myself, I'm making a new class that contains common values that won't (or usually doesn't) change for each menu.
 class MenuTemp():
@@ -266,7 +269,10 @@ class CompSetupMenu():
         js = open("save/paths.json", 'r')
         self.csPaths = json.loads(js.read())
         js.close()
-        cList = open("save/compilers.txt", "r")
+        if os.path.exists(f"save/compilers{sys.platform}.txt"):
+            cList = open(f"save/compilers{sys.platform}.txt", "r")
+        else:
+            cList = open("save/compilers.txt", "r")
         cOptions = cList.read().split('\n')
         cOptions.pop(len(cOptions)-1)
         cList.close()
@@ -826,13 +832,13 @@ class DecompMenu():
                     "-V": False,
                     "-m": True
                 },
-                # For the DoomMusic StudioMDL compiler
-                "DoomMusic": {
+                # For FunnkyHD's StudioMDL compiler
+                "FunnkyHD": {
                     "-u": True,
                     "-V": False,
                     "-m": True
                 },
-                # For Xash3D engine mods
+                # For Xash3D/PrimeXT engine mods
                 "Xash3D": {
                     "-u": False,
                     "-V": False,
@@ -1268,7 +1274,7 @@ class CompMenu():
             pass
         self.hidden = startHidden
         self.master = master
-        self.svengine, logOutput = False, False
+        self.svengine, self.funnky, logOutput = False, False, False
         self.mdlPath = ""
         # Setting up JSON stuff
         js = open("save/compilers.jsonc", 'r')
@@ -1311,7 +1317,10 @@ class CompMenu():
         self.outBrowse = Button(master, text='Browse', command=self.output, cursor="hand2")
         self.compLabel = Label(self.selects, text="Compiler: ")
         self.hlmv = Button(master, text='Open model in HLMV', command=self.openHLAM, cursor="hand2")
-        cList = open("save/compilers.txt", "r")
+        if os.path.exists(f"save/compilers{sys.platform}.txt"):
+            cList = open(f"save/compilers{sys.platform}.txt", "r")
+        else:
+            cList = open("save/compilers.txt", "r")
         cOptions = cList.read().split('\n')
         cOptions.pop(len(cOptions)-1)
         self.compSel = ttk.Combobox(self.selects, values=cOptions, width=8)
@@ -1389,6 +1398,7 @@ class CompMenu():
         self.pf2ChkTT = ToolTip(self.pf2Chk, "Forces power of 2 textures when enabled", background=thme["tt"], foreground=thme["txt"])
         self.mdlTT = ToolTip(self.mdlBrowse, "REQUIRED, specifies the QC file used to compile your model, you cannot leave this blank.", background=thme["tt"], foreground=thme["txt"])
         self.outputTT = ToolTip(self.outBrowse, "OPTIONAL, if an output folder is not specified, then it will place the compiled model in a subfolder of where the QC file is located.", background=thme["tt"], foreground=thme["txt"])
+        self.compilerTT = ToolTip(self.compSel, self.fullCJS["compilers"][cOptions[self.options["defComp"]]]["description"], background=thme["tt"], foreground=thme["txt"])
         
         self.decomp = Button(master, text='Compile', command=self.startCompile, cursor="hand2")
         self.console = Console(master, 'Currently no warnings or errors!', 0, 5, self.conFix-self.conWFix, 12)
@@ -1485,8 +1495,12 @@ class CompMenu():
             else:
                 self.keepBonesChk.grid(column=5, row=2, sticky="w")
             self.pf2Chk.grid_remove()
+        elif self.compJS["type"].lower() == "funnky":
+            self.funnky = True
+            self.pf2Chk.grid_remove()
         else:
             self.svengine = False
+            self.funnky = False
             self.keepBonesChk.grid_remove()
             if self.advOptFix:
                 self.pf2Chk.grid(column=1, row=2, sticky="w")
@@ -1496,6 +1510,13 @@ class CompMenu():
             self.compatChk(enabled=False)
         else:
             self.compatChk()
+        # Unlike every other time, I have to destroy the tooltip display first before changing this around.
+        try:
+            self.compilerTT.window.destroy()
+        except:
+            pass
+        self.compilerTT = ToolTip(self.compSel, self.compJS["description"], background=self.thme["tt"], foreground=self.thme["txt"])
+
     
     def openHLAM(self):
         # If "Half-Life Asset Manager" is selected
@@ -1572,6 +1593,7 @@ class CompMenu():
         self.outputTT.changeTheme(newTheme["tt"], newTheme["txt"])
         self.angleSB.changeTheme(newTheme["ent"], newTheme["btn"][0], newTheme["txt"])
         self.groupSB.changeTheme(newTheme["ent"], newTheme["btn"][0], newTheme["txt"])
+        self.compilerTT.changeTheme(newTheme["tt"], newTheme["txt"])
 
     def updateOpt(self, key, value):
         if not key.startswith("gsMV"):
@@ -1648,6 +1670,8 @@ class CompMenu():
                 self.keepBonesChk.grid(column=1, row=2, sticky="w")
             else:
                 self.keepBonesChk.grid(column=5, row=2, sticky="w")
+        elif self.funnky:
+            self.pf2Chk.grid_remove()
         self.decomp.grid(column=0, row=4, pady=(10,0))
         if not self.mdlPath == "" and self.options["gsMV"]["selectedMV"] > 0:
             self.hlmv.grid(column=1, row=4, pady=(10,0), sticky="w")
@@ -1744,6 +1768,7 @@ class CompMenu():
         self.batchManager.setBatch(batchFolders, 'comp')
     
     def compatChk(self, e=False, enabled=True):
+        compDat = self.fullCJS["compilers"][self.compSel.get()]
         if enabled:
             if not self.name.get() == "":
                 handler = QCHandler(self.name.get())
@@ -1753,7 +1778,6 @@ class CompMenu():
                     js = open(f"save/user/game{self.gameSel.get()}.json", 'r')
                     gJS = json.loads(js.read())
                     gameDat = gJS[self.gameSel.get()]
-                compDat = self.fullCJS["compilers"][self.compSel.get()]
                 warnings = []
                 if compDat["capabilities"]["1024px"]:
                     # If the game doesn't support higher resolution textures, then give a warning in the console.
@@ -1795,11 +1819,27 @@ class CompMenu():
                 
                 # Update the console
                 if len(warnings) != 0:
-                    self.console.setOutput("\n".join(warnings))
+                    if compDat["path"]["default"]["linux"][0].endswith(".exe") and sys.platform == "linux":
+                        self.console.setOutput("\n".join(warnings))
+                        self.console.append("\nWARNING: The selected compiler does not have a native Linux binary and \nthus requires Wine to run, install the non-Flatpak version of Wine if you \ndon't have it. As a consequence, this will also run slower!")
+                    else:
+                        self.console.setOutput("\n".join(warnings))
+                else:
+                    if compDat["path"]["default"]["linux"][0].endswith(".exe") and sys.platform == "linux":
+                        self.console.setOutput('Currently no warnings or errors!')
+                        self.console.append("\nWARNING: The selected compiler does not have a native Linux binary and \nthus requires Wine to run, install the non-Flatpak version of Wine if you \ndon't have it. As a consequence, this will also run slower!")
+                    else:
+                        self.console.setOutput('Currently no warnings or errors!')
+            else:
+                if compDat["path"]["default"]["linux"][0].endswith(".exe") and sys.platform == "linux":
+                    self.console.setOutput('Currently no warnings or errors!')
+                    self.console.append("\nWARNING: The selected compiler does not have a native Linux binary and \nthus requires Wine to run, install the non-Flatpak version of Wine if you \ndon't have it. As a consequence, this will also run slower!")
                 else:
                     self.console.setOutput('Currently no warnings or errors!')
         else:
             self.console.setOutput('Cannot check for compatibility issues as you have selected batch mode!')
+            if compDat["path"]["default"]["linux"][0].endswith(".exe") and sys.platform == "linux":
+                self.console.append("\nWARNING: The selected compiler does not have a native Linux binary and \nthus requires Wine to run, install the non-Flatpak version of Wine if you \ndon't have it. As a consequence, this will also run slower!")
 
     def output(self):
         startDir = self.options["startFolder"]
@@ -1871,7 +1911,7 @@ class CompMenu():
         SINGLE = False
         BATCH = True
         if self.typeSel.get() == "File":
-            self.singleComp(self.name.get(), self.out.get(), SINGLE)
+            self.startComp(self.name.get(), self.out.get(), SINGLE)
         else:
             self.batchErrors = []
             mdls = self.batchManager.getBatch('comp')
@@ -1882,11 +1922,11 @@ class CompMenu():
                     continue
                 if m.output == "out":
                     if not self.out.get() == "" or not self.out.get() == None:
-                        self.singleComp(m.qcLoc, self.out.get(), BATCH, m.name)
+                        self.startComp(m.qcLoc, self.out.get(), BATCH, m.name)
                     else:
-                        self.singleComp(m.qcLoc, fallbackOutput, BATCH, m.name)
+                        self.startComp(m.qcLoc, fallbackOutput, BATCH, m.name)
                 else:
-                    self.singleComp(m.mdlLoc, m.output, BATCH, m.name)
+                    self.startComp(m.mdlLoc, m.output, BATCH, m.name)
             consoleOutput = "All models have been compiled!"
             if self.out.get() == "" or self.out.get() == None:
                 consoleOutput = f"All models have been compiled!\nSince you did not specify an output folder, all the models that were set to be placed there are now somewhere else\nYou can find them in \'{fallbackOutput}\'"
@@ -1894,7 +1934,7 @@ class CompMenu():
                 consoleOutput = f"Some models were not compiled due to an error\nThese are {', '.join(self.batchErrors)}.\nPlease check the logs folder for details!"
             self.console.setOutput(consoleOutput)
     
-    def singleComp(self, mdl:str, out:str, batch:bool, mdlName:str=""):
+    def startComp(self, mdl:str, out:str, batch:bool, mdlName:str=""):
         mdl = mdl
         output = out
         tOutput = ''
@@ -1952,7 +1992,8 @@ class CompMenu():
                                 compilerPath = newPath
                                 compilerFound = True
                                 break
-        except:
+        except Exception as e:
+            print(e)
             self.console.setOutput("ERROR: Couldn't find compiler, have you selected one?")
             return
         # Getting advanced options the user has enabled and turning that into a string that can be used with StudioMDL
@@ -1975,8 +2016,10 @@ class CompMenu():
                     tOutput = subprocess.getoutput(f'wine \"{compilerPath}\" {cOpts} \"{mdl}\"')
             else:
                 if cOpts == None:
+                    print(f'\"{compilerPath}\" \"{mdl}\"')
                     tOutput = subprocess.getoutput(f'\"{compilerPath}\" \"{mdl}\"')
                 else:
+                    print(f'\"{compilerPath}\" {cOpts} \"{mdl}\"')
                     tOutput = subprocess.getoutput(f'\"{compilerPath}\" {cOpts} \"{mdl}\"')
         elif sys.platform == 'win32' and compilerFound:
             if cOpts == None:
@@ -2034,6 +2077,45 @@ class CompMenu():
                         os.remove(os.path.join(os.getcwd(), f))
 
 class AboutMenu():
+    # Checking the date for events such as: Snark's Anniversary and my birthday.
+    def checkDate(self, event:str):
+        day = '%d'
+        month = '%m'
+        year = '%Y'
+        dateObj = date.now()
+        curDate = {
+            "day": int(dateObj.strftime(day)), 
+            "month": int(dateObj.strftime(month)), 
+            "year": int(dateObj.strftime(year))
+        }
+        age = 0
+        # Btw there is no check if the number is under 1, so have fun with that nugget of information!
+        if event.lower() == "birthday":
+            age = curDate["year"] - 2006
+        elif event.lower() == "anniversary":
+            age = curDate["year"] - 2025
+        
+        numSuffix = "th"
+        if str(age).endswith("1"):
+            numSuffix = 'st'
+        elif str(age).endswith("2"):
+            numSuffix = 'nd'
+        elif str(age).endswith("3"):
+            numSuffix = 'rd'
+
+        if event.lower() == "birthday":
+            if curDate["day"] >= 11 and curDate["day"] < 18 and curDate["month"] == 9:
+                return f"Happy {age}{numSuffix} birthday PostScript!"
+        elif event.lower() == "anniversary":
+            if calendar.isleap(curDate["year"]):
+                if curDate["day"] >= 26 and curDate["month"] == 2 or curDate["day"] < 3 and curDate["month"] == 3:
+                    return f"Happy {age}{numSuffix} anniversary Snark!"
+            else:
+                if curDate["day"] >= 26 and curDate["month"] == 2 or curDate["day"] < 4 and curDate["month"] == 3:
+                    return f"Happy {age}{numSuffix} anniversary Snark!"
+        return False
+            
+    
     def __init__(self, template, master, startHidden:bool=False):
         self.hidden = startHidden
         self.master = master
@@ -2041,8 +2123,15 @@ class AboutMenu():
         self.thme, self.safeWidth = thme, template.safeWidth
         # Setting up options
         self.options = template.options
+        # (Not so secret) Easter egg checks
+        birthday = self.checkDate("Birthday")
+        anniversary = self.checkDate("Anniversary")
         # Images
         self.snarkLogoPNG = PhotoImage(file="logo128.png")
+        if not birthday == False:
+            self.snarkLogoPNG = PhotoImage(file="images/BirthdayLogo.png")
+        elif not anniversary == False:
+            self.snarkLogoPNG = PhotoImage(file="images/anniversarySnark.png")
         self.gitLogoPNG = PhotoImage(file="images/github.png")
         self.gbLogoPNG = PhotoImage(file="images/gamebanana.png")
         # Labels displaying the images
@@ -2050,12 +2139,17 @@ class AboutMenu():
         self.githubLogo = HyperlinkImg(master, image=self.gitLogoPNG, lID=0)
         self.gameBLogo = HyperlinkImg(master, image=self.gbLogoPNG, lID=1)
         self.getDistro = Button(master, text='Get Distro Information', command=self.grabOSRel, cursor="hand2")
+        self.eventLabel = Label(master, text="")
+        if not birthday == False:
+            self.eventLabel.configure(text=birthday)
+        elif not anniversary == False:
+            self.eventLabel.configure(text=anniversary)
         # Text
         vnum = open('version.txt', "r")
         self.ver = vnum.read().replace("(OS)", sys.platform)
         self.setupLabel = Label(master, text=f"Snark {self.ver} by:", background=thme["bg"], foreground=thme["txt"])
-        credits = ["PostScript", "\nusing:", "MDLDec by Flying With Gauss", "get_image_size by Paulo Scardine", "TkTooltip by DaedalicEntertainment",
-            "JSONC by John Carter", "MDL6Dec by GeckoN"
+        credits = ["PostScript", "\nusing:", "MDLDec by Flying With Gauss", "MDL6Dec by GeckoN", "get_image_size by Paulo Scardine", "TkTooltip by DaedalicEntertainment",
+            "JSONC by John Carter", "Studiomdl by fnky & L-P"
         ]
         self.nameLabel = Label(master, text="\n".join(credits), background=thme["bg"], fg=thme["txt"])
         # Tooltips
@@ -2125,12 +2219,13 @@ class AboutMenu():
     def show(self):
         self.hidden = False
         self.snarkLogo.grid(column=1, row=0)
+        self.eventLabel.grid(column=2, row=0, sticky="w")
         self.githubLogo.grid(column=1,row=1, padx=(0,50))
         self.gameBLogo.grid(column=1,row=1, padx=(50,0))
         self.setupLabel.grid(column=1, row=2)
         self.nameLabel.grid(column=1, row=3)
         if sys.platform == 'linux':
-            self.getDistro.grid(column=1, row=4, pady=(30,0))
+            self.getDistro.grid(column=1, row=4, pady=(15,0))
 
 class OptionsMenu():
     def __init__(self, template, master, thmecallback, updFunc, startHidden:bool=False):
@@ -2151,12 +2246,14 @@ class OptionsMenu():
         self.pageButtons = Frame(master, borderwidth=2, bg=thme["bg"])
         self.generalButton = Button(self.pageButtons, text="General", cursor="hand2", command=self.genPg)
         self.hlmvButton = Button(self.pageButtons, text="Model Viewers", cursor="hand2", command=self.hlmvPg)
+        # DE(A)F KEV
+        self.defButton = Button(self.pageButtons, text="Defaults", cursor="hand2", command=self.defPg)
         
         # General options
         self.setupLabel = Label(master, text=f"Theme: ", background=thme["bg"], foreground=thme["txt"])
         self.nameLabel = Label(master, text="Starting directory: ", background=thme["bg"], fg=thme["txt"])
         
-        themes = ["Freeman", "Shephard", "Calhoun", "Cross"]
+        themes = ["Freeman", "Shephard", "Calhoun", "Cross", "Delta", "Dark"]
         usrThemes = self.checkNewThemes()
         if not usrThemes == False:
             count = -1
@@ -2202,7 +2299,10 @@ class OptionsMenu():
         self.defPLabel = Label(master, text="Default Decompile Preset:")
         self.defMDLLabel = Label(master, text="Default Modeller Preset:")
         
-        cList = open("save/compilers.txt", "r")
+        if os.path.exists(f"save/compilers{sys.platform}.txt"):
+            cList = open(f"save/compilers{sys.platform}.txt", "r")
+        else:
+            cList = open("save/compilers.txt", "r")
         cOptions = cList.read().split('\n')
         cOptions.pop(len(cOptions)-1)
         self.compSel = ttk.Combobox(master, values=cOptions)
@@ -2232,8 +2332,8 @@ class OptionsMenu():
                     "-V": False,
                     "-m": True
                 },
-                # For the DoomMusic StudioMDL compiler
-                "DoomMusic": {
+                # For FunnkyHD's StudioMDL compiler
+                "FunnkyHD": {
                     "-u": True,
                     "-V": False,
                     "-m": True
@@ -2279,7 +2379,7 @@ class OptionsMenu():
             self.distroTT = ToolTip(self.distroSel, "This Linux-only selector will tell Snark which distro variant you use, it will resize itself so everything looks correct on your system when you select the option. If there's still windowing bugs, please create an issue on Github or Gamebanana with your distro information copied from the terminal or the about menu.", background=thme["tt"], foreground=thme["txt"])
         
         # Tooltips
-        self.themeTT = ToolTip(self.themeCBox, "Changes the program's theme, the built-in themes are: Freeman, Shephard, Calhoun and Cross.", background=thme["tt"], foreground=thme["txt"])
+        self.themeTT = ToolTip(self.themeCBox, "Changes the program's theme, the built-in themes are: Freeman, Shephard, Calhoun, Cross, Delta and a standard Dark theme.", background=thme["tt"], foreground=thme["txt"])
         self.startFolderTT = ToolTip(self.startFent, "Sets the directory that the built-in file explorer will start in, the default is the documents folder.", background=thme["tt"], foreground=thme["txt"])
         self.startFolderTT2 = ToolTip(self.setSF, "Sets the directory that the built-in file explorer will start in, the default is the documents folder.", background=thme["tt"], foreground=thme["txt"])
         self.forceDefTT = ToolTip(self.forceDefault, "By default, Snark prioritises the custom path you set over the default paths for compilers, enabling this will prioritise the default paths instead, meaning that Snark won't use the custom path if it finds the compiler in its default path.", background=thme["tt"], foreground=thme["txt"])
@@ -2377,20 +2477,21 @@ class OptionsMenu():
         self.setSF.grid(column=3, row=2, sticky="w")
         self.fdLabel.grid(column=1, row=3, sticky="w")
         self.forceDefault.grid(column=2, row=3, sticky="w")
-        self.defCLabel.grid(column=1, row=4, sticky="w")
-        self.compSel.grid(column=2, row=4, sticky="w")
-        self.defGLabel.grid(column=1, row=5, sticky="w")
-        self.defPLabel.grid(column=1, row=6, sticky="w")
-        self.gameSel.grid(column=2, row=5, sticky="w")
-        self.presetSel.grid(column=2, row=6, sticky="w")
         self.spLabel.grid(column=1, row=8, sticky="w")
         self.savePathsCB.grid(column=2, row=8, sticky="w")
         if sys.platform == 'linux':
             self.distroLabel.grid(column=1, row=9, sticky="w")
             self.distroSel.grid(column=2, row=9, sticky="w")
             self.restartReq1.grid(column=3, row=9, sticky="w")
-        self.defMDLLabel.grid(column=1, row=7, sticky="w")
-        self.mdlPresetSel.grid(column=2, row=7, sticky="w")
+        
+        self.defCLabel.grid_remove()
+        self.compSel.grid_remove()
+        self.defGLabel.grid_remove()
+        self.defPLabel.grid_remove()
+        self.gameSel.grid_remove()
+        self.presetSel.grid_remove()
+        self.defMDLLabel.grid_remove()
+        self.mdlPresetSel.grid_remove()
         self.hlmvLabel.grid_remove()
         self.hlmvCBox.grid_remove()
         self.mvPathLabel.grid_remove()
@@ -2420,11 +2521,50 @@ class OptionsMenu():
             self.restartReq1.grid_remove()
         self.defMDLLabel.grid_remove()
         self.mdlPresetSel.grid_remove()
+
         self.hlmvLabel.grid(column=1, row=1, sticky="w")
         self.hlmvCBox.grid(column=2, row=1, sticky="w")
         self.mvPathLabel.grid(column=1, row=2, sticky="w")
         self.mvPathEnt.grid(column=2, row=2, sticky="w")
         self.setMVP.grid(column=3, row=2, sticky="w")
+    
+    def defPg(self):
+        self.curPage = DEFAULTS_TAB
+        self.setupLabel.grid_remove()
+        self.themeCBox.grid_remove()
+        self.nameLabel.grid_remove()
+        self.startFent.grid_remove()
+        self.setSF.grid_remove()
+        self.fdLabel.grid_remove()
+        self.forceDefault.grid_remove()
+        self.defCLabel.grid_remove()
+        self.compSel.grid_remove()
+        self.defGLabel.grid_remove()
+        self.defPLabel.grid_remove()
+        self.gameSel.grid_remove()
+        self.presetSel.grid_remove()
+        self.spLabel.grid_remove()
+        self.savePathsCB.grid_remove()
+        if sys.platform == 'linux':
+            self.distroLabel.grid_remove()
+            self.distroSel.grid_remove()
+            self.restartReq1.grid_remove()
+        self.defMDLLabel.grid_remove()
+        self.mdlPresetSel.grid_remove()
+        self.hlmvLabel.grid_remove()
+        self.hlmvCBox.grid_remove()
+        self.mvPathLabel.grid_remove()
+        self.mvPathEnt.grid_remove()
+        self.setMVP.grid_remove()
+
+        self.defCLabel.grid(column=1, row=1, sticky="w")
+        self.compSel.grid(column=2, row=1, sticky="w")
+        self.defGLabel.grid(column=1, row=2, sticky="w")
+        self.defPLabel.grid(column=1, row=3, sticky="w")
+        self.gameSel.grid(column=2, row=2, sticky="w")
+        self.presetSel.grid(column=2, row=3, sticky="w")
+        self.defMDLLabel.grid(column=1, row=4, sticky="w")
+        self.mdlPresetSel.grid(column=2, row=4, sticky="w")
     
     def applyTheme(self, master):
         style=ttk.Style()
@@ -2581,7 +2721,8 @@ class OptionsMenu():
         self.hidden = False
         self.pageButtons.grid(row=0, column=1, sticky="nsew", columnspan=10)
         self.generalButton.grid(row=0, column=1, sticky="w")
-        self.hlmvButton.grid(row=0, column=2, sticky="w")
+        self.hlmvButton.grid(row=0, column=3, sticky="w")
+        self.defButton.grid(row=0, column=2, sticky="w")
         if self.curPage == GENERAL_TAB:
             self.setupLabel.grid(column=1, row=1, sticky="w")
             self.themeCBox.grid(column=2, row=1, sticky="w")
@@ -2590,23 +2731,24 @@ class OptionsMenu():
             self.setSF.grid(column=3, row=2, sticky="w")
             self.fdLabel.grid(column=1, row=3, sticky="w")
             self.forceDefault.grid(column=2, row=3, sticky="w")
-            self.defCLabel.grid(column=1, row=4, sticky="w")
-            self.compSel.grid(column=2, row=4, sticky="w")
-            self.defGLabel.grid(column=1, row=5, sticky="w")
-            self.defPLabel.grid(column=1, row=6, sticky="w")
-            self.gameSel.grid(column=2, row=5, sticky="w")
-            self.presetSel.grid(column=2, row=6, sticky="w")
             self.spLabel.grid(column=1, row=8, sticky="w")
             self.savePathsCB.grid(column=2, row=8, sticky="w")
             if sys.platform == 'linux':
                 self.distroLabel.grid(column=1, row=9, sticky="w")
                 self.distroSel.grid(column=2, row=9, sticky="w")
                 self.restartReq1.grid(column=3, row=9, sticky="w")
-            self.defMDLLabel.grid(column=1, row=7, sticky="w")
-            self.mdlPresetSel.grid(column=2, row=7, sticky="w")
         elif self.curPage == MODELV_TAB:
             self.hlmvLabel.grid(column=1, row=1, sticky="w")
             self.hlmvCBox.grid(column=2, row=1, sticky="w")
             self.mvPathLabel.grid(column=1, row=2, sticky="w")
             self.mvPathEnt.grid(column=2, row=2, sticky="w")
             self.setMVP.grid(column=3, row=2, sticky="w")
+        elif self.curPage == DEFAULTS_TAB:
+            self.defCLabel.grid(column=1, row=1, sticky="w")
+            self.compSel.grid(column=2, row=1, sticky="w")
+            self.defGLabel.grid(column=1, row=2, sticky="w")
+            self.defPLabel.grid(column=1, row=3, sticky="w")
+            self.gameSel.grid(column=2, row=2, sticky="w")
+            self.presetSel.grid(column=2, row=3, sticky="w")
+            self.defMDLLabel.grid(column=1, row=4, sticky="w")
+            self.mdlPresetSel.grid(column=2, row=4, sticky="w")

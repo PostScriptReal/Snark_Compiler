@@ -4,22 +4,14 @@
             "path": {
                 "default": {
                     // Any path value that uses a list has multiple directories that Snark searches for,
-                    // In the case of Windows, the 1st string is for 64-bit installs of Steam, while the 2nd one is for 32-bit installs.
-                    "win32": [
-                        "C:/Program Files (x86)/Steam/steamapps/common/Half-Life SDK/Model Tools/studiomdl.exe",
-                        "C:/Program Files/Steam/steamapps/common/Half-Life SDK/Model Tools/studiomdl.exe"
-                    ],
+                    "win32": ["third_party/StudioMDL/hlsdk.exe"],
                     /*  I was planning on having MacOS support, but I decided against that since A. I don't have a Mac to test it on,
                         and B. Pretty much all modding tools that provide support for OSes other than Windows don't support Mac.*/
-                    // For Linux, the 1st string is for the native version of Steam, the 2nd one is for Flatpak Steam and the 3rd one is for Snap Steam.
-                    "linux": [
-                        "~/.steam/steam/steamapps/common/Half-Life SDK/Model Tools/studiomdl.exe",
-                        "~/.var/app/com.valvesoftware.Steam/.local/share/Steam/steamapps/common/Half-Life SDK/Model Tools/studiomdl.exe",
-                        "~/snap/steam/common/Steam/steamapps/common/Half-Life SDK/Model Tools/studiomdl.exe"
-                    ]
+                    "linux": ["third_party/StudioMDL/hlsdk"]
                 }
             },
             "type": "GoldSRC",
+            "description": "Cross-platform version of the Half-Life SDK StudioMDL, authored by Valve. Modern compilers are recommended!",
             "capabilities": {
                 "fullbright": false,
                 "flatshade": false,
@@ -39,13 +31,59 @@
                     ],
                     "linux": [
                         "third_party/StudioMDL/SC.exe"
-                    ],
-                    "darwin": [
-                        "third_party/StudioMDL/SC.exe"
                     ]
                 }
             },
             "type": "Svengine",
+            "description": "Most up-to-date compiler by Sven Co-op team, Linux users are recommended to use Funnky instead.",
+            "capabilities": {
+                "fullbright": true,
+                "flatshade": true,
+                "chromeTRM": true,
+                "1024px": true,
+                "unlockedChrome": true,
+                "noUVshift": true,
+                "cliptotextures": false
+            },
+            "disableEdit": true
+        },
+        "FunnkyHD": {
+            "path": {
+                "default": {
+                    "win32": [
+                        "third_party/StudioMDL/funnkySMDL.exe"
+                    ],
+                    "linux": [
+                        "third_party/StudioMDL/funnkySMDL"
+                    ]
+                }
+            },
+            "type": "Funnky",
+            "description": "Cross-platform compiler with similar features/improvements to Svengine and Xash, authored by FunnkyHD.",
+            "capabilities": {
+                "fullbright": true,
+                "flatshade": true,
+                "chromeTRM": true,
+                "1024px": true,
+                "unlockedChrome": true,
+                "noUVshift": true,
+                "cliptotextures": false
+            },
+            "disableEdit": true
+        },
+        "PrimeXT": {
+            "path": {
+                "default": {
+                    "win32": [
+                        "third_party/StudioMDL/pxstudiomdl.exe"
+                    ],
+                    "linux": [
+                        "third_party/StudioMDL/pxstudiomdl"
+                    ]
+                }
+            },
+            "type": "Xash3D",
+            "description": "Cross-platform compiler for Xash3D (and GoldSRC, but HLAM doesn't like it), authored by SNMetamorph from Flying With Gauss.",
             "capabilities": {
                 "fullbright": true,
                 "flatshade": true,
@@ -65,13 +103,11 @@
                     ],
                     "linux": [
                         "third_party/StudioMDL/SC2018.exe"
-                    ],
-                    "darwin": [
-                        "third_party/StudioMDL/SC2018.exe"
                     ]
                 }
             },
             "type": "Svengine",
+            "description": "2018 version of compiler by Sven Co-op team, included due to cbox bug in latest version, Linux users are recommended to use Funnky instead.",
             "capabilities": {
                 "fullbright": true,
                 "flatshade": true,
