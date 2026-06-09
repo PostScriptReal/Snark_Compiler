@@ -1,0 +1,12 @@
+[0.4.0]
+- Snark is now packaged as a single exe file, no more dependency issues!
+- Added a couple easter eggs ;)
+- Fixed potential crash if the options.json file was deleted.
+- Added a couple new model compilers, including PrimeXT (for Xash3D) and FunnkyHD's StudioMDL.
+- The Half-Life SDK StudioMDL is now bundled with Snark.
+- There are now native Linux binaries included with the Half-Life SDK StudioMDL, FunnkyHD's StudioMDL and the PrimeXT StudioMDL (re-compiling for Linux was a bitch).
+- Added new warning in the compile tab console for Linux users, saying that compile times will be slower if using non-native executables.
+- The compilers list is now reshuffled on Linux so compilers with native executables are higher in the list.
+- Added new tooltip that displays information for your chosen compiler in the Compile tab.
+- The options that set a default compiler, decompiler, presets, etc. are now separated into their own category.
+- Added two new themes, Delta (inspired by the mod Delta Particles) and a standard Dark theme.
