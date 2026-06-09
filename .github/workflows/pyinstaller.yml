@@ -31,4 +31,4 @@ jobs:
         uses: actions/upload-artifact@v6
         with:
           name: Snark-${{ matrix.os }}-${{ env.DATE }}
-          path: dist/Snark
+          path: dist/
