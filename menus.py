@@ -81,7 +81,7 @@ class SetupMenu():
         self.setupLabel = Label(master, text="Game Setup", background=thme["bg"], foreground=thme["txt"])
         self.nameLabel = Label(master, text="Name: ", background=thme["bg"], foreground=thme["txt"])
         self.typeLabel = Label(master, text="Engine type:")
-        tOpts = ["GoldSRC", "Svengine"]
+        tOpts = ["GoldSRC", "Svengine", "Funnky", "Xash3D"]
         self.typeSel = ttk.Combobox(master, values=tOpts, width=8)
         self.typeSel.set(self.gamePFs[self.gameSel.get()]["type"])
         self.name = StringVar()
