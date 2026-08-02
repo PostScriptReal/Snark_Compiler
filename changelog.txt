@@ -1,3 +1,9 @@
+[0.4.1]
+- Changed the version so it says it's a beta (the beta thing was a last minute decision I did as I was about to release the update)
+- Updated the help button functionality so that it no longer takes the user to a deleted wiki page.
+- (Linux) Added an option for the model viewer to use your dedicated GPU, in case there's issues with the integrated one.
+- Fixed issue that causes the compile function to fail when trying to use FunnkyHD's StudioMDL
+
 [0.4.0]
 - Snark is now packaged as a single exe file, no more dependency issues!
 - Added a couple easter eggs ;)

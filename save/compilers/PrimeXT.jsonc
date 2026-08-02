@@ -1,0 +1,26 @@
+{
+    "PrimeXT": {
+            "path": {
+                "default": {
+                    "win32": [
+                        "third_party/StudioMDL/pxstudiomdl.exe"
+                    ],
+                    "linux": [
+                        "third_party/StudioMDL/pxstudiomdl"
+                    ]
+                }
+            },
+            "type": "Xash3D",
+            "description": "Cross-platform compiler for Xash3D (and GoldSRC, but HLAM doesn't like it), authored by SNMetamorph from Flying With Gauss.",
+            "capabilities": {
+                "fullbright": true,
+                "flatshade": true,
+                "chromeTRM": true,
+                "1024px": true,
+                "unlockedChrome": true,
+                "noUVshift": true,
+                "cliptotextures": false
+            },
+            "disableEdit": true
+    }
+}

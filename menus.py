@@ -25,6 +25,41 @@ COMP_TAB = 1
 GENERAL_TAB = 0
 MODELV_TAB = 1
 DEFAULTS_TAB = 2
+# Presets
+DECOMPILEROPTS = {
+            "presets": {
+                # For most compilers
+                "GoldSRC": {
+                    "-u": False,
+                    "-V": False,
+                    "-m": True
+                },
+                # For Sven Co-op's StudioMDL
+                "Svengine": {
+                    "-u": True,
+                    "-V": False,
+                    "-m": True
+                },
+                # For FunnkyHD's StudioMDL compiler
+                "FunnkyHD": {
+                    "-u": True,
+                    "-V": False,
+                    "-m": True
+                },
+                # For Xash3D engine mods
+                "Xash3D": {
+                    "-u": False,
+                    "-V": False,
+                    "-m": False
+                }
+            }
+        }
+MODELLEROPTS = {
+            "presets": {
+                "Blender+Maya": True,
+                "FRAG+MS3D": False
+            }
+        }
 
 # To make things easier for myself, I'm making a new class that contains common values that won't (or usually doesn't) change for each menu.
 class MenuTemp():
@@ -209,20 +244,6 @@ class SetupMenu():
             self.ucBool.set(gameDat["capabilities"]["unlockedChrome"])
             # self.fsBool.set(gameDat["capabilities"]["flatshade"])
             self.fbBool.set(gameDat["capabilities"]["fullbright"])
-        """# If editing options were removed and the compiler doesn't have editing disabled
-        if self.hiddenEdit and not self.compDat[self.selComp]["disableEdit"]:
-            self.hiddenEdit = False
-            self.nameLabel.grid(column=1, row=4, sticky=(W))
-            self.nameEntry.grid(column=2, row=4, sticky=(W))
-            self.pathLabel.grid(column=1, row=5, sticky="w")
-            self.csPathEntry.grid(column=2, row=5, sticky="w")
-        # If editing options were available and the compiler has editing disabled
-        elif not self.hiddenEdit and self.compDat[self.selComp]["disableEdit"]:
-            self.hiddenEdit = True
-            self.nameLabel.grid_remove()
-            self.nameEntry.grid_remove()
-            self.pathLabel.grid(column=1, row=4, sticky="w")
-            self.csPathEntry.grid(column=2, row=4, sticky="w")"""
     
     def updateOpt(self, key, value):
         if not key.startswith("gsMV"):
@@ -818,40 +839,8 @@ class DecompMenu():
         if self.options["linuxFix"] == "Cinnamon":
             self.linuxWFix = 2
             self.conWFix = 6
-        self.presets = {
-            "presets": {
-                # For most compilers
-                "GoldSRC": {
-                    "-u": False,
-                    "-V": False,
-                    "-m": True
-                },
-                # For Sven Co-op's StudioMDL
-                "Svengine": {
-                    "-u": True,
-                    "-V": False,
-                    "-m": True
-                },
-                # For FunnkyHD's StudioMDL compiler
-                "FunnkyHD": {
-                    "-u": True,
-                    "-V": False,
-                    "-m": True
-                },
-                # For Xash3D/PrimeXT engine mods
-                "Xash3D": {
-                    "-u": False,
-                    "-V": False,
-                    "-m": False
-                }
-            }
-        }
-        self.modellerPresets = {
-            "presets": {
-                "Blender+Maya": True,
-                "FRAG+MS3D": False
-            }
-        }
+        self.presets = DECOMPILEROPTS
+        self.modellerPresets = MODELLEROPTS
         presetNames = list(self.presets["presets"].keys())
         modellerNames = list(self.modellerPresets["presets"].keys())
         self.quickStpLbl = Label(self.quick, text="Quick Setup Presets: ")
@@ -926,12 +915,13 @@ class DecompMenu():
         self.menuTemp.setPath(pathKey="decompileIn", pathVal="")
     
     def openHLAM(self):
+        linuxGPU = int(self.options["mvGPU"])
         print("Opening model in HLMV")
         # If "Half-Life Asset Manager" is selected
         if self.options["gsMV"]["selectedMV"] == 1:
             if sys.platform == "linux":
                 print("Opening using \'hlam\' command")
-                a = subprocess.getoutput(f"XDG_SESSION_TYPE=x11 hlam \"{self.name.get()}\"")
+                a = subprocess.getoutput(f"XDG_SESSION_TYPE=x11 DRI_PRIME={linuxGPU} hlam \"{self.name.get()}\"")
             else:
                 print("Opening using the direct path of the HLAM executable")
                 a = subprocess.getoutput(f"\"C:/Program Files (x86)/Half-Life Asset Manager/hlam.exe\" \"{self.name.get()}\"")
@@ -942,9 +932,9 @@ class DecompMenu():
                 path = os.path.expanduser(path)
                 print("Executing user-specified HLMV executable with Wine")
                 if path.endswith(".exe"):
-                    a = subprocess.getoutput(f"wine \"{path}\" \"{self.name.get()}\"")
+                    a = subprocess.getoutput(f"DRI_PRIME={linuxGPU} wine \"{path}\" \"{self.name.get()}\"")
                 else:
-                    a = subprocess.getoutput(f"\"{path}\" \"{self.name.get()}\"")
+                    a = subprocess.getoutput(f"DRI_PRIME={linuxGPU} \"{path}\" \"{self.name.get()}\"")
             else:
                 print("Executing user-specified HLMV executable (Native binary)")
                 path = self.options["gsMV"]["csPath"]
@@ -1519,22 +1509,28 @@ class CompMenu():
 
     
     def openHLAM(self):
+        linuxGPU = int(self.options["mvGPU"])
+        print("Opening model in HLMV")
         # If "Half-Life Asset Manager" is selected
         if self.options["gsMV"]["selectedMV"] == 1:
             if sys.platform == "linux":
-                a = subprocess.getoutput(f"XDG_SESSION_TYPE=x11 hlam \"{self.mdlPath}\"")
+                print("Opening using \'hlam\' command")
+                a = subprocess.getoutput(f"XDG_SESSION_TYPE=x11 DRI_PRIME={linuxGPU} hlam \"{self.mdlPath}\"")
             else:
+                print("Opening using the direct path of the HLAM executable")
                 a = subprocess.getoutput(f"\"C:/Program Files (x86)/Half-Life Asset Manager/hlam.exe\" \"{self.mdlPath}\"")
         # If "Other" option is selected
         elif self.options["gsMV"]["selectedMV"] > 1:
             if sys.platform == "linux":
                 path = self.options["gsMV"]["csPath"]
                 path = os.path.expanduser(path)
+                print("Executing user-specified HLMV executable with Wine")
                 if path.endswith(".exe"):
-                    a = subprocess.getoutput(f"wine \"{path}\" \"{self.mdlPath}\"")
+                    a = subprocess.getoutput(f"DRI_PRIME={linuxGPU} wine \"{path}\" \"{self.mdlPath}\"")
                 else:
-                    a = subprocess.getoutput(f"\"{path}\" \"{self.mdlPath}\"")
+                    a = subprocess.getoutput(f"DRI_PRIME={linuxGPU} \"{path}\" \"{self.mdlPath}\"")
             else:
+                print("Executing user-specified HLMV executable (Native binary)")
                 path = self.options["gsMV"]["csPath"]
                 a = subprocess.getoutput(f"\"{path}\" \"{self.mdlPath}\"")
 
@@ -1993,7 +1989,7 @@ class CompMenu():
                                 compilerFound = True
                                 break
         except Exception as e:
-            print(e)
+            print(f"ERROR: {e}")
             self.console.setOutput("ERROR: Couldn't find compiler, have you selected one?")
             return
         # Getting advanced options the user has enabled and turning that into a string that can be used with StudioMDL
@@ -2005,8 +2001,8 @@ class CompMenu():
             mdl = qcRelChk.newQCPath
 
         if sys.platform == 'linux' and compilerFound:
-            # I will check if it is a native executable anyway for future proofing
-            # Pretty much all StudioMDL compilers are windows executables only
+            # I will check if it is a native executable anyway
+            # Most StudioMDL compilers are windows executables only
             if compilerPath.endswith(".exe"):
                 if cOpts == None:
                     print(f'wine \"{compilerPath}\" \"{mdl}\"')
@@ -2238,7 +2234,7 @@ class OptionsMenu():
         self.updFunc = updFunc
         # Grabbing options
         self.options = template.options
-        self.curJSONVer = 7
+        self.curJSONVer = 8
         # Checking if options JSON is from a previous version...
         if not self.options["version"] >= self.curJSONVer:
             self.upgradeJSON()
@@ -2318,40 +2314,8 @@ class OptionsMenu():
         self.gameSel = ttk.Combobox(master, values=self.games.gNames)
         self.gameSel.bind("<<ComboboxSelected>>", self.setGame)
         self.gameSel.current(self.options["defGame"])
-        self.presets = {
-            "presets": {
-                # For most compilers
-                "GoldSRC": {
-                    "-u": False,
-                    "-V": False,
-                    "-m": True
-                },
-                # For Sven Co-op's StudioMDL
-                "Svengine": {
-                    "-u": True,
-                    "-V": False,
-                    "-m": True
-                },
-                # For FunnkyHD's StudioMDL compiler
-                "FunnkyHD": {
-                    "-u": True,
-                    "-V": False,
-                    "-m": True
-                },
-                # For Xash3D engine mods
-                "Xash3D": {
-                    "-u": False,
-                    "-V": False,
-                    "-m": False
-                }
-            }
-        }
-        self.modellerPresets = {
-            "presets": {
-                "Blender+Maya": True,
-                "FRAG+MS3D": False
-            }
-        }
+        self.presets = DECOMPILEROPTS
+        self.modellerPresets = MODELLEROPTS
         presetNames = list(self.presets["presets"].keys())
         modellerNames = list(self.modellerPresets["presets"].keys())
 
@@ -2378,6 +2342,10 @@ class OptionsMenu():
             self.distroSel.bind("<<ComboboxSelected>>", self.setLF)
             self.distroTT = ToolTip(self.distroSel, "This Linux-only selector will tell Snark which distro variant you use, it will resize itself so everything looks correct on your system when you select the option. If there's still windowing bugs, please create an issue on Github or Gamebanana with your distro information copied from the terminal or the about menu.", background=thme["tt"], foreground=thme["txt"])
         
+        self.gpuB = BooleanVar(master, value=self.options["forceDefPaths"])
+        self.gpuLabel = Label(master, text="Use Dedicated GPU:")
+        self.detonatedGPU = Checkbutton(master, command=self.chGPU, variable=self.gpuB)
+        
         # Tooltips
         self.themeTT = ToolTip(self.themeCBox, "Changes the program's theme, the built-in themes are: Freeman, Shephard, Calhoun, Cross, Delta and a standard Dark theme.", background=thme["tt"], foreground=thme["txt"])
         self.startFolderTT = ToolTip(self.startFent, "Sets the directory that the built-in file explorer will start in, the default is the documents folder.", background=thme["tt"], foreground=thme["txt"])
@@ -2386,6 +2354,7 @@ class OptionsMenu():
         self.hlmvTT = ToolTip(self.hlmvCBox, "Sets the model viewer you want to use when clicking the \"Open model in HLMV\" button, if this is set to None, the button will not show up!", background=thme["tt"], foreground=thme["txt"])
         self.setMVPtt = ToolTip(self.setMVP, "Sets the path to the model viewer you want to use if you select \"Other\"", background=thme["tt"], foreground=thme["txt"])
         self.savePathsTT = ToolTip(self.savePathsCB, "Disabling this will make Snark go back to its old behaviour of not keeping the paths you set in the previous session. If you have high read/write speeds (above 30-40 MB/s), it's recommended that you leave this on, otherwise, turn it off.", background=thme["tt"], foreground=thme["txt"])
+        self.detonatedTT = ToolTip(self.detonatedGPU, "Linux only, tells your model viewer to use your Nvidia GPU over integrated graphics in case there are issues with it.", background=thme["tt"], foreground=thme["txt"])
         if not startHidden:
             self.show()
         
@@ -2408,6 +2377,7 @@ class OptionsMenu():
         theme = self.options.get("theme", "Freeman")
         goldSRCModelViewer = self.options.get("gsMV", {"selectedMV": 0, "csPath": ""})
         linuxWinFix = self.options.get("linuxFix", "KDE")
+        mvGPUFix = self.options.get("mvGPU", False)
         if sys.platform == 'linux':
             # Detecting which version of Linux you're using for the Windowing fixes
             cinnamonDesktops = ['linuxmint']
@@ -2421,7 +2391,7 @@ class OptionsMenu():
         if self.options["version"] < 5:
             savePaths = True
             upgradePaths = True
-        # Upgrade from version 1 to 6
+        # Upgrade from version 1 to 8
         newOptions = {
             "defComp": defaultComp,
             "defGame": defaultGame,
@@ -2432,6 +2402,7 @@ class OptionsMenu():
             "startFolder": startingFolder,
             "theme": theme,
             "gsMV": goldSRCModelViewer,
+            "mvGPU": mvGPUFix,
             "linuxFix": linuxWinFix,
             "version": self.curJSONVer
         }
@@ -2497,6 +2468,8 @@ class OptionsMenu():
         self.mvPathLabel.grid_remove()
         self.mvPathEnt.grid_remove()
         self.setMVP.grid_remove()
+        self.gpuLabel.grid_remove()
+        self.detonatedGPU.grid_remove()
     
     def hlmvPg(self):
         self.curPage = MODELV_TAB
@@ -2527,6 +2500,9 @@ class OptionsMenu():
         self.mvPathLabel.grid(column=1, row=2, sticky="w")
         self.mvPathEnt.grid(column=2, row=2, sticky="w")
         self.setMVP.grid(column=3, row=2, sticky="w")
+        if sys.platform == 'linux':
+            self.gpuLabel.grid(column=1, row=3, sticky="w")
+            self.detonatedGPU.grid(column=2, row=3, sticky="w")
     
     def defPg(self):
         self.curPage = DEFAULTS_TAB
@@ -2556,6 +2532,8 @@ class OptionsMenu():
         self.mvPathLabel.grid_remove()
         self.mvPathEnt.grid_remove()
         self.setMVP.grid_remove()
+        self.gpuLabel.grid_remove()
+        self.detonatedGPU.grid_remove()
 
         self.defCLabel.grid(column=1, row=1, sticky="w")
         self.compSel.grid(column=2, row=1, sticky="w")
@@ -2690,6 +2668,11 @@ class OptionsMenu():
         self.save_options()
         self.updFunc("forceDefPaths", self.forceDefB.get())
     
+    def chGPU(self):
+        self.options["mvGPU"] = self.gpuB.get()
+        self.save_options()
+        self.updFunc("mvGPU", self.gpuB.get())
+    
     def chSP(self):
         self.options["save_paths"] = self.savePathsB.get()
         self.save_options()
@@ -2743,6 +2726,9 @@ class OptionsMenu():
             self.mvPathLabel.grid(column=1, row=2, sticky="w")
             self.mvPathEnt.grid(column=2, row=2, sticky="w")
             self.setMVP.grid(column=3, row=2, sticky="w")
+            if sys.platform == 'linux':
+                self.gpuLabel.grid(column=1, row=3, sticky="w")
+                self.detonatedGPU.grid(column=2, row=3, sticky="w")
         elif self.curPage == DEFAULTS_TAB:
             self.defCLabel.grid(column=1, row=1, sticky="w")
             self.compSel.grid(column=2, row=1, sticky="w")

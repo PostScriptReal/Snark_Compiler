@@ -9,8 +9,9 @@
           "selectedMV": 0
      },
      "linuxFix": "KDE",
+     "mvGPU": false,
      "save_paths": true,
      "startFolder": "~/Documents",
      "theme": "Freeman",
-     "version": 7
+     "version": 8
 }

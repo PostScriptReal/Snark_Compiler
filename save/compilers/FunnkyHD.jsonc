@@ -1,0 +1,26 @@
+{
+    "FunnkyHD": {
+            "path": {
+                "default": {
+                    "win32": [
+                        "third_party/StudioMDL/funnkySMDL.exe"
+                    ],
+                    "linux": [
+                        "third_party/StudioMDL/funnkySMDL"
+                    ]
+                }
+            },
+            "type": "Funnky",
+            "description": "Cross-platform compiler with similar features/improvements to Svengine and Xash, authored by FunnkyHD.",
+            "capabilities": {
+                "fullbright": true,
+                "flatshade": true,
+                "chromeTRM": true,
+                "1024px": true,
+                "unlockedChrome": true,
+                "noUVshift": true,
+                "cliptotextures": false
+            },
+            "disableEdit": true
+    }
+}

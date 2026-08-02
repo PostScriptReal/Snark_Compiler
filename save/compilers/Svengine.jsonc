@@ -1,0 +1,25 @@
+{
+    "Svengine": {
+            "path": {
+                "default": {
+                    "win32": [
+                        "third_party/StudioMDL/SC.exe"
+                    ],
+                    "linux": [
+                        "third_party/StudioMDL/SC.exe"
+                    ]
+                }
+            },
+            "type": "Svengine",
+            "description": "Most up-to-date compiler by Sven Co-op team, Linux users are recommended to use Funnky instead.",
+            "capabilities": {
+                "fullbright": true,
+                "flatshade": true,
+                "chromeTRM": true,
+                "1024px": true,
+                "unlockedChrome": true,
+                "noUVshift": true,
+                "cliptotextures": false
+            }
+    }
+}
