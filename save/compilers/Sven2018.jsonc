@@ -1,0 +1,25 @@
+{
+    "Sven2018": {
+            "path": {
+                "default": {
+                    "win32": [
+                        "third_party/StudioMDL/SC2018.exe"
+                    ],
+                    "linux": [
+                        "third_party/StudioMDL/SC2018.exe"
+                    ]
+                }
+            },
+            "type": "Svengine",
+            "description": "2018 version of compiler by Sven Co-op team, included due to cbox bug in latest version, Linux users are recommended to use Funnky instead.",
+            "capabilities": {
+                "fullbright": true,
+                "flatshade": true,
+                "chromeTRM": true,
+                "1024px": true,
+                "unlockedChrome": true,
+                "noUVshift": true,
+                "cliptotextures": false
+            }
+    }
+}

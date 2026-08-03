@@ -1,0 +1,26 @@
+{
+    "compilers": {
+        "GoldSRC": {
+            "path": {
+                "default": {
+                    // Any path value that uses a list has multiple directories that Snark searches for,
+                    "win32": ["third_party/StudioMDL/hlsdk.exe"],
+                    /*  I was planning on having MacOS support, but I decided against that since A. I don't have a Mac to test it on,
+                        and B. Most modding tools that provide support for OSes other than Windows don't support Mac.*/
+                    "linux": ["third_party/StudioMDL/hlsdk"]
+                }
+            },
+            "type": "GoldSRC",
+            "description": "Cross-platform version of the Half-Life SDK StudioMDL, authored by Valve. Modern compilers are recommended!",
+            "capabilities": {
+                "fullbright": false,
+                "flatshade": false,
+                "chromeTRM": false,
+                "1024px": false,
+                "unlockedChrome": false,
+                "noUVshift": false,
+                "cliptotextures": true
+            },
+            "disableEdit": true
+        }
+}

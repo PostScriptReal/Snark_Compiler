@@ -6,7 +6,7 @@
                     // Any path value that uses a list has multiple directories that Snark searches for,
                     "win32": ["third_party/StudioMDL/hlsdk.exe"],
                     /*  I was planning on having MacOS support, but I decided against that since A. I don't have a Mac to test it on,
-                        and B. Pretty much all modding tools that provide support for OSes other than Windows don't support Mac.*/
+                        and B. Most modding tools that provide support for OSes other than Windows don't support Mac.*/
                     "linux": ["third_party/StudioMDL/hlsdk"]
                 }
             },
